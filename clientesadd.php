@@ -647,7 +647,26 @@ class cclientes_add extends cclientes {
 		$this->tipo->ViewCustomAttributes = "";
 
 		// id
-		$this->id->ViewValue = $this->id->CurrentValue;
+		if (strval($this->id->CurrentValue) <> "") {
+			$sFilterWrk = "`id_pessoa`" . ew_SearchString("=", $this->id->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_pessoa`, `nome_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `pessoa_fisica`";
+		$sWhereWrk = "";
+		$this->id->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id->ViewValue = $this->id->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id->ViewValue = $this->id->CurrentValue;
+			}
+		} else {
+			$this->id->ViewValue = NULL;
+		}
 		$this->id->ViewCustomAttributes = "";
 
 		// data
@@ -689,8 +708,21 @@ class cclientes_add extends cclientes {
 			// id
 			$this->id->EditAttrs["class"] = "form-control";
 			$this->id->EditCustomAttributes = "";
-			$this->id->EditValue = ew_HtmlEncode($this->id->CurrentValue);
-			$this->id->PlaceHolder = ew_RemoveHtml($this->id->FldCaption());
+			if (trim(strval($this->id->CurrentValue)) == "") {
+				$sFilterWrk = "0=1";
+			} else {
+				$sFilterWrk = "`id_pessoa`" . ew_SearchString("=", $this->id->CurrentValue, EW_DATATYPE_NUMBER, "");
+			}
+			$sSqlWrk = "SELECT `id_pessoa`, `nome_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `pessoa_fisica`";
+			$sWhereWrk = "";
+			$this->id->LookupFilters = array();
+			ew_AddFilter($sWhereWrk, $sFilterWrk);
+			$this->Lookup_Selecting($this->id, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
+			if ($rswrk) $rswrk->Close();
+			$this->id->EditValue = $arwrk;
 
 			// data
 			// time
@@ -732,9 +764,6 @@ class cclientes_add extends cclientes {
 			return ($gsFormError == "");
 		if (!$this->id->FldIsDetailKey && !is_null($this->id->FormValue) && $this->id->FormValue == "") {
 			ew_AddMessage($gsFormError, str_replace("%s", $this->id->FldCaption(), $this->id->ReqErrMsg));
-		}
-		if (!ew_CheckInteger($this->id->FormValue)) {
-			ew_AddMessage($gsFormError, $this->id->FldErrMsg());
 		}
 
 		// Return validate result
@@ -819,6 +848,18 @@ class cclientes_add extends cclientes {
 		global $gsLanguage;
 		$pageId = $pageId ?: $this->PageID;
 		switch ($fld->FldVar) {
+		case "x_id":
+			$sSqlWrk = "";
+			$sSqlWrk = "SELECT `id_pessoa` AS `LinkFld`, `nome_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `pessoa_fisica`";
+			$sWhereWrk = "";
+			$fld->LookupFilters = array();
+			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`id_pessoa` IN ({filter_value})', "t0" => "3", "fn0" => "");
+			$sSqlWrk = "";
+			$this->Lookup_Selecting($this->id, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			if ($sSqlWrk <> "")
+				$fld->LookupFilters["s"] .= $sSqlWrk;
+			break;
 		}
 	}
 
@@ -941,9 +982,6 @@ fclientesadd.Validate = function() {
 			elm = this.GetElements("x" + infix + "_id");
 			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
 				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $clientes->id->FldCaption(), $clientes->id->ReqErrMsg)) ?>");
-			elm = this.GetElements("x" + infix + "_id");
-			if (elm && !ew_CheckInteger(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($clientes->id->FldErrMsg()) ?>");
 
 			// Fire Form_CustomValidate event
 			if (!this.Form_CustomValidate(fobj))
@@ -975,6 +1013,8 @@ fclientesadd.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 // Dynamic selection lists
 fclientesadd.Lists["x_tipo"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
 fclientesadd.Lists["x_tipo"].Options = <?php echo json_encode($clientes_add->tipo->Options()) ?>;
+fclientesadd.Lists["x_id"] = {"LinkField":"x_id_pessoa","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_pessoa","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"pessoa_fisica"};
+fclientesadd.Lists["x_id"].Data = "<?php echo $clientes_add->id->LookupFilterQuery(FALSE, "add") ?>";
 
 // Form object for search
 </script>
@@ -1011,7 +1051,10 @@ $clientes_add->ShowMessage();
 		<label id="elh_clientes_id" for="x_id" class="<?php echo $clientes_add->LeftColumnClass ?>"><?php echo $clientes->id->FldCaption() ?><?php echo $Language->Phrase("FieldRequiredIndicator") ?></label>
 		<div class="<?php echo $clientes_add->RightColumnClass ?>"><div<?php echo $clientes->id->CellAttributes() ?>>
 <span id="el_clientes_id">
-<input type="text" data-table="clientes" data-field="x_id" name="x_id" id="x_id" size="30" placeholder="<?php echo ew_HtmlEncode($clientes->id->getPlaceHolder()) ?>" value="<?php echo $clientes->id->EditValue ?>"<?php echo $clientes->id->EditAttributes() ?>>
+<select data-table="clientes" data-field="x_id" data-value-separator="<?php echo $clientes->id->DisplayValueSeparatorAttribute() ?>" id="x_id" name="x_id"<?php echo $clientes->id->EditAttributes() ?>>
+<?php echo $clientes->id->SelectOptionListHtml("x_id") ?>
+</select>
+<button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $clientes->id->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id',url:'pessoa_fisicaaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $clientes->id->FldCaption() ?></span></button>
 </span>
 <?php echo $clientes->id->CustomMsg ?></div></div>
 	</div>

@@ -669,7 +669,26 @@ class cclientes_view extends cclientes {
 		$this->tipo->ViewCustomAttributes = "";
 
 		// id
-		$this->id->ViewValue = $this->id->CurrentValue;
+		if (strval($this->id->CurrentValue) <> "") {
+			$sFilterWrk = "`id_pessoa`" . ew_SearchString("=", $this->id->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_pessoa`, `nome_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `pessoa_fisica`";
+		$sWhereWrk = "";
+		$this->id->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id->ViewValue = $this->id->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id->ViewValue = $this->id->CurrentValue;
+			}
+		} else {
+			$this->id->ViewValue = NULL;
+		}
 		$this->id->ViewCustomAttributes = "";
 
 			// tipo
@@ -840,6 +859,8 @@ fclientesview.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 // Dynamic selection lists
 fclientesview.Lists["x_tipo"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
 fclientesview.Lists["x_tipo"].Options = <?php echo json_encode($clientes_view->tipo->Options()) ?>;
+fclientesview.Lists["x_id"] = {"LinkField":"x_id_pessoa","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_pessoa","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"pessoa_fisica"};
+fclientesview.Lists["x_id"].Data = "<?php echo $clientes_view->id->LookupFilterQuery(FALSE, "view") ?>";
 
 // Form object for search
 </script>

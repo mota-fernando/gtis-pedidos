@@ -60,8 +60,10 @@ class cclientes extends cTable {
 		$this->fields['tipo'] = &$this->tipo;
 
 		// id
-		$this->id = new cField('clientes', 'clientes', 'x_id', 'id', '`id`', '`id`', 3, -1, FALSE, '`id`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->id = new cField('clientes', 'clientes', 'x_id', 'id', '`id`', '`id`', 3, -1, FALSE, '`id`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'SELECT');
 		$this->id->Sortable = TRUE; // Allow sort
+		$this->id->UsePleaseSelect = TRUE; // Use PleaseSelect by default
+		$this->id->PleaseSelectText = $Language->Phrase("PleaseSelect"); // PleaseSelect text
 		$this->id->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['id'] = &$this->id;
 
@@ -646,7 +648,26 @@ class cclientes extends cTable {
 		$this->tipo->ViewCustomAttributes = "";
 
 		// id
-		$this->id->ViewValue = $this->id->CurrentValue;
+		if (strval($this->id->CurrentValue) <> "") {
+			$sFilterWrk = "`id_pessoa`" . ew_SearchString("=", $this->id->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_pessoa`, `nome_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `pessoa_fisica`";
+		$sWhereWrk = "";
+		$this->id->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id->ViewValue = $this->id->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id->ViewValue = $this->id->CurrentValue;
+			}
+		} else {
+			$this->id->ViewValue = NULL;
+		}
 		$this->id->ViewCustomAttributes = "";
 
 		// data
@@ -712,8 +733,6 @@ class cclientes extends cTable {
 		// id
 		$this->id->EditAttrs["class"] = "form-control";
 		$this->id->EditCustomAttributes = "";
-		$this->id->EditValue = $this->id->CurrentValue;
-		$this->id->PlaceHolder = ew_RemoveHtml($this->id->FldCaption());
 
 		// data
 		// time
