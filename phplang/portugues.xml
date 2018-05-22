@@ -607,33 +607,6 @@
     <menu id="8">
       <phrase id="menutext" value="Pedidos" />
     </menu>
-    <menu id="1">
-      <phrase id="menutext" value="Clientes" />
-    </menu>
-    <menu id="2">
-      <phrase id="menutext" value="Configurar" />
-    </menu>
-    <menu id="3">
-      <phrase id="menutext" value="Descontos" />
-    </menu>
-    <menu id="4">
-      <phrase id="menutext" value="Detalhe Pedido" />
-    </menu>
-    <menu id="5">
-      <phrase id="menutext" value="Empresas" />
-    </menu>
-    <menu id="6">
-      <phrase id="menutext" value="Endereços" />
-    </menu>
-    <menu id="7">
-      <phrase id="menutext" value="Marcas" />
-    </menu>
-    <menu id="9">
-      <phrase id="menutext" value="Pessoa Fisica" />
-    </menu>
-    <menu id="10">
-      <phrase id="menutext" value="Prazos" />
-    </menu>
     <menu id="11">
       <phrase id="menutext" value="Produtos" />
     </menu>
@@ -641,7 +614,37 @@
       <phrase id="menutext" value="Representantes" />
     </menu>
     <menu id="13">
-      <phrase id="menutext" value="Tranportadora" />
+      <phrase id="menutext" value="Tranportadoras" />
+    </menu>
+    <menu id="21">
+      <phrase id="menutext" value="Cadastro" />
+    </menu>
+    <menu id="1">
+      <phrase id="menutext" value="Clientes" />
+    </menu>
+    <menu id="7">
+      <phrase id="menutext" value="Marcas" />
+    </menu>
+    <menu id="5">
+      <phrase id="menutext" value="Empresas" />
+    </menu>
+    <menu id="6">
+      <phrase id="menutext" value="Endereços" />
+    </menu>
+    <menu id="2">
+      <phrase id="menutext" value="Configurar" />
+    </menu>
+    <menu id="3">
+      <phrase id="menutext" value="Descontos" />
+    </menu>
+    <menu id="10">
+      <phrase id="menutext" value="Prazos" />
+    </menu>
+    <menu id="4">
+      <phrase id="menutext" value="Detalhe Pedido" />
+    </menu>
+    <menu id="9">
+      <phrase id="menutext" value="Pessoa Fisica" />
     </menu>
     <table id="pedidos">
       <phrase id="tblcaption" value="Pedidos" />

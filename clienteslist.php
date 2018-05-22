@@ -1257,7 +1257,7 @@ class cclientes_list extends cclientes {
 		// id
 		if (strval($this->id->CurrentValue) <> "") {
 			$sFilterWrk = "`id_pessoa`" . ew_SearchString("=", $this->id->CurrentValue, EW_DATATYPE_NUMBER, "");
-		$sSqlWrk = "SELECT `id_pessoa`, `nome_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `pessoa_fisica`";
+		$sSqlWrk = "SELECT `id_pessoa`, `nome_pessoa` AS `DispFld`, `sobrenome_pessoa` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `pessoa_fisica`";
 		$sWhereWrk = "";
 		$this->id->LookupFilters = array();
 		ew_AddFilter($sWhereWrk, $sFilterWrk);
@@ -1267,6 +1267,7 @@ class cclientes_list extends cclientes {
 			if ($rswrk && !$rswrk->EOF) { // Lookup values found
 				$arwrk = array();
 				$arwrk[1] = $rswrk->fields('DispFld');
+				$arwrk[2] = $rswrk->fields('Disp2Fld');
 				$this->id->ViewValue = $this->id->DisplayValue($arwrk);
 				$rswrk->Close();
 			} else {
@@ -1641,7 +1642,7 @@ fclienteslist.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 // Dynamic selection lists
 fclienteslist.Lists["x_tipo"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
 fclienteslist.Lists["x_tipo"].Options = <?php echo json_encode($clientes_list->tipo->Options()) ?>;
-fclienteslist.Lists["x_id"] = {"LinkField":"x_id_pessoa","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_pessoa","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"pessoa_fisica"};
+fclienteslist.Lists["x_id"] = {"LinkField":"x_id_pessoa","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_pessoa","x_sobrenome_pessoa","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"pessoa_fisica"};
 fclienteslist.Lists["x_id"].Data = "<?php echo $clientes_list->id->LookupFilterQuery(FALSE, "list") ?>";
 
 // Form object for search

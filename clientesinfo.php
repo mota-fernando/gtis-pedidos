@@ -650,7 +650,7 @@ class cclientes extends cTable {
 		// id
 		if (strval($this->id->CurrentValue) <> "") {
 			$sFilterWrk = "`id_pessoa`" . ew_SearchString("=", $this->id->CurrentValue, EW_DATATYPE_NUMBER, "");
-		$sSqlWrk = "SELECT `id_pessoa`, `nome_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `pessoa_fisica`";
+		$sSqlWrk = "SELECT `id_pessoa`, `nome_pessoa` AS `DispFld`, `sobrenome_pessoa` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `pessoa_fisica`";
 		$sWhereWrk = "";
 		$this->id->LookupFilters = array();
 		ew_AddFilter($sWhereWrk, $sFilterWrk);
@@ -660,6 +660,7 @@ class cclientes extends cTable {
 			if ($rswrk && !$rswrk->EOF) { // Lookup values found
 				$arwrk = array();
 				$arwrk[1] = $rswrk->fields('DispFld');
+				$arwrk[2] = $rswrk->fields('Disp2Fld');
 				$this->id->ViewValue = $this->id->DisplayValue($arwrk);
 				$rswrk->Close();
 			} else {
