@@ -294,6 +294,7 @@ class cpedidos_delete extends cpedidos {
 		$this->id_representante->SetVisibility();
 		$this->comissao_representante->SetVisibility();
 		$this->id_cliente->SetVisibility();
+		$this->status->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -485,6 +486,7 @@ class cpedidos_delete extends cpedidos {
 		$this->id_representante->setDbValue($row['id_representante']);
 		$this->comissao_representante->setDbValue($row['comissao_representante']);
 		$this->id_cliente->setDbValue($row['id_cliente']);
+		$this->status->setDbValue($row['status']);
 	}
 
 	// Return a row with default values
@@ -502,6 +504,7 @@ class cpedidos_delete extends cpedidos {
 		$row['id_representante'] = NULL;
 		$row['comissao_representante'] = NULL;
 		$row['id_cliente'] = NULL;
+		$row['status'] = NULL;
 		return $row;
 	}
 
@@ -522,6 +525,7 @@ class cpedidos_delete extends cpedidos {
 		$this->id_representante->DbValue = $row['id_representante'];
 		$this->comissao_representante->DbValue = $row['comissao_representante'];
 		$this->id_cliente->DbValue = $row['id_cliente'];
+		$this->status->DbValue = $row['status'];
 	}
 
 	// Render row values based on field settings
@@ -546,6 +550,7 @@ class cpedidos_delete extends cpedidos {
 		// id_representante
 		// comissao_representante
 		// id_cliente
+		// status
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -684,6 +689,14 @@ class cpedidos_delete extends cpedidos {
 		$this->id_cliente->ViewValue = $this->id_cliente->CurrentValue;
 		$this->id_cliente->ViewCustomAttributes = "";
 
+		// status
+		if (strval($this->status->CurrentValue) <> "") {
+			$this->status->ViewValue = $this->status->OptionCaption($this->status->CurrentValue);
+		} else {
+			$this->status->ViewValue = NULL;
+		}
+		$this->status->ViewCustomAttributes = "";
+
 			// id_pedidos
 			$this->id_pedidos->LinkCustomAttributes = "";
 			$this->id_pedidos->HrefValue = "";
@@ -743,6 +756,11 @@ class cpedidos_delete extends cpedidos {
 			$this->id_cliente->LinkCustomAttributes = "";
 			$this->id_cliente->HrefValue = "";
 			$this->id_cliente->TooltipValue = "";
+
+			// status
+			$this->status->LinkCustomAttributes = "";
+			$this->status->HrefValue = "";
+			$this->status->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -962,6 +980,8 @@ fpedidosdelete.Lists["x_id_representante"] = {"LinkField":"x_id_representantes",
 fpedidosdelete.Lists["x_id_representante"].Data = "<?php echo $pedidos_delete->id_representante->LookupFilterQuery(FALSE, "delete") ?>";
 fpedidosdelete.Lists["x_comissao_representante"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
 fpedidosdelete.Lists["x_comissao_representante"].Options = <?php echo json_encode($pedidos_delete->comissao_representante->Options()) ?>;
+fpedidosdelete.Lists["x_status"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
+fpedidosdelete.Lists["x_status"].Options = <?php echo json_encode($pedidos_delete->status->Options()) ?>;
 
 // Form object for search
 </script>
@@ -1023,6 +1043,9 @@ $pedidos_delete->ShowMessage();
 <?php } ?>
 <?php if ($pedidos->id_cliente->Visible) { // id_cliente ?>
 		<th class="<?php echo $pedidos->id_cliente->HeaderCellClass() ?>"><span id="elh_pedidos_id_cliente" class="pedidos_id_cliente"><?php echo $pedidos->id_cliente->FldCaption() ?></span></th>
+<?php } ?>
+<?php if ($pedidos->status->Visible) { // status ?>
+		<th class="<?php echo $pedidos->status->HeaderCellClass() ?>"><span id="elh_pedidos_status" class="pedidos_status"><?php echo $pedidos->status->FldCaption() ?></span></th>
 <?php } ?>
 	</tr>
 	</thead>
@@ -1138,6 +1161,14 @@ while (!$pedidos_delete->Recordset->EOF) {
 <span id="el<?php echo $pedidos_delete->RowCnt ?>_pedidos_id_cliente" class="pedidos_id_cliente">
 <span<?php echo $pedidos->id_cliente->ViewAttributes() ?>>
 <?php echo $pedidos->id_cliente->ListViewValue() ?></span>
+</span>
+</td>
+<?php } ?>
+<?php if ($pedidos->status->Visible) { // status ?>
+		<td<?php echo $pedidos->status->CellAttributes() ?>>
+<span id="el<?php echo $pedidos_delete->RowCnt ?>_pedidos_status" class="pedidos_status">
+<span<?php echo $pedidos->status->ViewAttributes() ?>>
+<?php echo $pedidos->status->ListViewValue() ?></span>
 </span>
 </td>
 <?php } ?>

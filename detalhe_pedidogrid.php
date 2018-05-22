@@ -44,9 +44,18 @@ fdetalhe_pedidogrid.Validate = function() {
 			elm = this.GetElements("x" + infix + "_numero_pedido");
 			if (elm && !ew_CheckInteger(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($detalhe_pedido->numero_pedido->FldErrMsg()) ?>");
+			elm = this.GetElements("x" + infix + "_id_produto");
+			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
+				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $detalhe_pedido->id_produto->FldCaption(), $detalhe_pedido->id_produto->ReqErrMsg)) ?>");
+			elm = this.GetElements("x" + infix + "_quantidade");
+			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
+				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $detalhe_pedido->quantidade->FldCaption(), $detalhe_pedido->quantidade->ReqErrMsg)) ?>");
 			elm = this.GetElements("x" + infix + "_quantidade");
 			if (elm && !ew_CheckInteger(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($detalhe_pedido->quantidade->FldErrMsg()) ?>");
+			elm = this.GetElements("x" + infix + "_custo");
+			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
+				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $detalhe_pedido->custo->FldCaption(), $detalhe_pedido->custo->ReqErrMsg)) ?>");
 			elm = this.GetElements("x" + infix + "_custo");
 			if (elm && !ew_CheckNumber(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($detalhe_pedido->custo->FldErrMsg()) ?>");

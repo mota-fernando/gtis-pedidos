@@ -301,6 +301,7 @@ class cpedidos_edit extends cpedidos {
 		$this->id_representante->SetVisibility();
 		$this->comissao_representante->SetVisibility();
 		$this->id_cliente->SetVisibility();
+		$this->status->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -599,6 +600,9 @@ class cpedidos_edit extends cpedidos {
 		if (!$this->id_cliente->FldIsDetailKey) {
 			$this->id_cliente->setFormValue($objForm->GetValue("x_id_cliente"));
 		}
+		if (!$this->status->FldIsDetailKey) {
+			$this->status->setFormValue($objForm->GetValue("x_status"));
+		}
 	}
 
 	// Restore form values
@@ -618,6 +622,7 @@ class cpedidos_edit extends cpedidos {
 		$this->id_representante->CurrentValue = $this->id_representante->FormValue;
 		$this->comissao_representante->CurrentValue = $this->comissao_representante->FormValue;
 		$this->id_cliente->CurrentValue = $this->id_cliente->FormValue;
+		$this->status->CurrentValue = $this->status->FormValue;
 	}
 
 	// Load row based on key values
@@ -665,6 +670,7 @@ class cpedidos_edit extends cpedidos {
 		$this->id_representante->setDbValue($row['id_representante']);
 		$this->comissao_representante->setDbValue($row['comissao_representante']);
 		$this->id_cliente->setDbValue($row['id_cliente']);
+		$this->status->setDbValue($row['status']);
 	}
 
 	// Return a row with default values
@@ -682,6 +688,7 @@ class cpedidos_edit extends cpedidos {
 		$row['id_representante'] = NULL;
 		$row['comissao_representante'] = NULL;
 		$row['id_cliente'] = NULL;
+		$row['status'] = NULL;
 		return $row;
 	}
 
@@ -702,6 +709,7 @@ class cpedidos_edit extends cpedidos {
 		$this->id_representante->DbValue = $row['id_representante'];
 		$this->comissao_representante->DbValue = $row['comissao_representante'];
 		$this->id_cliente->DbValue = $row['id_cliente'];
+		$this->status->DbValue = $row['status'];
 	}
 
 	// Load old record
@@ -748,6 +756,7 @@ class cpedidos_edit extends cpedidos {
 		// id_representante
 		// comissao_representante
 		// id_cliente
+		// status
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -886,6 +895,14 @@ class cpedidos_edit extends cpedidos {
 		$this->id_cliente->ViewValue = $this->id_cliente->CurrentValue;
 		$this->id_cliente->ViewCustomAttributes = "";
 
+		// status
+		if (strval($this->status->CurrentValue) <> "") {
+			$this->status->ViewValue = $this->status->OptionCaption($this->status->CurrentValue);
+		} else {
+			$this->status->ViewValue = NULL;
+		}
+		$this->status->ViewCustomAttributes = "";
+
 			// id_pedidos
 			$this->id_pedidos->LinkCustomAttributes = "";
 			$this->id_pedidos->HrefValue = "";
@@ -945,6 +962,11 @@ class cpedidos_edit extends cpedidos {
 			$this->id_cliente->LinkCustomAttributes = "";
 			$this->id_cliente->HrefValue = "";
 			$this->id_cliente->TooltipValue = "";
+
+			// status
+			$this->status->LinkCustomAttributes = "";
+			$this->status->HrefValue = "";
+			$this->status->TooltipValue = "";
 		} elseif ($this->RowType == EW_ROWTYPE_EDIT) { // Edit row
 
 			// id_pedidos
@@ -1060,6 +1082,10 @@ class cpedidos_edit extends cpedidos {
 			$this->id_cliente->EditValue = ew_HtmlEncode($this->id_cliente->CurrentValue);
 			$this->id_cliente->PlaceHolder = ew_RemoveHtml($this->id_cliente->FldCaption());
 
+			// status
+			$this->status->EditCustomAttributes = "";
+			$this->status->EditValue = $this->status->Options(FALSE);
+
 			// Edit refer script
 			// id_pedidos
 
@@ -1109,6 +1135,10 @@ class cpedidos_edit extends cpedidos {
 			// id_cliente
 			$this->id_cliente->LinkCustomAttributes = "";
 			$this->id_cliente->HrefValue = "";
+
+			// status
+			$this->status->LinkCustomAttributes = "";
+			$this->status->HrefValue = "";
 		}
 		if ($this->RowType == EW_ROWTYPE_ADD || $this->RowType == EW_ROWTYPE_EDIT || $this->RowType == EW_ROWTYPE_SEARCH) // Add/Edit/Search row
 			$this->SetupFieldTitles();
@@ -1131,11 +1161,17 @@ class cpedidos_edit extends cpedidos {
 		if (!$this->tipo_pedido->FldIsDetailKey && !is_null($this->tipo_pedido->FormValue) && $this->tipo_pedido->FormValue == "") {
 			ew_AddMessage($gsFormError, str_replace("%s", $this->tipo_pedido->FldCaption(), $this->tipo_pedido->ReqErrMsg));
 		}
+		if (!$this->numero->FldIsDetailKey && !is_null($this->numero->FormValue) && $this->numero->FormValue == "") {
+			ew_AddMessage($gsFormError, str_replace("%s", $this->numero->FldCaption(), $this->numero->ReqErrMsg));
+		}
 		if (!ew_CheckInteger($this->numero->FormValue)) {
 			ew_AddMessage($gsFormError, $this->numero->FldErrMsg());
 		}
 		if (!ew_CheckInteger($this->id_cliente->FormValue)) {
 			ew_AddMessage($gsFormError, $this->id_cliente->FldErrMsg());
+		}
+		if ($this->status->FormValue == "") {
+			ew_AddMessage($gsFormError, str_replace("%s", $this->status->FldCaption(), $this->status->ReqErrMsg));
 		}
 
 		// Validate detail grid
@@ -1218,6 +1254,9 @@ class cpedidos_edit extends cpedidos {
 
 			// id_cliente
 			$this->id_cliente->SetDbValueDef($rsnew, $this->id_cliente->CurrentValue, NULL, $this->id_cliente->ReadOnly);
+
+			// status
+			$this->status->SetDbValueDef($rsnew, $this->status->CurrentValue, 0, $this->status->ReadOnly);
 
 			// Call Row Updating event
 			$bUpdateRow = $this->Row_Updating($rsold, $rsnew);
@@ -1485,11 +1524,17 @@ fpedidosedit.Validate = function() {
 			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
 				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $pedidos->tipo_pedido->FldCaption(), $pedidos->tipo_pedido->ReqErrMsg)) ?>");
 			elm = this.GetElements("x" + infix + "_numero");
+			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
+				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $pedidos->numero->FldCaption(), $pedidos->numero->ReqErrMsg)) ?>");
+			elm = this.GetElements("x" + infix + "_numero");
 			if (elm && !ew_CheckInteger(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($pedidos->numero->FldErrMsg()) ?>");
 			elm = this.GetElements("x" + infix + "_id_cliente");
 			if (elm && !ew_CheckInteger(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($pedidos->id_cliente->FldErrMsg()) ?>");
+			elm = this.GetElements("x" + infix + "_status");
+			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
+				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $pedidos->status->FldCaption(), $pedidos->status->ReqErrMsg)) ?>");
 
 			// Fire Form_CustomValidate event
 			if (!this.Form_CustomValidate(fobj))
@@ -1531,6 +1576,8 @@ fpedidosedit.Lists["x_id_representante"] = {"LinkField":"x_id_representantes","A
 fpedidosedit.Lists["x_id_representante"].Data = "<?php echo $pedidos_edit->id_representante->LookupFilterQuery(FALSE, "edit") ?>";
 fpedidosedit.Lists["x_comissao_representante"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
 fpedidosedit.Lists["x_comissao_representante"].Options = <?php echo json_encode($pedidos_edit->comissao_representante->Options()) ?>;
+fpedidosedit.Lists["x_status"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
+fpedidosedit.Lists["x_status"].Options = <?php echo json_encode($pedidos_edit->status->Options()) ?>;
 
 // Form object for search
 </script>
@@ -1576,7 +1623,7 @@ $pedidos_edit->ShowMessage();
 <?php } ?>
 <?php if ($pedidos->numero->Visible) { // numero ?>
 	<div id="r_numero" class="form-group">
-		<label id="elh_pedidos_numero" for="x_numero" class="<?php echo $pedidos_edit->LeftColumnClass ?>"><?php echo $pedidos->numero->FldCaption() ?></label>
+		<label id="elh_pedidos_numero" for="x_numero" class="<?php echo $pedidos_edit->LeftColumnClass ?>"><?php echo $pedidos->numero->FldCaption() ?><?php echo $Language->Phrase("FieldRequiredIndicator") ?></label>
 		<div class="<?php echo $pedidos_edit->RightColumnClass ?>"><div<?php echo $pedidos->numero->CellAttributes() ?>>
 <span id="el_pedidos_numero">
 <input type="text" data-table="pedidos" data-field="x_numero" name="x_numero" id="x_numero" size="30" placeholder="<?php echo ew_HtmlEncode($pedidos->numero->getPlaceHolder()) ?>" value="<?php echo $pedidos->numero->EditValue ?>"<?php echo $pedidos->numero->EditAttributes() ?>>
@@ -1666,6 +1713,19 @@ $pedidos_edit->ShowMessage();
 <input type="text" data-table="pedidos" data-field="x_id_cliente" name="x_id_cliente" id="x_id_cliente" size="30" placeholder="<?php echo ew_HtmlEncode($pedidos->id_cliente->getPlaceHolder()) ?>" value="<?php echo $pedidos->id_cliente->EditValue ?>"<?php echo $pedidos->id_cliente->EditAttributes() ?>>
 </span>
 <?php echo $pedidos->id_cliente->CustomMsg ?></div></div>
+	</div>
+<?php } ?>
+<?php if ($pedidos->status->Visible) { // status ?>
+	<div id="r_status" class="form-group">
+		<label id="elh_pedidos_status" class="<?php echo $pedidos_edit->LeftColumnClass ?>"><?php echo $pedidos->status->FldCaption() ?><?php echo $Language->Phrase("FieldRequiredIndicator") ?></label>
+		<div class="<?php echo $pedidos_edit->RightColumnClass ?>"><div<?php echo $pedidos->status->CellAttributes() ?>>
+<span id="el_pedidos_status">
+<div id="tp_x_status" class="ewTemplate"><input type="radio" data-table="pedidos" data-field="x_status" data-value-separator="<?php echo $pedidos->status->DisplayValueSeparatorAttribute() ?>" name="x_status" id="x_status" value="{value}"<?php echo $pedidos->status->EditAttributes() ?>></div>
+<div id="dsl_x_status" data-repeatcolumn="5" class="ewItemList" style="display: none;"><div>
+<?php echo $pedidos->status->RadioButtonListHtml(FALSE, "x_status") ?>
+</div></div>
+</span>
+<?php echo $pedidos->status->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
 </div><!-- /page* -->

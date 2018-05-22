@@ -1277,7 +1277,15 @@ class cdetalhe_pedido_list extends cdetalhe_pedido {
 		// quantidade
 		// custo
 		// id_desconto
+		// Accumulate aggregate value
 
+		if ($this->RowType <> EW_ROWTYPE_AGGREGATEINIT && $this->RowType <> EW_ROWTYPE_AGGREGATE) {
+			$this->quantidade->Count++; // Increment count
+			if (is_numeric($this->quantidade->CurrentValue))
+				$this->quantidade->Total += $this->quantidade->CurrentValue; // Accumulate total
+			if (is_numeric($this->custo->CurrentValue))
+				$this->custo->Total += $this->custo->CurrentValue; // Accumulate total
+		}
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
 		// id_detalhe
@@ -1371,6 +1379,21 @@ class cdetalhe_pedido_list extends cdetalhe_pedido {
 			$this->id_desconto->LinkCustomAttributes = "";
 			$this->id_desconto->HrefValue = "";
 			$this->id_desconto->TooltipValue = "";
+		} elseif ($this->RowType == EW_ROWTYPE_AGGREGATEINIT) { // Initialize aggregate row
+			$this->quantidade->Count = 0; // Initialize count
+			$this->quantidade->Total = 0; // Initialize total
+			$this->custo->Total = 0; // Initialize total
+		} elseif ($this->RowType == EW_ROWTYPE_AGGREGATE) { // Aggregate row
+			if ($this->quantidade->Count > 0) {
+				$this->quantidade->CurrentValue = $this->quantidade->Total / $this->quantidade->Count;
+			}
+			$this->quantidade->ViewValue = $this->quantidade->CurrentValue;
+			$this->quantidade->ViewCustomAttributes = "";
+			$this->quantidade->HrefValue = ""; // Clear href value
+			$this->custo->CurrentValue = $this->custo->Total;
+			$this->custo->ViewValue = $this->custo->CurrentValue;
+			$this->custo->ViewCustomAttributes = "";
+			$this->custo->HrefValue = ""; // Clear href value
 		}
 
 		// Call Row Rendered event
@@ -2080,6 +2103,64 @@ $detalhe_pedido_list->ListOptions->Render("body", "right", $detalhe_pedido_list-
 }
 ?>
 </tbody>
+<?php
+
+// Render aggregate row
+$detalhe_pedido->RowType = EW_ROWTYPE_AGGREGATE;
+$detalhe_pedido->ResetAttrs();
+$detalhe_pedido_list->RenderRow();
+?>
+<?php if ($detalhe_pedido_list->TotalRecs > 0 && ($detalhe_pedido->CurrentAction <> "gridadd" && $detalhe_pedido->CurrentAction <> "gridedit")) { ?>
+<tfoot><!-- Table footer -->
+	<tr class="ewTableFooter">
+<?php
+
+// Render list options
+$detalhe_pedido_list->RenderListOptions();
+
+// Render list options (footer, left)
+$detalhe_pedido_list->ListOptions->Render("footer", "left");
+?>
+	<?php if ($detalhe_pedido->id_detalhe->Visible) { // id_detalhe ?>
+		<td data-name="id_detalhe" class="<?php echo $detalhe_pedido->id_detalhe->FooterCellClass() ?>"><span id="elf_detalhe_pedido_id_detalhe" class="detalhe_pedido_id_detalhe">
+		&nbsp;
+		</span></td>
+	<?php } ?>
+	<?php if ($detalhe_pedido->numero_pedido->Visible) { // numero_pedido ?>
+		<td data-name="numero_pedido" class="<?php echo $detalhe_pedido->numero_pedido->FooterCellClass() ?>"><span id="elf_detalhe_pedido_numero_pedido" class="detalhe_pedido_numero_pedido">
+		&nbsp;
+		</span></td>
+	<?php } ?>
+	<?php if ($detalhe_pedido->id_produto->Visible) { // id_produto ?>
+		<td data-name="id_produto" class="<?php echo $detalhe_pedido->id_produto->FooterCellClass() ?>"><span id="elf_detalhe_pedido_id_produto" class="detalhe_pedido_id_produto">
+		&nbsp;
+		</span></td>
+	<?php } ?>
+	<?php if ($detalhe_pedido->quantidade->Visible) { // quantidade ?>
+		<td data-name="quantidade" class="<?php echo $detalhe_pedido->quantidade->FooterCellClass() ?>"><span id="elf_detalhe_pedido_quantidade" class="detalhe_pedido_quantidade">
+<span class="ewAggregate"><?php echo $Language->Phrase("AVERAGE") ?></span><span class="ewAggregateValue">
+<?php echo $detalhe_pedido->quantidade->ViewValue ?></span>
+		</span></td>
+	<?php } ?>
+	<?php if ($detalhe_pedido->custo->Visible) { // custo ?>
+		<td data-name="custo" class="<?php echo $detalhe_pedido->custo->FooterCellClass() ?>"><span id="elf_detalhe_pedido_custo" class="detalhe_pedido_custo">
+<span class="ewAggregate"><?php echo $Language->Phrase("TOTAL") ?></span><span class="ewAggregateValue">
+<?php echo $detalhe_pedido->custo->ViewValue ?></span>
+		</span></td>
+	<?php } ?>
+	<?php if ($detalhe_pedido->id_desconto->Visible) { // id_desconto ?>
+		<td data-name="id_desconto" class="<?php echo $detalhe_pedido->id_desconto->FooterCellClass() ?>"><span id="elf_detalhe_pedido_id_desconto" class="detalhe_pedido_id_desconto">
+		&nbsp;
+		</span></td>
+	<?php } ?>
+<?php
+
+// Render list options (footer, right)
+$detalhe_pedido_list->ListOptions->Render("footer", "right");
+?>
+	</tr>
+</tfoot>
+<?php } ?>
 </table>
 <?php } ?>
 <?php if ($detalhe_pedido->CurrentAction == "") { ?>

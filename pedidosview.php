@@ -350,6 +350,7 @@ class cpedidos_view extends cpedidos {
 		$this->id_representante->SetVisibility();
 		$this->comissao_representante->SetVisibility();
 		$this->id_cliente->SetVisibility();
+		$this->status->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -692,6 +693,7 @@ class cpedidos_view extends cpedidos {
 		$this->id_representante->setDbValue($row['id_representante']);
 		$this->comissao_representante->setDbValue($row['comissao_representante']);
 		$this->id_cliente->setDbValue($row['id_cliente']);
+		$this->status->setDbValue($row['status']);
 		if (!isset($GLOBALS["detalhe_pedido_grid"])) $GLOBALS["detalhe_pedido_grid"] = new cdetalhe_pedido_grid;
 		$sDetailFilter = $GLOBALS["detalhe_pedido"]->SqlDetailFilter_pedidos();
 		$sDetailFilter = str_replace("@numero_pedido@", ew_AdjustSql($this->numero->DbValue, "DB"), $sDetailFilter);
@@ -715,6 +717,7 @@ class cpedidos_view extends cpedidos {
 		$row['id_representante'] = NULL;
 		$row['comissao_representante'] = NULL;
 		$row['id_cliente'] = NULL;
+		$row['status'] = NULL;
 		return $row;
 	}
 
@@ -735,6 +738,7 @@ class cpedidos_view extends cpedidos {
 		$this->id_representante->DbValue = $row['id_representante'];
 		$this->comissao_representante->DbValue = $row['comissao_representante'];
 		$this->id_cliente->DbValue = $row['id_cliente'];
+		$this->status->DbValue = $row['status'];
 	}
 
 	// Render row values based on field settings
@@ -765,6 +769,7 @@ class cpedidos_view extends cpedidos {
 		// id_representante
 		// comissao_representante
 		// id_cliente
+		// status
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -903,6 +908,14 @@ class cpedidos_view extends cpedidos {
 		$this->id_cliente->ViewValue = $this->id_cliente->CurrentValue;
 		$this->id_cliente->ViewCustomAttributes = "";
 
+		// status
+		if (strval($this->status->CurrentValue) <> "") {
+			$this->status->ViewValue = $this->status->OptionCaption($this->status->CurrentValue);
+		} else {
+			$this->status->ViewValue = NULL;
+		}
+		$this->status->ViewCustomAttributes = "";
+
 			// tipo_pedido
 			$this->tipo_pedido->LinkCustomAttributes = "";
 			$this->tipo_pedido->HrefValue = "";
@@ -947,6 +960,11 @@ class cpedidos_view extends cpedidos {
 			$this->id_cliente->LinkCustomAttributes = "";
 			$this->id_cliente->HrefValue = "";
 			$this->id_cliente->TooltipValue = "";
+
+			// status
+			$this->status->LinkCustomAttributes = "";
+			$this->status->HrefValue = "";
+			$this->status->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -1145,6 +1163,8 @@ fpedidosview.Lists["x_id_representante"] = {"LinkField":"x_id_representantes","A
 fpedidosview.Lists["x_id_representante"].Data = "<?php echo $pedidos_view->id_representante->LookupFilterQuery(FALSE, "view") ?>";
 fpedidosview.Lists["x_comissao_representante"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
 fpedidosview.Lists["x_comissao_representante"].Options = <?php echo json_encode($pedidos_view->comissao_representante->Options()) ?>;
+fpedidosview.Lists["x_status"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
+fpedidosview.Lists["x_status"].Options = <?php echo json_encode($pedidos_view->status->Options()) ?>;
 
 // Form object for search
 </script>
@@ -1266,6 +1286,17 @@ $pedidos_view->ShowMessage();
 <span id="el_pedidos_id_cliente">
 <span<?php echo $pedidos->id_cliente->ViewAttributes() ?>>
 <?php echo $pedidos->id_cliente->ViewValue ?></span>
+</span>
+</td>
+	</tr>
+<?php } ?>
+<?php if ($pedidos->status->Visible) { // status ?>
+	<tr id="r_status">
+		<td class="col-sm-2"><span id="elh_pedidos_status"><?php echo $pedidos->status->FldCaption() ?></span></td>
+		<td data-name="status"<?php echo $pedidos->status->CellAttributes() ?>>
+<span id="el_pedidos_status">
+<span<?php echo $pedidos->status->ViewAttributes() ?>>
+<?php echo $pedidos->status->ViewValue ?></span>
 </span>
 </td>
 	</tr>

@@ -15,6 +15,7 @@ class cprodutos extends cTable {
 	var $id_marca_produto;
 	var $status_produto;
 	var $unidade_medida_produto;
+	var $unidades;
 	var $peso_produto;
 	var $data_adicionado;
 	var $hora_adicionado;
@@ -91,8 +92,9 @@ class cprodutos extends cTable {
 		$this->fields['id_marca_produto'] = &$this->id_marca_produto;
 
 		// status_produto
-		$this->status_produto = new cField('produtos', 'produtos', 'x_status_produto', 'status_produto', '`status_produto`', '`status_produto`', 3, -1, FALSE, '`status_produto`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->status_produto = new cField('produtos', 'produtos', 'x_status_produto', 'status_produto', '`status_produto`', '`status_produto`', 3, -1, FALSE, '`status_produto`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'RADIO');
 		$this->status_produto->Sortable = TRUE; // Allow sort
+		$this->status_produto->OptionCount = 2;
 		$this->status_produto->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['status_produto'] = &$this->status_produto;
 
@@ -100,6 +102,12 @@ class cprodutos extends cTable {
 		$this->unidade_medida_produto = new cField('produtos', 'produtos', 'x_unidade_medida_produto', 'unidade_medida_produto', '`unidade_medida_produto`', '`unidade_medida_produto`', 200, -1, FALSE, '`unidade_medida_produto`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
 		$this->unidade_medida_produto->Sortable = TRUE; // Allow sort
 		$this->fields['unidade_medida_produto'] = &$this->unidade_medida_produto;
+
+		// unidades
+		$this->unidades = new cField('produtos', 'produtos', 'x_unidades', 'unidades', '`unidades`', '`unidades`', 3, -1, FALSE, '`unidades`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->unidades->Sortable = TRUE; // Allow sort
+		$this->unidades->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
+		$this->fields['unidades'] = &$this->unidades;
 
 		// peso_produto
 		$this->peso_produto = new cField('produtos', 'produtos', 'x_peso_produto', 'peso_produto', '`peso_produto`', '`peso_produto`', 200, -1, FALSE, '`peso_produto`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
@@ -669,6 +677,7 @@ class cprodutos extends cTable {
 		$this->id_marca_produto->setDbValue($rs->fields('id_marca_produto'));
 		$this->status_produto->setDbValue($rs->fields('status_produto'));
 		$this->unidade_medida_produto->setDbValue($rs->fields('unidade_medida_produto'));
+		$this->unidades->setDbValue($rs->fields('unidades'));
 		$this->peso_produto->setDbValue($rs->fields('peso_produto'));
 		$this->data_adicionado->setDbValue($rs->fields('data_adicionado'));
 		$this->hora_adicionado->setDbValue($rs->fields('hora_adicionado'));
@@ -696,6 +705,7 @@ class cprodutos extends cTable {
 		// id_marca_produto
 		// status_produto
 		// unidade_medida_produto
+		// unidades
 		// peso_produto
 		// data_adicionado
 		// hora_adicionado
@@ -747,12 +757,20 @@ class cprodutos extends cTable {
 		$this->id_marca_produto->ViewCustomAttributes = "";
 
 		// status_produto
-		$this->status_produto->ViewValue = $this->status_produto->CurrentValue;
+		if (strval($this->status_produto->CurrentValue) <> "") {
+			$this->status_produto->ViewValue = $this->status_produto->OptionCaption($this->status_produto->CurrentValue);
+		} else {
+			$this->status_produto->ViewValue = NULL;
+		}
 		$this->status_produto->ViewCustomAttributes = "";
 
 		// unidade_medida_produto
 		$this->unidade_medida_produto->ViewValue = $this->unidade_medida_produto->CurrentValue;
 		$this->unidade_medida_produto->ViewCustomAttributes = "";
+
+		// unidades
+		$this->unidades->ViewValue = $this->unidades->CurrentValue;
+		$this->unidades->ViewCustomAttributes = "";
 
 		// peso_produto
 		$this->peso_produto->ViewValue = $this->peso_produto->CurrentValue;
@@ -819,6 +837,11 @@ class cprodutos extends cTable {
 		$this->unidade_medida_produto->LinkCustomAttributes = "";
 		$this->unidade_medida_produto->HrefValue = "";
 		$this->unidade_medida_produto->TooltipValue = "";
+
+		// unidades
+		$this->unidades->LinkCustomAttributes = "";
+		$this->unidades->HrefValue = "";
+		$this->unidades->TooltipValue = "";
 
 		// peso_produto
 		$this->peso_produto->LinkCustomAttributes = "";
@@ -899,16 +922,20 @@ class cprodutos extends cTable {
 		$this->id_marca_produto->EditCustomAttributes = "";
 
 		// status_produto
-		$this->status_produto->EditAttrs["class"] = "form-control";
 		$this->status_produto->EditCustomAttributes = "";
-		$this->status_produto->EditValue = $this->status_produto->CurrentValue;
-		$this->status_produto->PlaceHolder = ew_RemoveHtml($this->status_produto->FldCaption());
+		$this->status_produto->EditValue = $this->status_produto->Options(FALSE);
 
 		// unidade_medida_produto
 		$this->unidade_medida_produto->EditAttrs["class"] = "form-control";
 		$this->unidade_medida_produto->EditCustomAttributes = "";
 		$this->unidade_medida_produto->EditValue = $this->unidade_medida_produto->CurrentValue;
 		$this->unidade_medida_produto->PlaceHolder = ew_RemoveHtml($this->unidade_medida_produto->FldCaption());
+
+		// unidades
+		$this->unidades->EditAttrs["class"] = "form-control";
+		$this->unidades->EditCustomAttributes = "";
+		$this->unidades->EditValue = $this->unidades->CurrentValue;
+		$this->unidades->PlaceHolder = ew_RemoveHtml($this->unidades->FldCaption());
 
 		// peso_produto
 		$this->peso_produto->EditAttrs["class"] = "form-control";
@@ -971,6 +998,7 @@ class cprodutos extends cTable {
 					if ($this->id_marca_produto->Exportable) $Doc->ExportCaption($this->id_marca_produto);
 					if ($this->status_produto->Exportable) $Doc->ExportCaption($this->status_produto);
 					if ($this->unidade_medida_produto->Exportable) $Doc->ExportCaption($this->unidade_medida_produto);
+					if ($this->unidades->Exportable) $Doc->ExportCaption($this->unidades);
 					if ($this->peso_produto->Exportable) $Doc->ExportCaption($this->peso_produto);
 					if ($this->preco_produto->Exportable) $Doc->ExportCaption($this->preco_produto);
 					if ($this->descricao->Exportable) $Doc->ExportCaption($this->descricao);
@@ -983,6 +1011,7 @@ class cprodutos extends cTable {
 					if ($this->id_marca_produto->Exportable) $Doc->ExportCaption($this->id_marca_produto);
 					if ($this->status_produto->Exportable) $Doc->ExportCaption($this->status_produto);
 					if ($this->unidade_medida_produto->Exportable) $Doc->ExportCaption($this->unidade_medida_produto);
+					if ($this->unidades->Exportable) $Doc->ExportCaption($this->unidades);
 					if ($this->peso_produto->Exportable) $Doc->ExportCaption($this->peso_produto);
 					if ($this->data_adicionado->Exportable) $Doc->ExportCaption($this->data_adicionado);
 					if ($this->hora_adicionado->Exportable) $Doc->ExportCaption($this->hora_adicionado);
@@ -1026,6 +1055,7 @@ class cprodutos extends cTable {
 						if ($this->id_marca_produto->Exportable) $Doc->ExportField($this->id_marca_produto);
 						if ($this->status_produto->Exportable) $Doc->ExportField($this->status_produto);
 						if ($this->unidade_medida_produto->Exportable) $Doc->ExportField($this->unidade_medida_produto);
+						if ($this->unidades->Exportable) $Doc->ExportField($this->unidades);
 						if ($this->peso_produto->Exportable) $Doc->ExportField($this->peso_produto);
 						if ($this->preco_produto->Exportable) $Doc->ExportField($this->preco_produto);
 						if ($this->descricao->Exportable) $Doc->ExportField($this->descricao);
@@ -1038,6 +1068,7 @@ class cprodutos extends cTable {
 						if ($this->id_marca_produto->Exportable) $Doc->ExportField($this->id_marca_produto);
 						if ($this->status_produto->Exportable) $Doc->ExportField($this->status_produto);
 						if ($this->unidade_medida_produto->Exportable) $Doc->ExportField($this->unidade_medida_produto);
+						if ($this->unidades->Exportable) $Doc->ExportField($this->unidades);
 						if ($this->peso_produto->Exportable) $Doc->ExportField($this->peso_produto);
 						if ($this->data_adicionado->Exportable) $Doc->ExportField($this->data_adicionado);
 						if ($this->hora_adicionado->Exportable) $Doc->ExportField($this->hora_adicionado);

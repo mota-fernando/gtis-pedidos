@@ -837,10 +837,25 @@ class cdetalhe_pedido extends cTable {
 
 	// Aggregate list row values
 	function AggregateListRowValues() {
+			$this->quantidade->Count++; // Increment count
+			if (is_numeric($this->quantidade->CurrentValue))
+				$this->quantidade->Total += $this->quantidade->CurrentValue; // Accumulate total
+			if (is_numeric($this->custo->CurrentValue))
+				$this->custo->Total += $this->custo->CurrentValue; // Accumulate total
 	}
 
 	// Aggregate list row (for rendering)
 	function AggregateListRow() {
+			if ($this->quantidade->Count > 0) {
+				$this->quantidade->CurrentValue = $this->quantidade->Total / $this->quantidade->Count;
+			}
+			$this->quantidade->ViewValue = $this->quantidade->CurrentValue;
+			$this->quantidade->ViewCustomAttributes = "";
+			$this->quantidade->HrefValue = ""; // Clear href value
+			$this->custo->CurrentValue = $this->custo->Total;
+			$this->custo->ViewValue = $this->custo->CurrentValue;
+			$this->custo->ViewCustomAttributes = "";
+			$this->custo->HrefValue = ""; // Clear href value
 
 		// Call Row Rendered event
 		$this->Row_Rendered();
@@ -893,6 +908,7 @@ class cdetalhe_pedido extends cTable {
 						$Doc->ExportPageBreak();
 				}
 				$this->LoadListRowValues($Recordset);
+				$this->AggregateListRowValues(); // Aggregate row values
 
 				// Render row
 				$this->RowType = EW_ROWTYPE_VIEW; // Render view
@@ -922,6 +938,23 @@ class cdetalhe_pedido extends cTable {
 			if ($Doc->ExportCustom)
 				$this->Row_Export($Recordset->fields);
 			$Recordset->MoveNext();
+		}
+
+		// Export aggregates (horizontal format only)
+		if ($Doc->Horizontal) {
+			$this->RowType = EW_ROWTYPE_AGGREGATE;
+			$this->ResetAttrs();
+			$this->AggregateListRow();
+			if (!$Doc->ExportCustom) {
+				$Doc->BeginExportRow(-1);
+				if ($this->id_detalhe->Exportable) $Doc->ExportAggregate($this->id_detalhe, '');
+				if ($this->numero_pedido->Exportable) $Doc->ExportAggregate($this->numero_pedido, '');
+				if ($this->id_produto->Exportable) $Doc->ExportAggregate($this->id_produto, '');
+				if ($this->quantidade->Exportable) $Doc->ExportAggregate($this->quantidade, 'AVERAGE');
+				if ($this->custo->Exportable) $Doc->ExportAggregate($this->custo, 'TOTAL');
+				if ($this->id_desconto->Exportable) $Doc->ExportAggregate($this->id_desconto, '');
+				$Doc->EndExportRow();
+			}
 		}
 		if (!$Doc->ExportCustom) {
 			$Doc->ExportTableFooter();

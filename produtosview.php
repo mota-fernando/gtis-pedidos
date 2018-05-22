@@ -346,6 +346,7 @@ class cprodutos_view extends cprodutos {
 		$this->id_marca_produto->SetVisibility();
 		$this->status_produto->SetVisibility();
 		$this->unidade_medida_produto->SetVisibility();
+		$this->unidades->SetVisibility();
 		$this->peso_produto->SetVisibility();
 		$this->preco_produto->SetVisibility();
 		$this->descricao->SetVisibility();
@@ -622,6 +623,7 @@ class cprodutos_view extends cprodutos {
 		$this->id_marca_produto->setDbValue($row['id_marca_produto']);
 		$this->status_produto->setDbValue($row['status_produto']);
 		$this->unidade_medida_produto->setDbValue($row['unidade_medida_produto']);
+		$this->unidades->setDbValue($row['unidades']);
 		$this->peso_produto->setDbValue($row['peso_produto']);
 		$this->data_adicionado->setDbValue($row['data_adicionado']);
 		$this->hora_adicionado->setDbValue($row['hora_adicionado']);
@@ -641,6 +643,7 @@ class cprodutos_view extends cprodutos {
 		$row['id_marca_produto'] = NULL;
 		$row['status_produto'] = NULL;
 		$row['unidade_medida_produto'] = NULL;
+		$row['unidades'] = NULL;
 		$row['peso_produto'] = NULL;
 		$row['data_adicionado'] = NULL;
 		$row['hora_adicionado'] = NULL;
@@ -663,6 +666,7 @@ class cprodutos_view extends cprodutos {
 		$this->id_marca_produto->DbValue = $row['id_marca_produto'];
 		$this->status_produto->DbValue = $row['status_produto'];
 		$this->unidade_medida_produto->DbValue = $row['unidade_medida_produto'];
+		$this->unidades->DbValue = $row['unidades'];
 		$this->peso_produto->DbValue = $row['peso_produto'];
 		$this->data_adicionado->DbValue = $row['data_adicionado'];
 		$this->hora_adicionado->DbValue = $row['hora_adicionado'];
@@ -699,6 +703,7 @@ class cprodutos_view extends cprodutos {
 		// id_marca_produto
 		// status_produto
 		// unidade_medida_produto
+		// unidades
 		// peso_produto
 		// data_adicionado
 		// hora_adicionado
@@ -748,12 +753,20 @@ class cprodutos_view extends cprodutos {
 		$this->id_marca_produto->ViewCustomAttributes = "";
 
 		// status_produto
-		$this->status_produto->ViewValue = $this->status_produto->CurrentValue;
+		if (strval($this->status_produto->CurrentValue) <> "") {
+			$this->status_produto->ViewValue = $this->status_produto->OptionCaption($this->status_produto->CurrentValue);
+		} else {
+			$this->status_produto->ViewValue = NULL;
+		}
 		$this->status_produto->ViewCustomAttributes = "";
 
 		// unidade_medida_produto
 		$this->unidade_medida_produto->ViewValue = $this->unidade_medida_produto->CurrentValue;
 		$this->unidade_medida_produto->ViewCustomAttributes = "";
+
+		// unidades
+		$this->unidades->ViewValue = $this->unidades->CurrentValue;
+		$this->unidades->ViewCustomAttributes = "";
 
 		// peso_produto
 		$this->peso_produto->ViewValue = $this->peso_produto->CurrentValue;
@@ -810,6 +823,11 @@ class cprodutos_view extends cprodutos {
 			$this->unidade_medida_produto->LinkCustomAttributes = "";
 			$this->unidade_medida_produto->HrefValue = "";
 			$this->unidade_medida_produto->TooltipValue = "";
+
+			// unidades
+			$this->unidades->LinkCustomAttributes = "";
+			$this->unidades->HrefValue = "";
+			$this->unidades->TooltipValue = "";
 
 			// peso_produto
 			$this->peso_produto->LinkCustomAttributes = "";
@@ -989,6 +1007,8 @@ fprodutosview.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 // Dynamic selection lists
 fprodutosview.Lists["x_id_marca_produto"] = {"LinkField":"x_id_marca","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_marca","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"marcas"};
 fprodutosview.Lists["x_id_marca_produto"].Data = "<?php echo $produtos_view->id_marca_produto->LookupFilterQuery(FALSE, "view") ?>";
+fprodutosview.Lists["x_status_produto"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
+fprodutosview.Lists["x_status_produto"].Options = <?php echo json_encode($produtos_view->status_produto->Options()) ?>;
 
 // Form object for search
 </script>
@@ -1077,6 +1097,17 @@ $produtos_view->ShowMessage();
 <span id="el_produtos_unidade_medida_produto">
 <span<?php echo $produtos->unidade_medida_produto->ViewAttributes() ?>>
 <?php echo $produtos->unidade_medida_produto->ViewValue ?></span>
+</span>
+</td>
+	</tr>
+<?php } ?>
+<?php if ($produtos->unidades->Visible) { // unidades ?>
+	<tr id="r_unidades">
+		<td class="col-sm-2"><span id="elh_produtos_unidades"><?php echo $produtos->unidades->FldCaption() ?></span></td>
+		<td data-name="unidades"<?php echo $produtos->unidades->CellAttributes() ?>>
+<span id="el_produtos_unidades">
+<span<?php echo $produtos->unidades->ViewAttributes() ?>>
+<?php echo $produtos->unidades->ViewValue ?></span>
 </span>
 </td>
 	</tr>

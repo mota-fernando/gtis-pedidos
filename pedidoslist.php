@@ -432,6 +432,7 @@ class cpedidos_list extends cpedidos {
 		$this->id_representante->SetVisibility();
 		$this->comissao_representante->SetVisibility();
 		$this->id_cliente->SetVisibility();
+		$this->status->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -746,6 +747,7 @@ class cpedidos_list extends cpedidos {
 			$this->UpdateSort($this->id_representante); // id_representante
 			$this->UpdateSort($this->comissao_representante); // comissao_representante
 			$this->UpdateSort($this->id_cliente); // id_cliente
+			$this->UpdateSort($this->status); // status
 			$this->setStartRecordNumber(1); // Reset start position
 		}
 	}
@@ -786,6 +788,7 @@ class cpedidos_list extends cpedidos {
 				$this->id_representante->setSort("");
 				$this->comissao_representante->setSort("");
 				$this->id_cliente->setSort("");
+				$this->status->setSort("");
 			}
 
 			// Reset start position
@@ -1319,6 +1322,7 @@ class cpedidos_list extends cpedidos {
 		$this->id_representante->setDbValue($row['id_representante']);
 		$this->comissao_representante->setDbValue($row['comissao_representante']);
 		$this->id_cliente->setDbValue($row['id_cliente']);
+		$this->status->setDbValue($row['status']);
 		if (!isset($GLOBALS["detalhe_pedido_grid"])) $GLOBALS["detalhe_pedido_grid"] = new cdetalhe_pedido_grid;
 		$sDetailFilter = $GLOBALS["detalhe_pedido"]->SqlDetailFilter_pedidos();
 		$sDetailFilter = str_replace("@numero_pedido@", ew_AdjustSql($this->numero->DbValue, "DB"), $sDetailFilter);
@@ -1342,6 +1346,7 @@ class cpedidos_list extends cpedidos {
 		$row['id_representante'] = NULL;
 		$row['comissao_representante'] = NULL;
 		$row['id_cliente'] = NULL;
+		$row['status'] = NULL;
 		return $row;
 	}
 
@@ -1362,6 +1367,7 @@ class cpedidos_list extends cpedidos {
 		$this->id_representante->DbValue = $row['id_representante'];
 		$this->comissao_representante->DbValue = $row['comissao_representante'];
 		$this->id_cliente->DbValue = $row['id_cliente'];
+		$this->status->DbValue = $row['status'];
 	}
 
 	// Load old record
@@ -1414,6 +1420,7 @@ class cpedidos_list extends cpedidos {
 		// id_representante
 		// comissao_representante
 		// id_cliente
+		// status
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -1552,6 +1559,14 @@ class cpedidos_list extends cpedidos {
 		$this->id_cliente->ViewValue = $this->id_cliente->CurrentValue;
 		$this->id_cliente->ViewCustomAttributes = "";
 
+		// status
+		if (strval($this->status->CurrentValue) <> "") {
+			$this->status->ViewValue = $this->status->OptionCaption($this->status->CurrentValue);
+		} else {
+			$this->status->ViewValue = NULL;
+		}
+		$this->status->ViewCustomAttributes = "";
+
 			// id_pedidos
 			$this->id_pedidos->LinkCustomAttributes = "";
 			$this->id_pedidos->HrefValue = "";
@@ -1611,6 +1626,11 @@ class cpedidos_list extends cpedidos {
 			$this->id_cliente->LinkCustomAttributes = "";
 			$this->id_cliente->HrefValue = "";
 			$this->id_cliente->TooltipValue = "";
+
+			// status
+			$this->status->LinkCustomAttributes = "";
+			$this->status->HrefValue = "";
+			$this->status->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -1976,6 +1996,8 @@ fpedidoslist.Lists["x_id_representante"] = {"LinkField":"x_id_representantes","A
 fpedidoslist.Lists["x_id_representante"].Data = "<?php echo $pedidos_list->id_representante->LookupFilterQuery(FALSE, "list") ?>";
 fpedidoslist.Lists["x_comissao_representante"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
 fpedidoslist.Lists["x_comissao_representante"].Options = <?php echo json_encode($pedidos_list->comissao_representante->Options()) ?>;
+fpedidoslist.Lists["x_status"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
+fpedidoslist.Lists["x_status"].Options = <?php echo json_encode($pedidos_list->status->Options()) ?>;
 
 // Form object for search
 </script>
@@ -2154,6 +2176,15 @@ $pedidos_list->ListOptions->Render("header", "left");
 		</div></div></th>
 	<?php } ?>
 <?php } ?>
+<?php if ($pedidos->status->Visible) { // status ?>
+	<?php if ($pedidos->SortUrl($pedidos->status) == "") { ?>
+		<th data-name="status" class="<?php echo $pedidos->status->HeaderCellClass() ?>"><div id="elh_pedidos_status" class="pedidos_status"><div class="ewTableHeaderCaption"><?php echo $pedidos->status->FldCaption() ?></div></div></th>
+	<?php } else { ?>
+		<th data-name="status" class="<?php echo $pedidos->status->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $pedidos->SortUrl($pedidos->status) ?>',1);"><div id="elh_pedidos_status" class="pedidos_status">
+			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $pedidos->status->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($pedidos->status->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($pedidos->status->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
+		</div></div></th>
+	<?php } ?>
+<?php } ?>
 <?php
 
 // Render list options (header, right)
@@ -2312,6 +2343,14 @@ $pedidos_list->ListOptions->Render("body", "left", $pedidos_list->RowCnt);
 <span id="el<?php echo $pedidos_list->RowCnt ?>_pedidos_id_cliente" class="pedidos_id_cliente">
 <span<?php echo $pedidos->id_cliente->ViewAttributes() ?>>
 <?php echo $pedidos->id_cliente->ListViewValue() ?></span>
+</span>
+</td>
+	<?php } ?>
+	<?php if ($pedidos->status->Visible) { // status ?>
+		<td data-name="status"<?php echo $pedidos->status->CellAttributes() ?>>
+<span id="el<?php echo $pedidos_list->RowCnt ?>_pedidos_status" class="pedidos_status">
+<span<?php echo $pedidos->status->ViewAttributes() ?>>
+<?php echo $pedidos->status->ListViewValue() ?></span>
 </span>
 </td>
 	<?php } ?>

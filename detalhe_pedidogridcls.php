@@ -1644,8 +1644,17 @@ class cdetalhe_pedido_grid extends cdetalhe_pedido {
 		if (!ew_CheckInteger($this->numero_pedido->FormValue)) {
 			ew_AddMessage($gsFormError, $this->numero_pedido->FldErrMsg());
 		}
+		if (!$this->id_produto->FldIsDetailKey && !is_null($this->id_produto->FormValue) && $this->id_produto->FormValue == "") {
+			ew_AddMessage($gsFormError, str_replace("%s", $this->id_produto->FldCaption(), $this->id_produto->ReqErrMsg));
+		}
+		if (!$this->quantidade->FldIsDetailKey && !is_null($this->quantidade->FormValue) && $this->quantidade->FormValue == "") {
+			ew_AddMessage($gsFormError, str_replace("%s", $this->quantidade->FldCaption(), $this->quantidade->ReqErrMsg));
+		}
 		if (!ew_CheckInteger($this->quantidade->FormValue)) {
 			ew_AddMessage($gsFormError, $this->quantidade->FldErrMsg());
+		}
+		if (!$this->custo->FldIsDetailKey && !is_null($this->custo->FormValue) && $this->custo->FormValue == "") {
+			ew_AddMessage($gsFormError, str_replace("%s", $this->custo->FldCaption(), $this->custo->ReqErrMsg));
 		}
 		if (!ew_CheckNumber($this->custo->FormValue)) {
 			ew_AddMessage($gsFormError, $this->custo->FldErrMsg());

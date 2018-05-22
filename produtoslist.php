@@ -422,6 +422,7 @@ class cprodutos_list extends cprodutos {
 		$this->id_marca_produto->SetVisibility();
 		$this->status_produto->SetVisibility();
 		$this->unidade_medida_produto->SetVisibility();
+		$this->unidades->SetVisibility();
 		$this->peso_produto->SetVisibility();
 		$this->data_adicionado->SetVisibility();
 		if ($this->IsAddOrEdit())
@@ -773,6 +774,7 @@ class cprodutos_list extends cprodutos {
 		$sFilterList = ew_Concat($sFilterList, $this->id_marca_produto->AdvancedSearch->ToJson(), ","); // Field id_marca_produto
 		$sFilterList = ew_Concat($sFilterList, $this->status_produto->AdvancedSearch->ToJson(), ","); // Field status_produto
 		$sFilterList = ew_Concat($sFilterList, $this->unidade_medida_produto->AdvancedSearch->ToJson(), ","); // Field unidade_medida_produto
+		$sFilterList = ew_Concat($sFilterList, $this->unidades->AdvancedSearch->ToJson(), ","); // Field unidades
 		$sFilterList = ew_Concat($sFilterList, $this->peso_produto->AdvancedSearch->ToJson(), ","); // Field peso_produto
 		$sFilterList = ew_Concat($sFilterList, $this->data_adicionado->AdvancedSearch->ToJson(), ","); // Field data_adicionado
 		$sFilterList = ew_Concat($sFilterList, $this->hora_adicionado->AdvancedSearch->ToJson(), ","); // Field hora_adicionado
@@ -878,6 +880,14 @@ class cprodutos_list extends cprodutos {
 		$this->unidade_medida_produto->AdvancedSearch->SearchValue2 = @$filter["y_unidade_medida_produto"];
 		$this->unidade_medida_produto->AdvancedSearch->SearchOperator2 = @$filter["w_unidade_medida_produto"];
 		$this->unidade_medida_produto->AdvancedSearch->Save();
+
+		// Field unidades
+		$this->unidades->AdvancedSearch->SearchValue = @$filter["x_unidades"];
+		$this->unidades->AdvancedSearch->SearchOperator = @$filter["z_unidades"];
+		$this->unidades->AdvancedSearch->SearchCondition = @$filter["v_unidades"];
+		$this->unidades->AdvancedSearch->SearchValue2 = @$filter["y_unidades"];
+		$this->unidades->AdvancedSearch->SearchOperator2 = @$filter["w_unidades"];
+		$this->unidades->AdvancedSearch->Save();
 
 		// Field peso_produto
 		$this->peso_produto->AdvancedSearch->SearchValue = @$filter["x_peso_produto"];
@@ -1090,6 +1100,7 @@ class cprodutos_list extends cprodutos {
 			$this->UpdateSort($this->id_marca_produto); // id_marca_produto
 			$this->UpdateSort($this->status_produto); // status_produto
 			$this->UpdateSort($this->unidade_medida_produto); // unidade_medida_produto
+			$this->UpdateSort($this->unidades); // unidades
 			$this->UpdateSort($this->peso_produto); // peso_produto
 			$this->UpdateSort($this->data_adicionado); // data_adicionado
 			$this->UpdateSort($this->hora_adicionado); // hora_adicionado
@@ -1135,6 +1146,7 @@ class cprodutos_list extends cprodutos {
 				$this->id_marca_produto->setSort("");
 				$this->status_produto->setSort("");
 				$this->unidade_medida_produto->setSort("");
+				$this->unidades->setSort("");
 				$this->peso_produto->setSort("");
 				$this->data_adicionado->setSort("");
 				$this->hora_adicionado->setSort("");
@@ -1597,6 +1609,7 @@ class cprodutos_list extends cprodutos {
 		$this->id_marca_produto->setDbValue($row['id_marca_produto']);
 		$this->status_produto->setDbValue($row['status_produto']);
 		$this->unidade_medida_produto->setDbValue($row['unidade_medida_produto']);
+		$this->unidades->setDbValue($row['unidades']);
 		$this->peso_produto->setDbValue($row['peso_produto']);
 		$this->data_adicionado->setDbValue($row['data_adicionado']);
 		$this->hora_adicionado->setDbValue($row['hora_adicionado']);
@@ -1616,6 +1629,7 @@ class cprodutos_list extends cprodutos {
 		$row['id_marca_produto'] = NULL;
 		$row['status_produto'] = NULL;
 		$row['unidade_medida_produto'] = NULL;
+		$row['unidades'] = NULL;
 		$row['peso_produto'] = NULL;
 		$row['data_adicionado'] = NULL;
 		$row['hora_adicionado'] = NULL;
@@ -1638,6 +1652,7 @@ class cprodutos_list extends cprodutos {
 		$this->id_marca_produto->DbValue = $row['id_marca_produto'];
 		$this->status_produto->DbValue = $row['status_produto'];
 		$this->unidade_medida_produto->DbValue = $row['unidade_medida_produto'];
+		$this->unidades->DbValue = $row['unidades'];
 		$this->peso_produto->DbValue = $row['peso_produto'];
 		$this->data_adicionado->DbValue = $row['data_adicionado'];
 		$this->hora_adicionado->DbValue = $row['hora_adicionado'];
@@ -1699,6 +1714,7 @@ class cprodutos_list extends cprodutos {
 		// id_marca_produto
 		// status_produto
 		// unidade_medida_produto
+		// unidades
 		// peso_produto
 		// data_adicionado
 		// hora_adicionado
@@ -1748,12 +1764,20 @@ class cprodutos_list extends cprodutos {
 		$this->id_marca_produto->ViewCustomAttributes = "";
 
 		// status_produto
-		$this->status_produto->ViewValue = $this->status_produto->CurrentValue;
+		if (strval($this->status_produto->CurrentValue) <> "") {
+			$this->status_produto->ViewValue = $this->status_produto->OptionCaption($this->status_produto->CurrentValue);
+		} else {
+			$this->status_produto->ViewValue = NULL;
+		}
 		$this->status_produto->ViewCustomAttributes = "";
 
 		// unidade_medida_produto
 		$this->unidade_medida_produto->ViewValue = $this->unidade_medida_produto->CurrentValue;
 		$this->unidade_medida_produto->ViewCustomAttributes = "";
+
+		// unidades
+		$this->unidades->ViewValue = $this->unidades->CurrentValue;
+		$this->unidades->ViewCustomAttributes = "";
 
 		// peso_produto
 		$this->peso_produto->ViewValue = $this->peso_produto->CurrentValue;
@@ -1815,6 +1839,11 @@ class cprodutos_list extends cprodutos {
 			$this->unidade_medida_produto->LinkCustomAttributes = "";
 			$this->unidade_medida_produto->HrefValue = "";
 			$this->unidade_medida_produto->TooltipValue = "";
+
+			// unidades
+			$this->unidades->LinkCustomAttributes = "";
+			$this->unidades->HrefValue = "";
+			$this->unidades->TooltipValue = "";
 
 			// peso_produto
 			$this->peso_produto->LinkCustomAttributes = "";
@@ -2200,6 +2229,8 @@ fprodutoslist.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 // Dynamic selection lists
 fprodutoslist.Lists["x_id_marca_produto"] = {"LinkField":"x_id_marca","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_marca","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"marcas"};
 fprodutoslist.Lists["x_id_marca_produto"].Data = "<?php echo $produtos_list->id_marca_produto->LookupFilterQuery(FALSE, "list") ?>";
+fprodutoslist.Lists["x_status_produto"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
+fprodutoslist.Lists["x_status_produto"].Options = <?php echo json_encode($produtos_list->status_produto->Options()) ?>;
 
 // Form object for search
 var CurrentSearchForm = fprodutoslistsrch = new ew_Form("fprodutoslistsrch");
@@ -2364,6 +2395,15 @@ $produtos_list->ListOptions->Render("header", "left");
 	<?php } else { ?>
 		<th data-name="unidade_medida_produto" class="<?php echo $produtos->unidade_medida_produto->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $produtos->SortUrl($produtos->unidade_medida_produto) ?>',1);"><div id="elh_produtos_unidade_medida_produto" class="produtos_unidade_medida_produto">
 			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $produtos->unidade_medida_produto->FldCaption() ?><?php echo $Language->Phrase("SrchLegend") ?></span><span class="ewTableHeaderSort"><?php if ($produtos->unidade_medida_produto->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($produtos->unidade_medida_produto->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
+		</div></div></th>
+	<?php } ?>
+<?php } ?>
+<?php if ($produtos->unidades->Visible) { // unidades ?>
+	<?php if ($produtos->SortUrl($produtos->unidades) == "") { ?>
+		<th data-name="unidades" class="<?php echo $produtos->unidades->HeaderCellClass() ?>"><div id="elh_produtos_unidades" class="produtos_unidades"><div class="ewTableHeaderCaption"><?php echo $produtos->unidades->FldCaption() ?></div></div></th>
+	<?php } else { ?>
+		<th data-name="unidades" class="<?php echo $produtos->unidades->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $produtos->SortUrl($produtos->unidades) ?>',1);"><div id="elh_produtos_unidades" class="produtos_unidades">
+			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $produtos->unidades->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($produtos->unidades->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($produtos->unidades->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
 		</div></div></th>
 	<?php } ?>
 <?php } ?>
@@ -2539,6 +2579,14 @@ $produtos_list->ListOptions->Render("body", "left", $produtos_list->RowCnt);
 <span id="el<?php echo $produtos_list->RowCnt ?>_produtos_unidade_medida_produto" class="produtos_unidade_medida_produto">
 <span<?php echo $produtos->unidade_medida_produto->ViewAttributes() ?>>
 <?php echo $produtos->unidade_medida_produto->ListViewValue() ?></span>
+</span>
+</td>
+	<?php } ?>
+	<?php if ($produtos->unidades->Visible) { // unidades ?>
+		<td data-name="unidades"<?php echo $produtos->unidades->CellAttributes() ?>>
+<span id="el<?php echo $produtos_list->RowCnt ?>_produtos_unidades" class="produtos_unidades">
+<span<?php echo $produtos->unidades->ViewAttributes() ?>>
+<?php echo $produtos->unidades->ListViewValue() ?></span>
 </span>
 </td>
 	<?php } ?>

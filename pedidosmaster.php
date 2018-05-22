@@ -12,6 +12,7 @@
 // id_representante
 // comissao_representante
 // id_cliente
+// status
 
 ?>
 <?php if ($pedidos->Visible) { ?>
@@ -146,6 +147,17 @@
 <span id="el_pedidos_id_cliente">
 <span<?php echo $pedidos->id_cliente->ViewAttributes() ?>>
 <?php echo $pedidos->id_cliente->ListViewValue() ?></span>
+</span>
+</td>
+		</tr>
+<?php } ?>
+<?php if ($pedidos->status->Visible) { // status ?>
+		<tr id="r_status">
+			<td class="col-sm-2"><?php echo $pedidos->status->FldCaption() ?></td>
+			<td<?php echo $pedidos->status->CellAttributes() ?>>
+<span id="el_pedidos_status">
+<span<?php echo $pedidos->status->ViewAttributes() ?>>
+<?php echo $pedidos->status->ListViewValue() ?></span>
 </span>
 </td>
 		</tr>

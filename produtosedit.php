@@ -295,6 +295,7 @@ class cprodutos_edit extends cprodutos {
 		$this->id_marca_produto->SetVisibility();
 		$this->status_produto->SetVisibility();
 		$this->unidade_medida_produto->SetVisibility();
+		$this->unidades->SetVisibility();
 		$this->peso_produto->SetVisibility();
 		$this->data_adicionado->SetVisibility();
 		$this->hora_adicionado->SetVisibility();
@@ -557,6 +558,9 @@ class cprodutos_edit extends cprodutos {
 		if (!$this->unidade_medida_produto->FldIsDetailKey) {
 			$this->unidade_medida_produto->setFormValue($objForm->GetValue("x_unidade_medida_produto"));
 		}
+		if (!$this->unidades->FldIsDetailKey) {
+			$this->unidades->setFormValue($objForm->GetValue("x_unidades"));
+		}
 		if (!$this->peso_produto->FldIsDetailKey) {
 			$this->peso_produto->setFormValue($objForm->GetValue("x_peso_produto"));
 		}
@@ -589,6 +593,7 @@ class cprodutos_edit extends cprodutos {
 		$this->id_marca_produto->CurrentValue = $this->id_marca_produto->FormValue;
 		$this->status_produto->CurrentValue = $this->status_produto->FormValue;
 		$this->unidade_medida_produto->CurrentValue = $this->unidade_medida_produto->FormValue;
+		$this->unidades->CurrentValue = $this->unidades->FormValue;
 		$this->peso_produto->CurrentValue = $this->peso_produto->FormValue;
 		$this->data_adicionado->CurrentValue = $this->data_adicionado->FormValue;
 		$this->data_adicionado->CurrentValue = ew_UnFormatDateTime($this->data_adicionado->CurrentValue, 0);
@@ -640,6 +645,7 @@ class cprodutos_edit extends cprodutos {
 		$this->id_marca_produto->setDbValue($row['id_marca_produto']);
 		$this->status_produto->setDbValue($row['status_produto']);
 		$this->unidade_medida_produto->setDbValue($row['unidade_medida_produto']);
+		$this->unidades->setDbValue($row['unidades']);
 		$this->peso_produto->setDbValue($row['peso_produto']);
 		$this->data_adicionado->setDbValue($row['data_adicionado']);
 		$this->hora_adicionado->setDbValue($row['hora_adicionado']);
@@ -659,6 +665,7 @@ class cprodutos_edit extends cprodutos {
 		$row['id_marca_produto'] = NULL;
 		$row['status_produto'] = NULL;
 		$row['unidade_medida_produto'] = NULL;
+		$row['unidades'] = NULL;
 		$row['peso_produto'] = NULL;
 		$row['data_adicionado'] = NULL;
 		$row['hora_adicionado'] = NULL;
@@ -681,6 +688,7 @@ class cprodutos_edit extends cprodutos {
 		$this->id_marca_produto->DbValue = $row['id_marca_produto'];
 		$this->status_produto->DbValue = $row['status_produto'];
 		$this->unidade_medida_produto->DbValue = $row['unidade_medida_produto'];
+		$this->unidades->DbValue = $row['unidades'];
 		$this->peso_produto->DbValue = $row['peso_produto'];
 		$this->data_adicionado->DbValue = $row['data_adicionado'];
 		$this->hora_adicionado->DbValue = $row['hora_adicionado'];
@@ -733,6 +741,7 @@ class cprodutos_edit extends cprodutos {
 		// id_marca_produto
 		// status_produto
 		// unidade_medida_produto
+		// unidades
 		// peso_produto
 		// data_adicionado
 		// hora_adicionado
@@ -782,12 +791,20 @@ class cprodutos_edit extends cprodutos {
 		$this->id_marca_produto->ViewCustomAttributes = "";
 
 		// status_produto
-		$this->status_produto->ViewValue = $this->status_produto->CurrentValue;
+		if (strval($this->status_produto->CurrentValue) <> "") {
+			$this->status_produto->ViewValue = $this->status_produto->OptionCaption($this->status_produto->CurrentValue);
+		} else {
+			$this->status_produto->ViewValue = NULL;
+		}
 		$this->status_produto->ViewCustomAttributes = "";
 
 		// unidade_medida_produto
 		$this->unidade_medida_produto->ViewValue = $this->unidade_medida_produto->CurrentValue;
 		$this->unidade_medida_produto->ViewCustomAttributes = "";
+
+		// unidades
+		$this->unidades->ViewValue = $this->unidades->CurrentValue;
+		$this->unidades->ViewCustomAttributes = "";
 
 		// peso_produto
 		$this->peso_produto->ViewValue = $this->peso_produto->CurrentValue;
@@ -849,6 +866,11 @@ class cprodutos_edit extends cprodutos {
 			$this->unidade_medida_produto->LinkCustomAttributes = "";
 			$this->unidade_medida_produto->HrefValue = "";
 			$this->unidade_medida_produto->TooltipValue = "";
+
+			// unidades
+			$this->unidades->LinkCustomAttributes = "";
+			$this->unidades->HrefValue = "";
+			$this->unidades->TooltipValue = "";
 
 			// peso_produto
 			$this->peso_produto->LinkCustomAttributes = "";
@@ -925,16 +947,20 @@ class cprodutos_edit extends cprodutos {
 			$this->id_marca_produto->EditValue = $arwrk;
 
 			// status_produto
-			$this->status_produto->EditAttrs["class"] = "form-control";
 			$this->status_produto->EditCustomAttributes = "";
-			$this->status_produto->EditValue = ew_HtmlEncode($this->status_produto->CurrentValue);
-			$this->status_produto->PlaceHolder = ew_RemoveHtml($this->status_produto->FldCaption());
+			$this->status_produto->EditValue = $this->status_produto->Options(FALSE);
 
 			// unidade_medida_produto
 			$this->unidade_medida_produto->EditAttrs["class"] = "form-control";
 			$this->unidade_medida_produto->EditCustomAttributes = "";
 			$this->unidade_medida_produto->EditValue = ew_HtmlEncode($this->unidade_medida_produto->CurrentValue);
 			$this->unidade_medida_produto->PlaceHolder = ew_RemoveHtml($this->unidade_medida_produto->FldCaption());
+
+			// unidades
+			$this->unidades->EditAttrs["class"] = "form-control";
+			$this->unidades->EditCustomAttributes = "";
+			$this->unidades->EditValue = ew_HtmlEncode($this->unidades->CurrentValue);
+			$this->unidades->PlaceHolder = ew_RemoveHtml($this->unidades->FldCaption());
 
 			// peso_produto
 			$this->peso_produto->EditAttrs["class"] = "form-control";
@@ -994,6 +1020,10 @@ class cprodutos_edit extends cprodutos {
 			$this->unidade_medida_produto->LinkCustomAttributes = "";
 			$this->unidade_medida_produto->HrefValue = "";
 
+			// unidades
+			$this->unidades->LinkCustomAttributes = "";
+			$this->unidades->HrefValue = "";
+
 			// peso_produto
 			$this->peso_produto->LinkCustomAttributes = "";
 			$this->peso_produto->HrefValue = "";
@@ -1039,8 +1069,11 @@ class cprodutos_edit extends cprodutos {
 		if (!ew_CheckInteger($this->codigo_produto->FormValue)) {
 			ew_AddMessage($gsFormError, $this->codigo_produto->FldErrMsg());
 		}
-		if (!ew_CheckInteger($this->status_produto->FormValue)) {
-			ew_AddMessage($gsFormError, $this->status_produto->FldErrMsg());
+		if (!$this->unidades->FldIsDetailKey && !is_null($this->unidades->FormValue) && $this->unidades->FormValue == "") {
+			ew_AddMessage($gsFormError, str_replace("%s", $this->unidades->FldCaption(), $this->unidades->ReqErrMsg));
+		}
+		if (!ew_CheckInteger($this->unidades->FormValue)) {
+			ew_AddMessage($gsFormError, $this->unidades->FldErrMsg());
 		}
 		if (!ew_CheckNumber($this->preco_produto->FormValue)) {
 			ew_AddMessage($gsFormError, $this->preco_produto->FldErrMsg());
@@ -1101,6 +1134,9 @@ class cprodutos_edit extends cprodutos {
 
 			// unidade_medida_produto
 			$this->unidade_medida_produto->SetDbValueDef($rsnew, $this->unidade_medida_produto->CurrentValue, NULL, $this->unidade_medida_produto->ReadOnly);
+
+			// unidades
+			$this->unidades->SetDbValueDef($rsnew, $this->unidades->CurrentValue, 0, $this->unidades->ReadOnly);
 
 			// peso_produto
 			$this->peso_produto->SetDbValueDef($rsnew, $this->peso_produto->CurrentValue, NULL, $this->peso_produto->ReadOnly);
@@ -1303,9 +1339,12 @@ fprodutosedit.Validate = function() {
 			elm = this.GetElements("x" + infix + "_codigo_produto");
 			if (elm && !ew_CheckInteger(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($produtos->codigo_produto->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_status_produto");
+			elm = this.GetElements("x" + infix + "_unidades");
+			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
+				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $produtos->unidades->FldCaption(), $produtos->unidades->ReqErrMsg)) ?>");
+			elm = this.GetElements("x" + infix + "_unidades");
 			if (elm && !ew_CheckInteger(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($produtos->status_produto->FldErrMsg()) ?>");
+				return this.OnError(elm, "<?php echo ew_JsEncode2($produtos->unidades->FldErrMsg()) ?>");
 			elm = this.GetElements("x" + infix + "_preco_produto");
 			if (elm && !ew_CheckNumber(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($produtos->preco_produto->FldErrMsg()) ?>");
@@ -1343,6 +1382,8 @@ fprodutosedit.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 // Dynamic selection lists
 fprodutosedit.Lists["x_id_marca_produto"] = {"LinkField":"x_id_marca","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_marca","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"marcas"};
 fprodutosedit.Lists["x_id_marca_produto"].Data = "<?php echo $produtos_edit->id_marca_produto->LookupFilterQuery(FALSE, "edit") ?>";
+fprodutosedit.Lists["x_status_produto"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
+fprodutosedit.Lists["x_status_produto"].Options = <?php echo json_encode($produtos_edit->status_produto->Options()) ?>;
 
 // Form object for search
 </script>
@@ -1419,10 +1460,13 @@ $produtos_edit->ShowMessage();
 <?php } ?>
 <?php if ($produtos->status_produto->Visible) { // status_produto ?>
 	<div id="r_status_produto" class="form-group">
-		<label id="elh_produtos_status_produto" for="x_status_produto" class="<?php echo $produtos_edit->LeftColumnClass ?>"><?php echo $produtos->status_produto->FldCaption() ?></label>
+		<label id="elh_produtos_status_produto" class="<?php echo $produtos_edit->LeftColumnClass ?>"><?php echo $produtos->status_produto->FldCaption() ?></label>
 		<div class="<?php echo $produtos_edit->RightColumnClass ?>"><div<?php echo $produtos->status_produto->CellAttributes() ?>>
 <span id="el_produtos_status_produto">
-<input type="text" data-table="produtos" data-field="x_status_produto" name="x_status_produto" id="x_status_produto" size="30" placeholder="<?php echo ew_HtmlEncode($produtos->status_produto->getPlaceHolder()) ?>" value="<?php echo $produtos->status_produto->EditValue ?>"<?php echo $produtos->status_produto->EditAttributes() ?>>
+<div id="tp_x_status_produto" class="ewTemplate"><input type="radio" data-table="produtos" data-field="x_status_produto" data-value-separator="<?php echo $produtos->status_produto->DisplayValueSeparatorAttribute() ?>" name="x_status_produto" id="x_status_produto" value="{value}"<?php echo $produtos->status_produto->EditAttributes() ?>></div>
+<div id="dsl_x_status_produto" data-repeatcolumn="5" class="ewItemList" style="display: none;"><div>
+<?php echo $produtos->status_produto->RadioButtonListHtml(FALSE, "x_status_produto") ?>
+</div></div>
 </span>
 <?php echo $produtos->status_produto->CustomMsg ?></div></div>
 	</div>
@@ -1435,6 +1479,16 @@ $produtos_edit->ShowMessage();
 <input type="text" data-table="produtos" data-field="x_unidade_medida_produto" name="x_unidade_medida_produto" id="x_unidade_medida_produto" size="30" maxlength="20" placeholder="<?php echo ew_HtmlEncode($produtos->unidade_medida_produto->getPlaceHolder()) ?>" value="<?php echo $produtos->unidade_medida_produto->EditValue ?>"<?php echo $produtos->unidade_medida_produto->EditAttributes() ?>>
 </span>
 <?php echo $produtos->unidade_medida_produto->CustomMsg ?></div></div>
+	</div>
+<?php } ?>
+<?php if ($produtos->unidades->Visible) { // unidades ?>
+	<div id="r_unidades" class="form-group">
+		<label id="elh_produtos_unidades" for="x_unidades" class="<?php echo $produtos_edit->LeftColumnClass ?>"><?php echo $produtos->unidades->FldCaption() ?><?php echo $Language->Phrase("FieldRequiredIndicator") ?></label>
+		<div class="<?php echo $produtos_edit->RightColumnClass ?>"><div<?php echo $produtos->unidades->CellAttributes() ?>>
+<span id="el_produtos_unidades">
+<input type="text" data-table="produtos" data-field="x_unidades" name="x_unidades" id="x_unidades" size="30" placeholder="<?php echo ew_HtmlEncode($produtos->unidades->getPlaceHolder()) ?>" value="<?php echo $produtos->unidades->EditValue ?>"<?php echo $produtos->unidades->EditAttributes() ?>>
+</span>
+<?php echo $produtos->unidades->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
 <?php if ($produtos->peso_produto->Visible) { // peso_produto ?>

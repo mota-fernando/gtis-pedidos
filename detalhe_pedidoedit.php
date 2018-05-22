@@ -887,8 +887,17 @@ class cdetalhe_pedido_edit extends cdetalhe_pedido {
 		if (!ew_CheckInteger($this->numero_pedido->FormValue)) {
 			ew_AddMessage($gsFormError, $this->numero_pedido->FldErrMsg());
 		}
+		if (!$this->id_produto->FldIsDetailKey && !is_null($this->id_produto->FormValue) && $this->id_produto->FormValue == "") {
+			ew_AddMessage($gsFormError, str_replace("%s", $this->id_produto->FldCaption(), $this->id_produto->ReqErrMsg));
+		}
+		if (!$this->quantidade->FldIsDetailKey && !is_null($this->quantidade->FormValue) && $this->quantidade->FormValue == "") {
+			ew_AddMessage($gsFormError, str_replace("%s", $this->quantidade->FldCaption(), $this->quantidade->ReqErrMsg));
+		}
 		if (!ew_CheckInteger($this->quantidade->FormValue)) {
 			ew_AddMessage($gsFormError, $this->quantidade->FldErrMsg());
+		}
+		if (!$this->custo->FldIsDetailKey && !is_null($this->custo->FormValue) && $this->custo->FormValue == "") {
+			ew_AddMessage($gsFormError, str_replace("%s", $this->custo->FldCaption(), $this->custo->ReqErrMsg));
 		}
 		if (!ew_CheckNumber($this->custo->FormValue)) {
 			ew_AddMessage($gsFormError, $this->custo->FldErrMsg());
@@ -1200,9 +1209,18 @@ fdetalhe_pedidoedit.Validate = function() {
 			elm = this.GetElements("x" + infix + "_numero_pedido");
 			if (elm && !ew_CheckInteger(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($detalhe_pedido->numero_pedido->FldErrMsg()) ?>");
+			elm = this.GetElements("x" + infix + "_id_produto");
+			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
+				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $detalhe_pedido->id_produto->FldCaption(), $detalhe_pedido->id_produto->ReqErrMsg)) ?>");
+			elm = this.GetElements("x" + infix + "_quantidade");
+			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
+				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $detalhe_pedido->quantidade->FldCaption(), $detalhe_pedido->quantidade->ReqErrMsg)) ?>");
 			elm = this.GetElements("x" + infix + "_quantidade");
 			if (elm && !ew_CheckInteger(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($detalhe_pedido->quantidade->FldErrMsg()) ?>");
+			elm = this.GetElements("x" + infix + "_custo");
+			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
+				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $detalhe_pedido->custo->FldCaption(), $detalhe_pedido->custo->ReqErrMsg)) ?>");
 			elm = this.GetElements("x" + infix + "_custo");
 			if (elm && !ew_CheckNumber(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($detalhe_pedido->custo->FldErrMsg()) ?>");
@@ -1294,7 +1312,7 @@ $detalhe_pedido_edit->ShowMessage();
 <?php } ?>
 <?php if ($detalhe_pedido->id_produto->Visible) { // id_produto ?>
 	<div id="r_id_produto" class="form-group">
-		<label id="elh_detalhe_pedido_id_produto" for="x_id_produto" class="<?php echo $detalhe_pedido_edit->LeftColumnClass ?>"><?php echo $detalhe_pedido->id_produto->FldCaption() ?></label>
+		<label id="elh_detalhe_pedido_id_produto" for="x_id_produto" class="<?php echo $detalhe_pedido_edit->LeftColumnClass ?>"><?php echo $detalhe_pedido->id_produto->FldCaption() ?><?php echo $Language->Phrase("FieldRequiredIndicator") ?></label>
 		<div class="<?php echo $detalhe_pedido_edit->RightColumnClass ?>"><div<?php echo $detalhe_pedido->id_produto->CellAttributes() ?>>
 <span id="el_detalhe_pedido_id_produto">
 <select data-table="detalhe_pedido" data-field="x_id_produto" data-value-separator="<?php echo $detalhe_pedido->id_produto->DisplayValueSeparatorAttribute() ?>" id="x_id_produto" name="x_id_produto"<?php echo $detalhe_pedido->id_produto->EditAttributes() ?>>
@@ -1307,7 +1325,7 @@ $detalhe_pedido_edit->ShowMessage();
 <?php } ?>
 <?php if ($detalhe_pedido->quantidade->Visible) { // quantidade ?>
 	<div id="r_quantidade" class="form-group">
-		<label id="elh_detalhe_pedido_quantidade" for="x_quantidade" class="<?php echo $detalhe_pedido_edit->LeftColumnClass ?>"><?php echo $detalhe_pedido->quantidade->FldCaption() ?></label>
+		<label id="elh_detalhe_pedido_quantidade" for="x_quantidade" class="<?php echo $detalhe_pedido_edit->LeftColumnClass ?>"><?php echo $detalhe_pedido->quantidade->FldCaption() ?><?php echo $Language->Phrase("FieldRequiredIndicator") ?></label>
 		<div class="<?php echo $detalhe_pedido_edit->RightColumnClass ?>"><div<?php echo $detalhe_pedido->quantidade->CellAttributes() ?>>
 <span id="el_detalhe_pedido_quantidade">
 <input type="text" data-table="detalhe_pedido" data-field="x_quantidade" name="x_quantidade" id="x_quantidade" size="6" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->quantidade->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->quantidade->EditValue ?>"<?php echo $detalhe_pedido->quantidade->EditAttributes() ?>>
@@ -1317,7 +1335,7 @@ $detalhe_pedido_edit->ShowMessage();
 <?php } ?>
 <?php if ($detalhe_pedido->custo->Visible) { // custo ?>
 	<div id="r_custo" class="form-group">
-		<label id="elh_detalhe_pedido_custo" for="x_custo" class="<?php echo $detalhe_pedido_edit->LeftColumnClass ?>"><?php echo $detalhe_pedido->custo->FldCaption() ?></label>
+		<label id="elh_detalhe_pedido_custo" for="x_custo" class="<?php echo $detalhe_pedido_edit->LeftColumnClass ?>"><?php echo $detalhe_pedido->custo->FldCaption() ?><?php echo $Language->Phrase("FieldRequiredIndicator") ?></label>
 		<div class="<?php echo $detalhe_pedido_edit->RightColumnClass ?>"><div<?php echo $detalhe_pedido->custo->CellAttributes() ?>>
 <span id="el_detalhe_pedido_custo">
 <input type="text" data-table="detalhe_pedido" data-field="x_custo" name="x_custo" id="x_custo" size="6" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->custo->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->custo->EditValue ?>"<?php echo $detalhe_pedido->custo->EditAttributes() ?>>

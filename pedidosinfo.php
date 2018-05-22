@@ -19,6 +19,7 @@ class cpedidos extends cTable {
 	var $id_representante;
 	var $comissao_representante;
 	var $id_cliente;
+	var $status;
 
 	//
 	// Table class constructor
@@ -132,6 +133,13 @@ class cpedidos extends cTable {
 		$this->id_cliente->Sortable = TRUE; // Allow sort
 		$this->id_cliente->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['id_cliente'] = &$this->id_cliente;
+
+		// status
+		$this->status = new cField('pedidos', 'pedidos', 'x_status', 'status', '`status`', '`status`', 3, -1, FALSE, '`status`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'RADIO');
+		$this->status->Sortable = TRUE; // Allow sort
+		$this->status->OptionCount = 3;
+		$this->status->FldDefaultErrMsg = $Language->Phrase("IncorrectFloat");
+		$this->fields['status'] = &$this->status;
 	}
 
 	// Field Visibility
@@ -755,6 +763,7 @@ class cpedidos extends cTable {
 		$this->id_representante->setDbValue($rs->fields('id_representante'));
 		$this->comissao_representante->setDbValue($rs->fields('comissao_representante'));
 		$this->id_cliente->setDbValue($rs->fields('id_cliente'));
+		$this->status->setDbValue($rs->fields('status'));
 	}
 
 	// Render list row values
@@ -777,6 +786,7 @@ class cpedidos extends cTable {
 		// id_representante
 		// comissao_representante
 		// id_cliente
+		// status
 		// id_pedidos
 
 		$this->id_pedidos->ViewValue = $this->id_pedidos->CurrentValue;
@@ -913,6 +923,14 @@ class cpedidos extends cTable {
 		$this->id_cliente->ViewValue = $this->id_cliente->CurrentValue;
 		$this->id_cliente->ViewCustomAttributes = "";
 
+		// status
+		if (strval($this->status->CurrentValue) <> "") {
+			$this->status->ViewValue = $this->status->OptionCaption($this->status->CurrentValue);
+		} else {
+			$this->status->ViewValue = NULL;
+		}
+		$this->status->ViewCustomAttributes = "";
+
 		// id_pedidos
 		$this->id_pedidos->LinkCustomAttributes = "";
 		$this->id_pedidos->HrefValue = "";
@@ -972,6 +990,11 @@ class cpedidos extends cTable {
 		$this->id_cliente->LinkCustomAttributes = "";
 		$this->id_cliente->HrefValue = "";
 		$this->id_cliente->TooltipValue = "";
+
+		// status
+		$this->status->LinkCustomAttributes = "";
+		$this->status->HrefValue = "";
+		$this->status->TooltipValue = "";
 
 		// Call Row Rendered event
 		$this->Row_Rendered();
@@ -1040,6 +1063,10 @@ class cpedidos extends cTable {
 		$this->id_cliente->EditValue = $this->id_cliente->CurrentValue;
 		$this->id_cliente->PlaceHolder = ew_RemoveHtml($this->id_cliente->FldCaption());
 
+		// status
+		$this->status->EditCustomAttributes = "";
+		$this->status->EditValue = $this->status->Options(FALSE);
+
 		// Call Row Rendered event
 		$this->Row_Rendered();
 	}
@@ -1076,6 +1103,7 @@ class cpedidos extends cTable {
 					if ($this->id_representante->Exportable) $Doc->ExportCaption($this->id_representante);
 					if ($this->comissao_representante->Exportable) $Doc->ExportCaption($this->comissao_representante);
 					if ($this->id_cliente->Exportable) $Doc->ExportCaption($this->id_cliente);
+					if ($this->status->Exportable) $Doc->ExportCaption($this->status);
 				} else {
 					if ($this->id_pedidos->Exportable) $Doc->ExportCaption($this->id_pedidos);
 					if ($this->tipo_pedido->Exportable) $Doc->ExportCaption($this->tipo_pedido);
@@ -1089,6 +1117,7 @@ class cpedidos extends cTable {
 					if ($this->id_representante->Exportable) $Doc->ExportCaption($this->id_representante);
 					if ($this->comissao_representante->Exportable) $Doc->ExportCaption($this->comissao_representante);
 					if ($this->id_cliente->Exportable) $Doc->ExportCaption($this->id_cliente);
+					if ($this->status->Exportable) $Doc->ExportCaption($this->status);
 				}
 				$Doc->EndExportRow();
 			}
@@ -1129,6 +1158,7 @@ class cpedidos extends cTable {
 						if ($this->id_representante->Exportable) $Doc->ExportField($this->id_representante);
 						if ($this->comissao_representante->Exportable) $Doc->ExportField($this->comissao_representante);
 						if ($this->id_cliente->Exportable) $Doc->ExportField($this->id_cliente);
+						if ($this->status->Exportable) $Doc->ExportField($this->status);
 					} else {
 						if ($this->id_pedidos->Exportable) $Doc->ExportField($this->id_pedidos);
 						if ($this->tipo_pedido->Exportable) $Doc->ExportField($this->tipo_pedido);
@@ -1142,6 +1172,7 @@ class cpedidos extends cTable {
 						if ($this->id_representante->Exportable) $Doc->ExportField($this->id_representante);
 						if ($this->comissao_representante->Exportable) $Doc->ExportField($this->comissao_representante);
 						if ($this->id_cliente->Exportable) $Doc->ExportField($this->id_cliente);
+						if ($this->status->Exportable) $Doc->ExportField($this->status);
 					}
 					$Doc->EndExportRow($RowCnt);
 				}

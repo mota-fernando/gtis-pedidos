@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<ew-language date="2018/5/21" version="14.0.0" id="pt-br" name="Portugues" desc="Portugues" author="Eder Villalba / Vinicius Bello ">
+<ew-language date="2018/5/22" version="14.0.0" id="pt-br" name="Portugues" desc="Portugues" author="Eder Villalba / Vinicius Bello ">
   <global>
     <phrase id="actiondeleted" value="Excluído" />
     <phrase id="actioninserted" value="Inserido" />
@@ -699,6 +699,16 @@
         <phrase id="fldcaption" value="Cliente" />
         <phrase id="fldtitle" value="Cliente" />
       </field>
+      <field id="status">
+        <phrase id="fldcaption" value="Situação" />
+        <phrase id="fldtitle" value="Situação" />
+        <phrase id="fldtagvalue1" value="0" />
+        <phrase id="fldtagcaption1" value="Pendente" />
+        <phrase id="fldtagvalue2" value="1" />
+        <phrase id="fldtagcaption2" value="Cancelado" />
+        <phrase id="fldtagvalue3" value="2" />
+        <phrase id="fldtagcaption3" value="Concluido" />
+      </field>
     </table>
     <table id="clientes">
       <phrase id="tblcaption" value="Clientes" />
@@ -876,9 +886,16 @@
       </field>
       <field id="status_produto">
         <phrase id="fldcaption" value="Status do produto" />
+        <phrase id="fldtagvalue1" value="0" />
+        <phrase id="fldtagcaption1" value="Indisponível" />
+        <phrase id="fldtagvalue2" value="1" />
+        <phrase id="fldtagcaption2" value="Disponível" />
       </field>
       <field id="unidade_medida_produto">
         <phrase id="fldcaption" value="Unidade de medida do produto" />
+      </field>
+      <field id="unidades">
+        <phrase id="fldcaption" value="Unidades" />
       </field>
       <field id="peso_produto">
         <phrase id="fldcaption" value="Peso do produto" />
