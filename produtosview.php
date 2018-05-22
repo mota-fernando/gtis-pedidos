@@ -21,7 +21,7 @@ class cprodutos_view extends cprodutos {
 	var $PageID = 'view';
 
 	// Project ID
-	var $ProjectID = '{D83B9BB1-2CD4-4540-9A5B-B0E890360FB3}';
+	var $ProjectID = '{A4E38B50-67B8-459F-992C-3B232135A6E3}';
 
 	// Table name
 	var $TableName = 'produtos';
@@ -340,13 +340,9 @@ class cprodutos_view extends cprodutos {
 		// Is modal
 		$this->IsModal = (@$_GET["modal"] == "1" || @$_POST["modal"] == "1");
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
-		$this->id_produto->SetVisibility();
-		if ($this->IsAdd() || $this->IsCopy() || $this->IsGridAdd())
-			$this->id_produto->Visible = FALSE;
 		$this->codigo_produto->SetVisibility();
 		$this->nome_produto->SetVisibility();
 		$this->modelo_produto->SetVisibility();
-		$this->id_departamento_produto->SetVisibility();
 		$this->id_marca_produto->SetVisibility();
 		$this->status_produto->SetVisibility();
 		$this->unidade_medida_produto->SetVisibility();
@@ -727,12 +723,27 @@ class cprodutos_view extends cprodutos {
 		$this->modelo_produto->ViewValue = $this->modelo_produto->CurrentValue;
 		$this->modelo_produto->ViewCustomAttributes = "";
 
-		// id_departamento_produto
-		$this->id_departamento_produto->ViewValue = $this->id_departamento_produto->CurrentValue;
-		$this->id_departamento_produto->ViewCustomAttributes = "";
-
 		// id_marca_produto
-		$this->id_marca_produto->ViewValue = $this->id_marca_produto->CurrentValue;
+		if (strval($this->id_marca_produto->CurrentValue) <> "") {
+			$sFilterWrk = "`id_marca`" . ew_SearchString("=", $this->id_marca_produto->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_marca`, `nome_marca` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `marcas`";
+		$sWhereWrk = "";
+		$this->id_marca_produto->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_marca_produto, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_marca_produto->ViewValue = $this->id_marca_produto->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_marca_produto->ViewValue = $this->id_marca_produto->CurrentValue;
+			}
+		} else {
+			$this->id_marca_produto->ViewValue = NULL;
+		}
 		$this->id_marca_produto->ViewCustomAttributes = "";
 
 		// status_produto
@@ -769,11 +780,6 @@ class cprodutos_view extends cprodutos {
 		$this->ipi->ViewValue = $this->ipi->CurrentValue;
 		$this->ipi->ViewCustomAttributes = "";
 
-			// id_produto
-			$this->id_produto->LinkCustomAttributes = "";
-			$this->id_produto->HrefValue = "";
-			$this->id_produto->TooltipValue = "";
-
 			// codigo_produto
 			$this->codigo_produto->LinkCustomAttributes = "";
 			$this->codigo_produto->HrefValue = "";
@@ -788,11 +794,6 @@ class cprodutos_view extends cprodutos {
 			$this->modelo_produto->LinkCustomAttributes = "";
 			$this->modelo_produto->HrefValue = "";
 			$this->modelo_produto->TooltipValue = "";
-
-			// id_departamento_produto
-			$this->id_departamento_produto->LinkCustomAttributes = "";
-			$this->id_departamento_produto->HrefValue = "";
-			$this->id_departamento_produto->TooltipValue = "";
 
 			// id_marca_produto
 			$this->id_marca_produto->LinkCustomAttributes = "";
@@ -995,8 +996,10 @@ fprodutosview.Form_CustomValidate =
 fprodutosview.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-// Form object for search
+fprodutosview.Lists["x_id_marca_produto"] = {"LinkField":"x_id_marca","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_marca","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"marcas"};
+fprodutosview.Lists["x_id_marca_produto"].Data = "<?php echo $produtos_view->id_marca_produto->LookupFilterQuery(FALSE, "view") ?>";
 
+// Form object for search
 </script>
 <script type="text/javascript">
 
@@ -1021,17 +1024,6 @@ $produtos_view->ShowMessage();
 <input type="hidden" name="t" value="produtos">
 <input type="hidden" name="modal" value="<?php echo intval($produtos_view->IsModal) ?>">
 <table class="table table-striped table-bordered table-hover table-condensed ewViewTable">
-<?php if ($produtos->id_produto->Visible) { // id_produto ?>
-	<tr id="r_id_produto">
-		<td class="col-sm-2"><span id="elh_produtos_id_produto"><?php echo $produtos->id_produto->FldCaption() ?></span></td>
-		<td data-name="id_produto"<?php echo $produtos->id_produto->CellAttributes() ?>>
-<span id="el_produtos_id_produto">
-<span<?php echo $produtos->id_produto->ViewAttributes() ?>>
-<?php echo $produtos->id_produto->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
 <?php if ($produtos->codigo_produto->Visible) { // codigo_produto ?>
 	<tr id="r_codigo_produto">
 		<td class="col-sm-2"><span id="elh_produtos_codigo_produto"><?php echo $produtos->codigo_produto->FldCaption() ?></span></td>
@@ -1061,17 +1053,6 @@ $produtos_view->ShowMessage();
 <span id="el_produtos_modelo_produto">
 <span<?php echo $produtos->modelo_produto->ViewAttributes() ?>>
 <?php echo $produtos->modelo_produto->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
-<?php if ($produtos->id_departamento_produto->Visible) { // id_departamento_produto ?>
-	<tr id="r_id_departamento_produto">
-		<td class="col-sm-2"><span id="elh_produtos_id_departamento_produto"><?php echo $produtos->id_departamento_produto->FldCaption() ?></span></td>
-		<td data-name="id_departamento_produto"<?php echo $produtos->id_departamento_produto->CellAttributes() ?>>
-<span id="el_produtos_id_departamento_produto">
-<span<?php echo $produtos->id_departamento_produto->ViewAttributes() ?>>
-<?php echo $produtos->id_departamento_produto->ViewValue ?></span>
 </span>
 </td>
 	</tr>

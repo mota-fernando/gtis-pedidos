@@ -21,7 +21,7 @@ class cmarcas_view extends cmarcas {
 	var $PageID = 'view';
 
 	// Project ID
-	var $ProjectID = '{D83B9BB1-2CD4-4540-9A5B-B0E890360FB3}';
+	var $ProjectID = '{A4E38B50-67B8-459F-992C-3B232135A6E3}';
 
 	// Table name
 	var $TableName = 'marcas';
@@ -340,9 +340,6 @@ class cmarcas_view extends cmarcas {
 		// Is modal
 		$this->IsModal = (@$_GET["modal"] == "1" || @$_POST["modal"] == "1");
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
-		$this->id_marca->SetVisibility();
-		if ($this->IsAdd() || $this->IsCopy() || $this->IsGridAdd())
-			$this->id_marca->Visible = FALSE;
 		$this->nome_marca->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
@@ -655,11 +652,6 @@ class cmarcas_view extends cmarcas {
 		$this->nome_marca->ViewValue = $this->nome_marca->CurrentValue;
 		$this->nome_marca->ViewCustomAttributes = "";
 
-			// id_marca
-			$this->id_marca->LinkCustomAttributes = "";
-			$this->id_marca->HrefValue = "";
-			$this->id_marca->TooltipValue = "";
-
 			// nome_marca
 			$this->nome_marca->LinkCustomAttributes = "";
 			$this->nome_marca->HrefValue = "";
@@ -847,17 +839,6 @@ $marcas_view->ShowMessage();
 <input type="hidden" name="t" value="marcas">
 <input type="hidden" name="modal" value="<?php echo intval($marcas_view->IsModal) ?>">
 <table class="table table-striped table-bordered table-hover table-condensed ewViewTable">
-<?php if ($marcas->id_marca->Visible) { // id_marca ?>
-	<tr id="r_id_marca">
-		<td class="col-sm-2"><span id="elh_marcas_id_marca"><?php echo $marcas->id_marca->FldCaption() ?></span></td>
-		<td data-name="id_marca"<?php echo $marcas->id_marca->CellAttributes() ?>>
-<span id="el_marcas_id_marca">
-<span<?php echo $marcas->id_marca->ViewAttributes() ?>>
-<?php echo $marcas->id_marca->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
 <?php if ($marcas->nome_marca->Visible) { // nome_marca ?>
 	<tr id="r_nome_marca">
 		<td class="col-sm-2"><span id="elh_marcas_nome_marca"><?php echo $marcas->nome_marca->FldCaption() ?></span></td>

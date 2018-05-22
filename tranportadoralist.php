@@ -21,7 +21,7 @@ class ctranportadora_list extends ctranportadora {
 	var $PageID = 'list';
 
 	// Project ID
-	var $ProjectID = '{D83B9BB1-2CD4-4540-9A5B-B0E890360FB3}';
+	var $ProjectID = '{A4E38B50-67B8-459F-992C-3B232135A6E3}';
 
 	// Table name
 	var $TableName = 'tranportadora';
@@ -1485,7 +1485,26 @@ class ctranportadora_list extends ctranportadora {
 		$this->transportadora->ViewCustomAttributes = "";
 
 		// id_empresa_transportadora
-		$this->id_empresa_transportadora->ViewValue = $this->id_empresa_transportadora->CurrentValue;
+		if (strval($this->id_empresa_transportadora->CurrentValue) <> "") {
+			$sFilterWrk = "`id_perfil`" . ew_SearchString("=", $this->id_empresa_transportadora->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_perfil`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `empresas`";
+		$sWhereWrk = "";
+		$this->id_empresa_transportadora->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_empresa_transportadora, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_empresa_transportadora->ViewValue = $this->id_empresa_transportadora->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_empresa_transportadora->ViewValue = $this->id_empresa_transportadora->CurrentValue;
+			}
+		} else {
+			$this->id_empresa_transportadora->ViewValue = NULL;
+		}
 		$this->id_empresa_transportadora->ViewCustomAttributes = "";
 
 			// id_transportadora
@@ -1701,8 +1720,10 @@ ftranportadoralist.Form_CustomValidate =
 ftranportadoralist.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-// Form object for search
+ftranportadoralist.Lists["x_id_empresa_transportadora"] = {"LinkField":"x_id_perfil","Ajax":true,"AutoFill":false,"DisplayFields":["x_razao_social","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"empresas"};
+ftranportadoralist.Lists["x_id_empresa_transportadora"].Data = "<?php echo $tranportadora_list->id_empresa_transportadora->LookupFilterQuery(FALSE, "list") ?>";
 
+// Form object for search
 var CurrentSearchForm = ftranportadoralistsrch = new ew_Form("ftranportadoralistsrch");
 </script>
 <script type="text/javascript">

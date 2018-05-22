@@ -21,7 +21,7 @@ class ctranportadora_edit extends ctranportadora {
 	var $PageID = 'edit';
 
 	// Project ID
-	var $ProjectID = '{D83B9BB1-2CD4-4540-9A5B-B0E890360FB3}';
+	var $ProjectID = '{A4E38B50-67B8-459F-992C-3B232135A6E3}';
 
 	// Table name
 	var $TableName = 'tranportadora';
@@ -649,7 +649,26 @@ class ctranportadora_edit extends ctranportadora {
 		$this->transportadora->ViewCustomAttributes = "";
 
 		// id_empresa_transportadora
-		$this->id_empresa_transportadora->ViewValue = $this->id_empresa_transportadora->CurrentValue;
+		if (strval($this->id_empresa_transportadora->CurrentValue) <> "") {
+			$sFilterWrk = "`id_perfil`" . ew_SearchString("=", $this->id_empresa_transportadora->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_perfil`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `empresas`";
+		$sWhereWrk = "";
+		$this->id_empresa_transportadora->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_empresa_transportadora, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_empresa_transportadora->ViewValue = $this->id_empresa_transportadora->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_empresa_transportadora->ViewValue = $this->id_empresa_transportadora->CurrentValue;
+			}
+		} else {
+			$this->id_empresa_transportadora->ViewValue = NULL;
+		}
 		$this->id_empresa_transportadora->ViewCustomAttributes = "";
 
 			// id_transportadora
@@ -683,8 +702,21 @@ class ctranportadora_edit extends ctranportadora {
 			// id_empresa_transportadora
 			$this->id_empresa_transportadora->EditAttrs["class"] = "form-control";
 			$this->id_empresa_transportadora->EditCustomAttributes = "";
-			$this->id_empresa_transportadora->EditValue = ew_HtmlEncode($this->id_empresa_transportadora->CurrentValue);
-			$this->id_empresa_transportadora->PlaceHolder = ew_RemoveHtml($this->id_empresa_transportadora->FldCaption());
+			if (trim(strval($this->id_empresa_transportadora->CurrentValue)) == "") {
+				$sFilterWrk = "0=1";
+			} else {
+				$sFilterWrk = "`id_perfil`" . ew_SearchString("=", $this->id_empresa_transportadora->CurrentValue, EW_DATATYPE_NUMBER, "");
+			}
+			$sSqlWrk = "SELECT `id_perfil`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `empresas`";
+			$sWhereWrk = "";
+			$this->id_empresa_transportadora->LookupFilters = array();
+			ew_AddFilter($sWhereWrk, $sFilterWrk);
+			$this->Lookup_Selecting($this->id_empresa_transportadora, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
+			if ($rswrk) $rswrk->Close();
+			$this->id_empresa_transportadora->EditValue = $arwrk;
 
 			// Edit refer script
 			// id_transportadora
@@ -718,9 +750,6 @@ class ctranportadora_edit extends ctranportadora {
 		// Check if validation required
 		if (!EW_SERVER_VALIDATE)
 			return ($gsFormError == "");
-		if (!ew_CheckInteger($this->id_empresa_transportadora->FormValue)) {
-			ew_AddMessage($gsFormError, $this->id_empresa_transportadora->FldErrMsg());
-		}
 
 		// Return validate result
 		$ValidateForm = ($gsFormError == "");
@@ -810,6 +839,18 @@ class ctranportadora_edit extends ctranportadora {
 		global $gsLanguage;
 		$pageId = $pageId ?: $this->PageID;
 		switch ($fld->FldVar) {
+		case "x_id_empresa_transportadora":
+			$sSqlWrk = "";
+			$sSqlWrk = "SELECT `id_perfil` AS `LinkFld`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `empresas`";
+			$sWhereWrk = "";
+			$fld->LookupFilters = array();
+			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`id_perfil` IN ({filter_value})', "t0" => "3", "fn0" => "");
+			$sSqlWrk = "";
+			$this->Lookup_Selecting($this->id_empresa_transportadora, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			if ($sSqlWrk <> "")
+				$fld->LookupFilters["s"] .= $sSqlWrk;
+			break;
 		}
 	}
 
@@ -929,9 +970,6 @@ ftranportadoraedit.Validate = function() {
 	for (var i = startcnt; i <= rowcnt; i++) {
 		var infix = ($k[0]) ? String(i) : "";
 		$fobj.data("rowindex", infix);
-			elm = this.GetElements("x" + infix + "_id_empresa_transportadora");
-			if (elm && !ew_CheckInteger(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($tranportadora->id_empresa_transportadora->FldErrMsg()) ?>");
 
 			// Fire Form_CustomValidate event
 			if (!this.Form_CustomValidate(fobj))
@@ -961,8 +999,10 @@ ftranportadoraedit.Form_CustomValidate =
 ftranportadoraedit.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-// Form object for search
+ftranportadoraedit.Lists["x_id_empresa_transportadora"] = {"LinkField":"x_id_perfil","Ajax":true,"AutoFill":false,"DisplayFields":["x_razao_social","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"empresas"};
+ftranportadoraedit.Lists["x_id_empresa_transportadora"].Data = "<?php echo $tranportadora_edit->id_empresa_transportadora->LookupFilterQuery(FALSE, "edit") ?>";
 
+// Form object for search
 </script>
 <script type="text/javascript">
 
@@ -1007,7 +1047,10 @@ $tranportadora_edit->ShowMessage();
 		<label id="elh_tranportadora_id_empresa_transportadora" for="x_id_empresa_transportadora" class="<?php echo $tranportadora_edit->LeftColumnClass ?>"><?php echo $tranportadora->id_empresa_transportadora->FldCaption() ?></label>
 		<div class="<?php echo $tranportadora_edit->RightColumnClass ?>"><div<?php echo $tranportadora->id_empresa_transportadora->CellAttributes() ?>>
 <span id="el_tranportadora_id_empresa_transportadora">
-<input type="text" data-table="tranportadora" data-field="x_id_empresa_transportadora" name="x_id_empresa_transportadora" id="x_id_empresa_transportadora" size="30" placeholder="<?php echo ew_HtmlEncode($tranportadora->id_empresa_transportadora->getPlaceHolder()) ?>" value="<?php echo $tranportadora->id_empresa_transportadora->EditValue ?>"<?php echo $tranportadora->id_empresa_transportadora->EditAttributes() ?>>
+<select data-table="tranportadora" data-field="x_id_empresa_transportadora" data-value-separator="<?php echo $tranportadora->id_empresa_transportadora->DisplayValueSeparatorAttribute() ?>" id="x_id_empresa_transportadora" name="x_id_empresa_transportadora"<?php echo $tranportadora->id_empresa_transportadora->EditAttributes() ?>>
+<?php echo $tranportadora->id_empresa_transportadora->SelectOptionListHtml("x_id_empresa_transportadora") ?>
+</select>
+<button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $tranportadora->id_empresa_transportadora->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_empresa_transportadora',url:'empresasaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_empresa_transportadora"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $tranportadora->id_empresa_transportadora->FldCaption() ?></span></button>
 </span>
 <?php echo $tranportadora->id_empresa_transportadora->CustomMsg ?></div></div>
 	</div>

@@ -6,6 +6,7 @@ ob_start(); // Turn on output buffering
 <?php include_once ((EW_USE_ADODB) ? "adodb5/adodb.inc.php" : "ewmysql14.php") ?>
 <?php include_once "phpfn14.php" ?>
 <?php include_once "detalhe_pedidoinfo.php" ?>
+<?php include_once "pedidosinfo.php" ?>
 <?php include_once "userfn14.php" ?>
 <?php
 
@@ -21,7 +22,7 @@ class cdetalhe_pedido_list extends cdetalhe_pedido {
 	var $PageID = 'list';
 
 	// Project ID
-	var $ProjectID = '{D83B9BB1-2CD4-4540-9A5B-B0E890360FB3}';
+	var $ProjectID = '{A4E38B50-67B8-459F-992C-3B232135A6E3}';
 
 	// Table name
 	var $TableName = 'detalhe_pedido';
@@ -309,6 +310,9 @@ class cdetalhe_pedido_list extends cdetalhe_pedido {
 		$this->MultiDeleteUrl = "detalhe_pedidodelete.php";
 		$this->MultiUpdateUrl = "detalhe_pedidoupdate.php";
 
+		// Table object (pedidos)
+		if (!isset($GLOBALS['pedidos'])) $GLOBALS['pedidos'] = new cpedidos();
+
 		// Page ID
 		if (!defined("EW_PAGE_ID"))
 			define("EW_PAGE_ID", 'list', TRUE);
@@ -409,6 +413,9 @@ class cdetalhe_pedido_list extends cdetalhe_pedido {
 
 		// Create Token
 		$this->CreateToken();
+
+		// Set up master detail parameters
+		$this->SetupMasterParms();
 
 		// Setup other options
 		$this->SetupOtherOptions();
@@ -581,8 +588,28 @@ class cdetalhe_pedido_list extends cdetalhe_pedido {
 
 		// Build filter
 		$sFilter = "";
+
+		// Restore master/detail filter
+		$this->DbMasterFilter = $this->GetMasterFilter(); // Restore master filter
+		$this->DbDetailFilter = $this->GetDetailFilter(); // Restore detail filter
 		ew_AddFilter($sFilter, $this->DbDetailFilter);
 		ew_AddFilter($sFilter, $this->SearchWhere);
+
+		// Load master record
+		if ($this->CurrentMode <> "add" && $this->GetMasterFilter() <> "" && $this->getCurrentMasterTable() == "pedidos") {
+			global $pedidos;
+			$rsmaster = $pedidos->LoadRs($this->DbMasterFilter);
+			$this->MasterRecordExists = ($rsmaster && !$rsmaster->EOF);
+			if (!$this->MasterRecordExists) {
+				$this->setFailureMessage($Language->Phrase("NoRecord")); // Set no record found
+				$this->Page_Terminate("pedidoslist.php"); // Return to master page
+			} else {
+				$pedidos->LoadListRowValues($rsmaster);
+				$pedidos->RowType = EW_ROWTYPE_MASTER; // Master row
+				$pedidos->RenderListRow();
+				$rsmaster->Close();
+			}
+		}
 
 		// Set up filter
 		if ($this->Command == "json") {
@@ -683,6 +710,14 @@ class cdetalhe_pedido_list extends cdetalhe_pedido {
 		// Check if reset command
 		if (substr($this->Command,0,5) == "reset") {
 
+			// Reset master/detail keys
+			if ($this->Command == "resetall") {
+				$this->setCurrentMasterTable(""); // Clear master table
+				$this->DbMasterFilter = "";
+				$this->DbDetailFilter = "";
+				$this->numero_pedido->setSessionValue("");
+			}
+
 			// Reset sorting order
 			if ($this->Command == "resetsort") {
 				$sOrderBy = "";
@@ -719,12 +754,6 @@ class cdetalhe_pedido_list extends cdetalhe_pedido {
 
 		// "edit"
 		$item = &$this->ListOptions->Add("edit");
-		$item->CssClass = "text-nowrap";
-		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
-
-		// "copy"
-		$item = &$this->ListOptions->Add("copy");
 		$item->CssClass = "text-nowrap";
 		$item->Visible = TRUE;
 		$item->OnLeft = FALSE;
@@ -793,15 +822,6 @@ class cdetalhe_pedido_list extends cdetalhe_pedido {
 			$oListOpt->Body = "";
 		}
 
-		// "copy"
-		$oListOpt = &$this->ListOptions->Items["copy"];
-		$copycaption = ew_HtmlTitle($Language->Phrase("CopyLink"));
-		if (TRUE) {
-			$oListOpt->Body = "<a class=\"ewRowLink ewCopy\" title=\"" . $copycaption . "\" data-caption=\"" . $copycaption . "\" href=\"" . ew_HtmlEncode($this->CopyUrl) . "\">" . $Language->Phrase("CopyLink") . "</a>";
-		} else {
-			$oListOpt->Body = "";
-		}
-
 		// "delete"
 		$oListOpt = &$this->ListOptions->Items["delete"];
 		if (TRUE)
@@ -856,7 +876,10 @@ class cdetalhe_pedido_list extends cdetalhe_pedido {
 		// Add
 		$item = &$option->Add("add");
 		$addcaption = ew_HtmlTitle($Language->Phrase("AddLink"));
-		$item->Body = "<a class=\"ewAddEdit ewAdd\" title=\"" . $addcaption . "\" data-caption=\"" . $addcaption . "\" href=\"" . ew_HtmlEncode($this->AddUrl) . "\">" . $Language->Phrase("AddLink") . "</a>";
+		if (ew_IsMobile())
+			$item->Body = "<a class=\"ewAddEdit ewAdd\" title=\"" . $addcaption . "\" data-caption=\"" . $addcaption . "\" href=\"" . ew_HtmlEncode($this->AddUrl) . "\">" . $Language->Phrase("AddLink") . "</a>";
+		else
+			$item->Body = "<a class=\"ewAddEdit ewAdd\" title=\"" . $addcaption . "\" data-table=\"detalhe_pedido\" data-caption=\"" . $addcaption . "\" href=\"javascript:void(0);\" onclick=\"ew_ModalDialogShow({lnk:this,btn:'AddBtn',url:'" . ew_HtmlEncode($this->AddUrl) . "'});\">" . $Language->Phrase("AddLink") . "</a>";
 		$item->Visible = ($this->AddUrl <> "");
 		$option = $options["action"];
 
@@ -1216,7 +1239,26 @@ class cdetalhe_pedido_list extends cdetalhe_pedido {
 		$this->numero_pedido->ViewCustomAttributes = "";
 
 		// id_produto
-		$this->id_produto->ViewValue = $this->id_produto->CurrentValue;
+		if (strval($this->id_produto->CurrentValue) <> "") {
+			$sFilterWrk = "`id_produto`" . ew_SearchString("=", $this->id_produto->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_produto`, `nome_produto` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `produtos`";
+		$sWhereWrk = "";
+		$this->id_produto->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_produto, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_produto->ViewValue = $this->id_produto->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_produto->ViewValue = $this->id_produto->CurrentValue;
+			}
+		} else {
+			$this->id_produto->ViewValue = NULL;
+		}
 		$this->id_produto->ViewCustomAttributes = "";
 
 		// quantidade
@@ -1228,7 +1270,26 @@ class cdetalhe_pedido_list extends cdetalhe_pedido {
 		$this->custo->ViewCustomAttributes = "";
 
 		// id_desconto
-		$this->id_desconto->ViewValue = $this->id_desconto->CurrentValue;
+		if (strval($this->id_desconto->CurrentValue) <> "") {
+			$sFilterWrk = "`id_desconto`" . ew_SearchString("=", $this->id_desconto->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_desconto`, `porcentagem` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `desconto`";
+		$sWhereWrk = "";
+		$this->id_desconto->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_desconto, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_desconto->ViewValue = $this->id_desconto->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_desconto->ViewValue = $this->id_desconto->CurrentValue;
+			}
+		} else {
+			$this->id_desconto->ViewValue = NULL;
+		}
 		$this->id_desconto->ViewCustomAttributes = "";
 
 			// id_detalhe
@@ -1265,6 +1326,74 @@ class cdetalhe_pedido_list extends cdetalhe_pedido {
 		// Call Row Rendered event
 		if ($this->RowType <> EW_ROWTYPE_AGGREGATEINIT)
 			$this->Row_Rendered();
+	}
+
+	// Set up master/detail based on QueryString
+	function SetupMasterParms() {
+		$bValidMaster = FALSE;
+
+		// Get the keys for master table
+		if (isset($_GET[EW_TABLE_SHOW_MASTER])) {
+			$sMasterTblVar = $_GET[EW_TABLE_SHOW_MASTER];
+			if ($sMasterTblVar == "") {
+				$bValidMaster = TRUE;
+				$this->DbMasterFilter = "";
+				$this->DbDetailFilter = "";
+			}
+			if ($sMasterTblVar == "pedidos") {
+				$bValidMaster = TRUE;
+				if (@$_GET["fk_numero"] <> "") {
+					$GLOBALS["pedidos"]->numero->setQueryStringValue($_GET["fk_numero"]);
+					$this->numero_pedido->setQueryStringValue($GLOBALS["pedidos"]->numero->QueryStringValue);
+					$this->numero_pedido->setSessionValue($this->numero_pedido->QueryStringValue);
+					if (!is_numeric($GLOBALS["pedidos"]->numero->QueryStringValue)) $bValidMaster = FALSE;
+				} else {
+					$bValidMaster = FALSE;
+				}
+			}
+		} elseif (isset($_POST[EW_TABLE_SHOW_MASTER])) {
+			$sMasterTblVar = $_POST[EW_TABLE_SHOW_MASTER];
+			if ($sMasterTblVar == "") {
+				$bValidMaster = TRUE;
+				$this->DbMasterFilter = "";
+				$this->DbDetailFilter = "";
+			}
+			if ($sMasterTblVar == "pedidos") {
+				$bValidMaster = TRUE;
+				if (@$_POST["fk_numero"] <> "") {
+					$GLOBALS["pedidos"]->numero->setFormValue($_POST["fk_numero"]);
+					$this->numero_pedido->setFormValue($GLOBALS["pedidos"]->numero->FormValue);
+					$this->numero_pedido->setSessionValue($this->numero_pedido->FormValue);
+					if (!is_numeric($GLOBALS["pedidos"]->numero->FormValue)) $bValidMaster = FALSE;
+				} else {
+					$bValidMaster = FALSE;
+				}
+			}
+		}
+		if ($bValidMaster) {
+
+			// Update URL
+			$this->AddUrl = $this->AddMasterUrl($this->AddUrl);
+			$this->InlineAddUrl = $this->AddMasterUrl($this->InlineAddUrl);
+			$this->GridAddUrl = $this->AddMasterUrl($this->GridAddUrl);
+			$this->GridEditUrl = $this->AddMasterUrl($this->GridEditUrl);
+
+			// Save current master table
+			$this->setCurrentMasterTable($sMasterTblVar);
+
+			// Reset start record counter (new master key)
+			if (!$this->IsAddOrEdit()) {
+				$this->StartRec = 1;
+				$this->setStartRecordNumber($this->StartRec);
+			}
+
+			// Clear previous master key from Session
+			if ($sMasterTblVar <> "pedidos") {
+				if ($this->numero_pedido->CurrentValue == "") $this->numero_pedido->setSessionValue("");
+			}
+		}
+		$this->DbMasterFilter = $this->GetMasterFilter(); // Get master filter
+		$this->DbDetailFilter = $this->GetDetailFilter(); // Get detail filter
 	}
 
 	// Set up Breadcrumb
@@ -1459,8 +1588,12 @@ fdetalhe_pedidolist.Form_CustomValidate =
 fdetalhe_pedidolist.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-// Form object for search
+fdetalhe_pedidolist.Lists["x_id_produto"] = {"LinkField":"x_id_produto","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_produto","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"produtos"};
+fdetalhe_pedidolist.Lists["x_id_produto"].Data = "<?php echo $detalhe_pedido_list->id_produto->LookupFilterQuery(FALSE, "list") ?>";
+fdetalhe_pedidolist.Lists["x_id_desconto"] = {"LinkField":"x_id_desconto","Ajax":true,"AutoFill":false,"DisplayFields":["x_porcentagem","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"desconto"};
+fdetalhe_pedidolist.Lists["x_id_desconto"].Data = "<?php echo $detalhe_pedido_list->id_desconto->LookupFilterQuery(FALSE, "list") ?>";
 
+// Form object for search
 </script>
 <script type="text/javascript">
 
@@ -1472,6 +1605,17 @@ fdetalhe_pedidolist.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE
 <?php } ?>
 <div class="clearfix"></div>
 </div>
+<?php if (($detalhe_pedido->Export == "") || (EW_EXPORT_MASTER_RECORD && $detalhe_pedido->Export == "print")) { ?>
+<?php
+if ($detalhe_pedido_list->DbMasterFilter <> "" && $detalhe_pedido->getCurrentMasterTable() == "pedidos") {
+	if ($detalhe_pedido_list->MasterRecordExists) {
+?>
+<?php include_once "pedidosmaster.php" ?>
+<?php
+	}
+}
+?>
+<?php } ?>
 <?php
 	$bSelectLimit = $detalhe_pedido_list->UseSelectLimit;
 	if ($bSelectLimit) {
@@ -1509,6 +1653,10 @@ $detalhe_pedido_list->ShowMessage();
 <input type="hidden" name="<?php echo EW_TOKEN_NAME ?>" value="<?php echo $detalhe_pedido_list->Token ?>">
 <?php } ?>
 <input type="hidden" name="t" value="detalhe_pedido">
+<?php if ($detalhe_pedido->getCurrentMasterTable() == "pedidos" && $detalhe_pedido->CurrentAction <> "") { ?>
+<input type="hidden" name="<?php echo EW_TABLE_SHOW_MASTER ?>" value="pedidos">
+<input type="hidden" name="fk_numero" value="<?php echo $detalhe_pedido->numero_pedido->getSessionValue() ?>">
+<?php } ?>
 <div id="gmp_detalhe_pedido" class="<?php if (ew_IsResponsiveLayout()) { ?>table-responsive <?php } ?>ewGridMiddlePanel">
 <?php if ($detalhe_pedido_list->TotalRecs > 0 || $detalhe_pedido->CurrentAction == "gridedit") { ?>
 <table id="tbl_detalhe_pedidolist" class="table ewTable">

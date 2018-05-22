@@ -38,7 +38,7 @@ class cprazos extends cTable {
 		$this->DetailEdit = FALSE; // Allow detail edit
 		$this->DetailView = FALSE; // Allow detail view
 		$this->ShowMultipleDetails = FALSE; // Show multiple details
-		$this->GridAddRowCount = 5;
+		$this->GridAddRowCount = 1;
 		$this->AllowAddDeleteRow = TRUE; // Allow add/delete row
 		$this->UserIDAllowSecurity = 0; // User ID Allow
 		$this->BasicSearch = new cBasicSearch($this->TableVar);
@@ -689,7 +689,6 @@ class cprazos extends cTable {
 			if ($Doc->Horizontal) { // Horizontal format, write header
 				$Doc->BeginExportRow();
 				if ($ExportPageType == "view") {
-					if ($this->id_prazos->Exportable) $Doc->ExportCaption($this->id_prazos);
 					if ($this->prazo_em_dias->Exportable) $Doc->ExportCaption($this->prazo_em_dias);
 					if ($this->parcelas->Exportable) $Doc->ExportCaption($this->parcelas);
 				} else {
@@ -727,7 +726,6 @@ class cprazos extends cTable {
 				if (!$Doc->ExportCustom) {
 					$Doc->BeginExportRow($RowCnt); // Allow CSS styles if enabled
 					if ($ExportPageType == "view") {
-						if ($this->id_prazos->Exportable) $Doc->ExportField($this->id_prazos);
 						if ($this->prazo_em_dias->Exportable) $Doc->ExportField($this->prazo_em_dias);
 						if ($this->parcelas->Exportable) $Doc->ExportField($this->parcelas);
 					} else {

@@ -21,7 +21,7 @@ class cprodutos_list extends cprodutos {
 	var $PageID = 'list';
 
 	// Project ID
-	var $ProjectID = '{D83B9BB1-2CD4-4540-9A5B-B0E890360FB3}';
+	var $ProjectID = '{A4E38B50-67B8-459F-992C-3B232135A6E3}';
 
 	// Table name
 	var $TableName = 'produtos';
@@ -377,7 +377,6 @@ class cprodutos_list extends cprodutos {
 		$this->codigo_produto->SetVisibility();
 		$this->nome_produto->SetVisibility();
 		$this->modelo_produto->SetVisibility();
-		$this->id_departamento_produto->SetVisibility();
 		$this->id_marca_produto->SetVisibility();
 		$this->status_produto->SetVisibility();
 		$this->unidade_medida_produto->SetVisibility();
@@ -714,7 +713,6 @@ class cprodutos_list extends cprodutos {
 		$sFilterList = ew_Concat($sFilterList, $this->codigo_produto->AdvancedSearch->ToJson(), ","); // Field codigo_produto
 		$sFilterList = ew_Concat($sFilterList, $this->nome_produto->AdvancedSearch->ToJson(), ","); // Field nome_produto
 		$sFilterList = ew_Concat($sFilterList, $this->modelo_produto->AdvancedSearch->ToJson(), ","); // Field modelo_produto
-		$sFilterList = ew_Concat($sFilterList, $this->id_departamento_produto->AdvancedSearch->ToJson(), ","); // Field id_departamento_produto
 		$sFilterList = ew_Concat($sFilterList, $this->id_marca_produto->AdvancedSearch->ToJson(), ","); // Field id_marca_produto
 		$sFilterList = ew_Concat($sFilterList, $this->status_produto->AdvancedSearch->ToJson(), ","); // Field status_produto
 		$sFilterList = ew_Concat($sFilterList, $this->unidade_medida_produto->AdvancedSearch->ToJson(), ","); // Field unidade_medida_produto
@@ -799,14 +797,6 @@ class cprodutos_list extends cprodutos {
 		$this->modelo_produto->AdvancedSearch->SearchValue2 = @$filter["y_modelo_produto"];
 		$this->modelo_produto->AdvancedSearch->SearchOperator2 = @$filter["w_modelo_produto"];
 		$this->modelo_produto->AdvancedSearch->Save();
-
-		// Field id_departamento_produto
-		$this->id_departamento_produto->AdvancedSearch->SearchValue = @$filter["x_id_departamento_produto"];
-		$this->id_departamento_produto->AdvancedSearch->SearchOperator = @$filter["z_id_departamento_produto"];
-		$this->id_departamento_produto->AdvancedSearch->SearchCondition = @$filter["v_id_departamento_produto"];
-		$this->id_departamento_produto->AdvancedSearch->SearchValue2 = @$filter["y_id_departamento_produto"];
-		$this->id_departamento_produto->AdvancedSearch->SearchOperator2 = @$filter["w_id_departamento_produto"];
-		$this->id_departamento_produto->AdvancedSearch->Save();
 
 		// Field id_marca_produto
 		$this->id_marca_produto->AdvancedSearch->SearchValue = @$filter["x_id_marca_produto"];
@@ -1040,7 +1030,6 @@ class cprodutos_list extends cprodutos {
 			$this->UpdateSort($this->codigo_produto); // codigo_produto
 			$this->UpdateSort($this->nome_produto); // nome_produto
 			$this->UpdateSort($this->modelo_produto); // modelo_produto
-			$this->UpdateSort($this->id_departamento_produto); // id_departamento_produto
 			$this->UpdateSort($this->id_marca_produto); // id_marca_produto
 			$this->UpdateSort($this->status_produto); // status_produto
 			$this->UpdateSort($this->unidade_medida_produto); // unidade_medida_produto
@@ -1086,7 +1075,6 @@ class cprodutos_list extends cprodutos {
 				$this->codigo_produto->setSort("");
 				$this->nome_produto->setSort("");
 				$this->modelo_produto->setSort("");
-				$this->id_departamento_produto->setSort("");
 				$this->id_marca_produto->setSort("");
 				$this->status_produto->setSort("");
 				$this->unidade_medida_produto->setSort("");
@@ -1648,6 +1636,9 @@ class cprodutos_list extends cprodutos {
 		// nome_produto
 		// modelo_produto
 		// id_departamento_produto
+
+		$this->id_departamento_produto->CellCssStyle = "white-space: nowrap;";
+
 		// id_marca_produto
 		// status_produto
 		// unidade_medida_produto
@@ -1676,12 +1667,27 @@ class cprodutos_list extends cprodutos {
 		$this->modelo_produto->ViewValue = $this->modelo_produto->CurrentValue;
 		$this->modelo_produto->ViewCustomAttributes = "";
 
-		// id_departamento_produto
-		$this->id_departamento_produto->ViewValue = $this->id_departamento_produto->CurrentValue;
-		$this->id_departamento_produto->ViewCustomAttributes = "";
-
 		// id_marca_produto
-		$this->id_marca_produto->ViewValue = $this->id_marca_produto->CurrentValue;
+		if (strval($this->id_marca_produto->CurrentValue) <> "") {
+			$sFilterWrk = "`id_marca`" . ew_SearchString("=", $this->id_marca_produto->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_marca`, `nome_marca` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `marcas`";
+		$sWhereWrk = "";
+		$this->id_marca_produto->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_marca_produto, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_marca_produto->ViewValue = $this->id_marca_produto->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_marca_produto->ViewValue = $this->id_marca_produto->CurrentValue;
+			}
+		} else {
+			$this->id_marca_produto->ViewValue = NULL;
+		}
 		$this->id_marca_produto->ViewCustomAttributes = "";
 
 		// status_produto
@@ -1737,11 +1743,6 @@ class cprodutos_list extends cprodutos {
 			$this->modelo_produto->LinkCustomAttributes = "";
 			$this->modelo_produto->HrefValue = "";
 			$this->modelo_produto->TooltipValue = "";
-
-			// id_departamento_produto
-			$this->id_departamento_produto->LinkCustomAttributes = "";
-			$this->id_departamento_produto->HrefValue = "";
-			$this->id_departamento_produto->TooltipValue = "";
 
 			// id_marca_produto
 			$this->id_marca_produto->LinkCustomAttributes = "";
@@ -1986,8 +1987,10 @@ fprodutoslist.Form_CustomValidate =
 fprodutoslist.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-// Form object for search
+fprodutoslist.Lists["x_id_marca_produto"] = {"LinkField":"x_id_marca","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_marca","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"marcas"};
+fprodutoslist.Lists["x_id_marca_produto"].Data = "<?php echo $produtos_list->id_marca_produto->LookupFilterQuery(FALSE, "list") ?>";
 
+// Form object for search
 var CurrentSearchForm = fprodutoslistsrch = new ew_Form("fprodutoslistsrch");
 </script>
 <script type="text/javascript">
@@ -2119,15 +2122,6 @@ $produtos_list->ListOptions->Render("header", "left");
 	<?php } else { ?>
 		<th data-name="modelo_produto" class="<?php echo $produtos->modelo_produto->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $produtos->SortUrl($produtos->modelo_produto) ?>',1);"><div id="elh_produtos_modelo_produto" class="produtos_modelo_produto">
 			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $produtos->modelo_produto->FldCaption() ?><?php echo $Language->Phrase("SrchLegend") ?></span><span class="ewTableHeaderSort"><?php if ($produtos->modelo_produto->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($produtos->modelo_produto->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($produtos->id_departamento_produto->Visible) { // id_departamento_produto ?>
-	<?php if ($produtos->SortUrl($produtos->id_departamento_produto) == "") { ?>
-		<th data-name="id_departamento_produto" class="<?php echo $produtos->id_departamento_produto->HeaderCellClass() ?>"><div id="elh_produtos_id_departamento_produto" class="produtos_id_departamento_produto"><div class="ewTableHeaderCaption"><?php echo $produtos->id_departamento_produto->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="id_departamento_produto" class="<?php echo $produtos->id_departamento_produto->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $produtos->SortUrl($produtos->id_departamento_produto) ?>',1);"><div id="elh_produtos_id_departamento_produto" class="produtos_id_departamento_produto">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $produtos->id_departamento_produto->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($produtos->id_departamento_produto->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($produtos->id_departamento_produto->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
 		</div></div></th>
 	<?php } ?>
 <?php } ?>
@@ -2306,14 +2300,6 @@ $produtos_list->ListOptions->Render("body", "left", $produtos_list->RowCnt);
 <span id="el<?php echo $produtos_list->RowCnt ?>_produtos_modelo_produto" class="produtos_modelo_produto">
 <span<?php echo $produtos->modelo_produto->ViewAttributes() ?>>
 <?php echo $produtos->modelo_produto->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($produtos->id_departamento_produto->Visible) { // id_departamento_produto ?>
-		<td data-name="id_departamento_produto"<?php echo $produtos->id_departamento_produto->CellAttributes() ?>>
-<span id="el<?php echo $produtos_list->RowCnt ?>_produtos_id_departamento_produto" class="produtos_id_departamento_produto">
-<span<?php echo $produtos->id_departamento_produto->ViewAttributes() ?>>
-<?php echo $produtos->id_departamento_produto->ListViewValue() ?></span>
 </span>
 </td>
 	<?php } ?>

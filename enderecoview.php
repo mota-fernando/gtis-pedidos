@@ -21,7 +21,7 @@ class cendereco_view extends cendereco {
 	var $PageID = 'view';
 
 	// Project ID
-	var $ProjectID = '{D83B9BB1-2CD4-4540-9A5B-B0E890360FB3}';
+	var $ProjectID = '{A4E38B50-67B8-459F-992C-3B232135A6E3}';
 
 	// Table name
 	var $TableName = 'endereco';
@@ -340,9 +340,6 @@ class cendereco_view extends cendereco {
 		// Is modal
 		$this->IsModal = (@$_GET["modal"] == "1" || @$_POST["modal"] == "1");
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
-		$this->id_endereco->SetVisibility();
-		if ($this->IsAdd() || $this->IsCopy() || $this->IsGridAdd())
-			$this->id_endereco->Visible = FALSE;
 		$this->endereco->SetVisibility();
 		$this->bairro->SetVisibility();
 		$this->estado->SetVisibility();
@@ -691,11 +688,6 @@ class cendereco_view extends cendereco {
 		$this->cep->ViewValue = $this->cep->CurrentValue;
 		$this->cep->ViewCustomAttributes = "";
 
-			// id_endereco
-			$this->id_endereco->LinkCustomAttributes = "";
-			$this->id_endereco->HrefValue = "";
-			$this->id_endereco->TooltipValue = "";
-
 			// endereco
 			$this->endereco->LinkCustomAttributes = "";
 			$this->endereco->HrefValue = "";
@@ -903,17 +895,6 @@ $endereco_view->ShowMessage();
 <input type="hidden" name="t" value="endereco">
 <input type="hidden" name="modal" value="<?php echo intval($endereco_view->IsModal) ?>">
 <table class="table table-striped table-bordered table-hover table-condensed ewViewTable">
-<?php if ($endereco->id_endereco->Visible) { // id_endereco ?>
-	<tr id="r_id_endereco">
-		<td class="col-sm-2"><span id="elh_endereco_id_endereco"><?php echo $endereco->id_endereco->FldCaption() ?></span></td>
-		<td data-name="id_endereco"<?php echo $endereco->id_endereco->CellAttributes() ?>>
-<span id="el_endereco_id_endereco">
-<span<?php echo $endereco->id_endereco->ViewAttributes() ?>>
-<?php echo $endereco->id_endereco->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
 <?php if ($endereco->endereco->Visible) { // endereco ?>
 	<tr id="r_endereco">
 		<td class="col-sm-2"><span id="elh_endereco_endereco"><?php echo $endereco->endereco->FldCaption() ?></span></td>

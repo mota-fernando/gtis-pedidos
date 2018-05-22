@@ -21,7 +21,7 @@ class cpessoa_fisica_view extends cpessoa_fisica {
 	var $PageID = 'view';
 
 	// Project ID
-	var $ProjectID = '{D83B9BB1-2CD4-4540-9A5B-B0E890360FB3}';
+	var $ProjectID = '{A4E38B50-67B8-459F-992C-3B232135A6E3}';
 
 	// Table name
 	var $TableName = 'pessoa_fisica';
@@ -340,9 +340,6 @@ class cpessoa_fisica_view extends cpessoa_fisica {
 		// Is modal
 		$this->IsModal = (@$_GET["modal"] == "1" || @$_POST["modal"] == "1");
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
-		$this->id_pessoa->SetVisibility();
-		if ($this->IsAdd() || $this->IsCopy() || $this->IsGridAdd())
-			$this->id_pessoa->Visible = FALSE;
 		$this->nome_pessoa->SetVisibility();
 		$this->sobrenome_pessoa->SetVisibility();
 		$this->nascimento->SetVisibility();
@@ -734,13 +731,30 @@ class cpessoa_fisica_view extends cpessoa_fisica {
 		$this->endereco_numero->ViewCustomAttributes = "";
 
 		// id_endereco
-		$this->id_endereco->ViewValue = $this->id_endereco->CurrentValue;
+		if (strval($this->id_endereco->CurrentValue) <> "") {
+			$sFilterWrk = "`id_endereco`" . ew_SearchString("=", $this->id_endereco->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_endereco`, `endereco` AS `DispFld`, `bairro` AS `Disp2Fld`, `estado` AS `Disp3Fld`, `cidade` AS `Disp4Fld` FROM `endereco`";
+		$sWhereWrk = "";
+		$this->id_endereco->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_endereco, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$arwrk[2] = $rswrk->fields('Disp2Fld');
+				$arwrk[3] = $rswrk->fields('Disp3Fld');
+				$arwrk[4] = $rswrk->fields('Disp4Fld');
+				$this->id_endereco->ViewValue = $this->id_endereco->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_endereco->ViewValue = $this->id_endereco->CurrentValue;
+			}
+		} else {
+			$this->id_endereco->ViewValue = NULL;
+		}
 		$this->id_endereco->ViewCustomAttributes = "";
-
-			// id_pessoa
-			$this->id_pessoa->LinkCustomAttributes = "";
-			$this->id_pessoa->HrefValue = "";
-			$this->id_pessoa->TooltipValue = "";
 
 			// nome_pessoa
 			$this->nome_pessoa->LinkCustomAttributes = "";
@@ -948,8 +962,10 @@ fpessoa_fisicaview.Form_CustomValidate =
 fpessoa_fisicaview.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-// Form object for search
+fpessoa_fisicaview.Lists["x_id_endereco"] = {"LinkField":"x_id_endereco","Ajax":true,"AutoFill":false,"DisplayFields":["x_endereco","x_bairro","x_estado","x_cidade"],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"endereco"};
+fpessoa_fisicaview.Lists["x_id_endereco"].Data = "<?php echo $pessoa_fisica_view->id_endereco->LookupFilterQuery(FALSE, "view") ?>";
 
+// Form object for search
 </script>
 <script type="text/javascript">
 
@@ -974,17 +990,6 @@ $pessoa_fisica_view->ShowMessage();
 <input type="hidden" name="t" value="pessoa_fisica">
 <input type="hidden" name="modal" value="<?php echo intval($pessoa_fisica_view->IsModal) ?>">
 <table class="table table-striped table-bordered table-hover table-condensed ewViewTable">
-<?php if ($pessoa_fisica->id_pessoa->Visible) { // id_pessoa ?>
-	<tr id="r_id_pessoa">
-		<td class="col-sm-2"><span id="elh_pessoa_fisica_id_pessoa"><?php echo $pessoa_fisica->id_pessoa->FldCaption() ?></span></td>
-		<td data-name="id_pessoa"<?php echo $pessoa_fisica->id_pessoa->CellAttributes() ?>>
-<span id="el_pessoa_fisica_id_pessoa">
-<span<?php echo $pessoa_fisica->id_pessoa->ViewAttributes() ?>>
-<?php echo $pessoa_fisica->id_pessoa->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
 <?php if ($pessoa_fisica->nome_pessoa->Visible) { // nome_pessoa ?>
 	<tr id="r_nome_pessoa">
 		<td class="col-sm-2"><span id="elh_pessoa_fisica_nome_pessoa"><?php echo $pessoa_fisica->nome_pessoa->FldCaption() ?></span></td>

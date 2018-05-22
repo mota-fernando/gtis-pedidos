@@ -49,7 +49,7 @@ class cprodutos extends cTable {
 		$this->DetailEdit = FALSE; // Allow detail edit
 		$this->DetailView = FALSE; // Allow detail view
 		$this->ShowMultipleDetails = FALSE; // Show multiple details
-		$this->GridAddRowCount = 5;
+		$this->GridAddRowCount = 1;
 		$this->AllowAddDeleteRow = TRUE; // Allow add/delete row
 		$this->UserIDAllowSecurity = 0; // User ID Allow
 		$this->BasicSearch = new cBasicSearch($this->TableVar);
@@ -78,13 +78,15 @@ class cprodutos extends cTable {
 
 		// id_departamento_produto
 		$this->id_departamento_produto = new cField('produtos', 'produtos', 'x_id_departamento_produto', 'id_departamento_produto', '`id_departamento_produto`', '`id_departamento_produto`', 3, -1, FALSE, '`id_departamento_produto`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
-		$this->id_departamento_produto->Sortable = TRUE; // Allow sort
+		$this->id_departamento_produto->Sortable = FALSE; // Allow sort
 		$this->id_departamento_produto->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['id_departamento_produto'] = &$this->id_departamento_produto;
 
 		// id_marca_produto
-		$this->id_marca_produto = new cField('produtos', 'produtos', 'x_id_marca_produto', 'id_marca_produto', '`id_marca_produto`', '`id_marca_produto`', 3, -1, FALSE, '`id_marca_produto`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->id_marca_produto = new cField('produtos', 'produtos', 'x_id_marca_produto', 'id_marca_produto', '`id_marca_produto`', '`id_marca_produto`', 3, -1, FALSE, '`id_marca_produto`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'SELECT');
 		$this->id_marca_produto->Sortable = TRUE; // Allow sort
+		$this->id_marca_produto->UsePleaseSelect = TRUE; // Use PleaseSelect by default
+		$this->id_marca_produto->PleaseSelectText = $Language->Phrase("PleaseSelect"); // PleaseSelect text
 		$this->id_marca_produto->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['id_marca_produto'] = &$this->id_marca_produto;
 
@@ -688,6 +690,9 @@ class cprodutos extends cTable {
 		// nome_produto
 		// modelo_produto
 		// id_departamento_produto
+
+		$this->id_departamento_produto->CellCssStyle = "white-space: nowrap;";
+
 		// id_marca_produto
 		// status_produto
 		// unidade_medida_produto
@@ -719,7 +724,26 @@ class cprodutos extends cTable {
 		$this->id_departamento_produto->ViewCustomAttributes = "";
 
 		// id_marca_produto
-		$this->id_marca_produto->ViewValue = $this->id_marca_produto->CurrentValue;
+		if (strval($this->id_marca_produto->CurrentValue) <> "") {
+			$sFilterWrk = "`id_marca`" . ew_SearchString("=", $this->id_marca_produto->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_marca`, `nome_marca` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `marcas`";
+		$sWhereWrk = "";
+		$this->id_marca_produto->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_marca_produto, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_marca_produto->ViewValue = $this->id_marca_produto->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_marca_produto->ViewValue = $this->id_marca_produto->CurrentValue;
+			}
+		} else {
+			$this->id_marca_produto->ViewValue = NULL;
+		}
 		$this->id_marca_produto->ViewCustomAttributes = "";
 
 		// status_produto
@@ -873,8 +897,6 @@ class cprodutos extends cTable {
 		// id_marca_produto
 		$this->id_marca_produto->EditAttrs["class"] = "form-control";
 		$this->id_marca_produto->EditCustomAttributes = "";
-		$this->id_marca_produto->EditValue = $this->id_marca_produto->CurrentValue;
-		$this->id_marca_produto->PlaceHolder = ew_RemoveHtml($this->id_marca_produto->FldCaption());
 
 		// status_produto
 		$this->status_produto->EditAttrs["class"] = "form-control";
@@ -952,11 +974,9 @@ class cprodutos extends cTable {
 			if ($Doc->Horizontal) { // Horizontal format, write header
 				$Doc->BeginExportRow();
 				if ($ExportPageType == "view") {
-					if ($this->id_produto->Exportable) $Doc->ExportCaption($this->id_produto);
 					if ($this->codigo_produto->Exportable) $Doc->ExportCaption($this->codigo_produto);
 					if ($this->nome_produto->Exportable) $Doc->ExportCaption($this->nome_produto);
 					if ($this->modelo_produto->Exportable) $Doc->ExportCaption($this->modelo_produto);
-					if ($this->id_departamento_produto->Exportable) $Doc->ExportCaption($this->id_departamento_produto);
 					if ($this->id_marca_produto->Exportable) $Doc->ExportCaption($this->id_marca_produto);
 					if ($this->status_produto->Exportable) $Doc->ExportCaption($this->status_produto);
 					if ($this->unidade_medida_produto->Exportable) $Doc->ExportCaption($this->unidade_medida_produto);
@@ -971,7 +991,6 @@ class cprodutos extends cTable {
 					if ($this->codigo_produto->Exportable) $Doc->ExportCaption($this->codigo_produto);
 					if ($this->nome_produto->Exportable) $Doc->ExportCaption($this->nome_produto);
 					if ($this->modelo_produto->Exportable) $Doc->ExportCaption($this->modelo_produto);
-					if ($this->id_departamento_produto->Exportable) $Doc->ExportCaption($this->id_departamento_produto);
 					if ($this->id_marca_produto->Exportable) $Doc->ExportCaption($this->id_marca_produto);
 					if ($this->status_produto->Exportable) $Doc->ExportCaption($this->status_produto);
 					if ($this->unidade_medida_produto->Exportable) $Doc->ExportCaption($this->unidade_medida_produto);
@@ -1012,11 +1031,9 @@ class cprodutos extends cTable {
 				if (!$Doc->ExportCustom) {
 					$Doc->BeginExportRow($RowCnt); // Allow CSS styles if enabled
 					if ($ExportPageType == "view") {
-						if ($this->id_produto->Exportable) $Doc->ExportField($this->id_produto);
 						if ($this->codigo_produto->Exportable) $Doc->ExportField($this->codigo_produto);
 						if ($this->nome_produto->Exportable) $Doc->ExportField($this->nome_produto);
 						if ($this->modelo_produto->Exportable) $Doc->ExportField($this->modelo_produto);
-						if ($this->id_departamento_produto->Exportable) $Doc->ExportField($this->id_departamento_produto);
 						if ($this->id_marca_produto->Exportable) $Doc->ExportField($this->id_marca_produto);
 						if ($this->status_produto->Exportable) $Doc->ExportField($this->status_produto);
 						if ($this->unidade_medida_produto->Exportable) $Doc->ExportField($this->unidade_medida_produto);
@@ -1031,7 +1048,6 @@ class cprodutos extends cTable {
 						if ($this->codigo_produto->Exportable) $Doc->ExportField($this->codigo_produto);
 						if ($this->nome_produto->Exportable) $Doc->ExportField($this->nome_produto);
 						if ($this->modelo_produto->Exportable) $Doc->ExportField($this->modelo_produto);
-						if ($this->id_departamento_produto->Exportable) $Doc->ExportField($this->id_departamento_produto);
 						if ($this->id_marca_produto->Exportable) $Doc->ExportField($this->id_marca_produto);
 						if ($this->status_produto->Exportable) $Doc->ExportField($this->status_produto);
 						if ($this->unidade_medida_produto->Exportable) $Doc->ExportField($this->unidade_medida_produto);

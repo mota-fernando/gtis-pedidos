@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<configuration date="2018/05/21" author="e.World Technology Ltd.">
+  <project id="{A4E38B50-67B8-459F-992C-3B232135A6E3}" file="C:\Users\Root\Documents\PHPMaker\Projects\pedidos.pmp" name="pedidos" product="PHPMaker" version="14.0" datetime="2018/05/21 22:30:52" languagefolder="phplang" userlevel="-2,&quot;Anonymous&quot;,0;">
+    <table id="pedidos" name="pedidos" caption="Pedidos" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />
+    <table id="clientes" name="clientes" caption="Clientes" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />
+    <table id="detalhe_pedido" name="detalhe_pedido" caption="Ítens do Pedido" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />
+    <table id="pessoa_fisica" name="pessoa_fisica" caption="Pessoa física" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />
+    <table id="endereco" name="endereco" caption="Endereço" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />
+    <table id="empresas" name="empresas" caption="Empresas" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />
+    <table id="marcas" name="marcas" caption="Marcas" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />
+    <table id="produtos" name="produtos" caption="Produtos" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />
+    <table id="prazos" name="prazos" caption="Prazos" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />
+    <table id="desconto" name="desconto" caption="Descontos" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />
+    <table id="tranportadora" name="tranportadora" caption="Transportadora" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />
+    <table id="representantes" name="representantes" caption="Representantes" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />
+    <table id="configurar" name="configurar" caption="Configurar" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />
+  </project>
+</configuration>

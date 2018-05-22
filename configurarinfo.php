@@ -7,6 +7,7 @@ $configurar = NULL;
 // Table class for configurar
 //
 class cconfigurar extends cTable {
+	var $id_configurar;
 	var $pedido_minimo;
 	var $valor_minimo_parcela;
 	var $id_empresa;
@@ -38,10 +39,16 @@ class cconfigurar extends cTable {
 		$this->DetailEdit = FALSE; // Allow detail edit
 		$this->DetailView = FALSE; // Allow detail view
 		$this->ShowMultipleDetails = FALSE; // Show multiple details
-		$this->GridAddRowCount = 5;
+		$this->GridAddRowCount = 1;
 		$this->AllowAddDeleteRow = TRUE; // Allow add/delete row
 		$this->UserIDAllowSecurity = 0; // User ID Allow
 		$this->BasicSearch = new cBasicSearch($this->TableVar);
+
+		// id_configurar
+		$this->id_configurar = new cField('configurar', 'configurar', 'x_id_configurar', 'id_configurar', '`id_configurar`', '`id_configurar`', 3, -1, FALSE, '`id_configurar`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'NO');
+		$this->id_configurar->Sortable = TRUE; // Allow sort
+		$this->id_configurar->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
+		$this->fields['id_configurar'] = &$this->id_configurar;
 
 		// pedido_minimo
 		$this->pedido_minimo = new cField('configurar', 'configurar', 'x_pedido_minimo', 'pedido_minimo', '`pedido_minimo`', '`pedido_minimo`', 4, -1, FALSE, '`pedido_minimo`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
@@ -56,8 +63,10 @@ class cconfigurar extends cTable {
 		$this->fields['valor_minimo_parcela'] = &$this->valor_minimo_parcela;
 
 		// id_empresa
-		$this->id_empresa = new cField('configurar', 'configurar', 'x_id_empresa', 'id_empresa', '`id_empresa`', '`id_empresa`', 3, -1, FALSE, '`id_empresa`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->id_empresa = new cField('configurar', 'configurar', 'x_id_empresa', 'id_empresa', '`id_empresa`', '`id_empresa`', 3, -1, FALSE, '`id_empresa`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'SELECT');
 		$this->id_empresa->Sortable = TRUE; // Allow sort
+		$this->id_empresa->UsePleaseSelect = TRUE; // Use PleaseSelect by default
+		$this->id_empresa->PleaseSelectText = $Language->Phrase("PleaseSelect"); // PleaseSelect text
 		$this->id_empresa->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['id_empresa'] = &$this->id_empresa;
 	}
@@ -329,6 +338,10 @@ class cconfigurar extends cTable {
 		$conn = &$this->Connection();
 		$bInsert = $conn->Execute($this->InsertSQL($rs));
 		if ($bInsert) {
+
+			// Get insert id if necessary
+			$this->id_configurar->setDbValue($conn->Insert_ID());
+			$rs['id_configurar'] = $this->id_configurar->DbValue;
 		}
 		return $bInsert;
 	}
@@ -364,6 +377,8 @@ class cconfigurar extends cTable {
 		if (is_array($where))
 			$where = $this->ArrayToFilter($where);
 		if ($rs) {
+			if (array_key_exists('id_configurar', $rs))
+				ew_AddFilter($where, ew_QuotedName('id_configurar', $this->DBID) . '=' . ew_QuotedValue($rs['id_configurar'], $this->id_configurar->FldDataType, $this->DBID));
 		}
 		$filter = ($curfilter) ? $this->CurrentFilter : "";
 		ew_AddFilter($filter, $where);
@@ -385,12 +400,18 @@ class cconfigurar extends cTable {
 
 	// Key filter WHERE clause
 	function SqlKeyFilter() {
-		return "";
+		return "`id_configurar` = @id_configurar@";
 	}
 
 	// Key filter
 	function KeyFilter() {
 		$sKeyFilter = $this->SqlKeyFilter();
+		if (!is_numeric($this->id_configurar->CurrentValue))
+			return "0=1"; // Invalid key
+		if (is_null($this->id_configurar->CurrentValue))
+			return "0=1"; // Invalid key
+		else
+			$sKeyFilter = str_replace("@id_configurar@", ew_AdjustSql($this->id_configurar->CurrentValue, $this->DBID), $sKeyFilter); // Replace key value
 		return $sKeyFilter;
 	}
 
@@ -484,6 +505,7 @@ class cconfigurar extends cTable {
 
 	function KeyToJson() {
 		$json = "";
+		$json .= "id_configurar:" . ew_VarToJson($this->id_configurar->CurrentValue, "number", "'");
 		return "{" . $json . "}";
 	}
 
@@ -491,6 +513,11 @@ class cconfigurar extends cTable {
 	function KeyUrl($url, $parm = "") {
 		$sUrl = $url . "?";
 		if ($parm <> "") $sUrl .= $parm . "&";
+		if (!is_null($this->id_configurar->CurrentValue)) {
+			$sUrl .= "id_configurar=" . urlencode($this->id_configurar->CurrentValue);
+		} else {
+			return "javascript:ew_Alert(ewLanguage.Phrase('InvalidRecord'));";
+		}
 		return $sUrl;
 	}
 
@@ -520,6 +547,12 @@ class cconfigurar extends cTable {
 			$cnt = count($arKeys);
 		} elseif (!empty($_GET) || !empty($_POST)) {
 			$isPost = ew_IsPost();
+			if ($isPost && isset($_POST["id_configurar"]))
+				$arKeys[] = $_POST["id_configurar"];
+			elseif (isset($_GET["id_configurar"]))
+				$arKeys[] = $_GET["id_configurar"];
+			else
+				$arKeys = NULL; // Do not setup
 
 			//return $arKeys; // Do not return yet, so the values will also be checked by the following code
 		}
@@ -528,6 +561,8 @@ class cconfigurar extends cTable {
 		$ar = array();
 		if (is_array($arKeys)) {
 			foreach ($arKeys as $key) {
+				if (!is_numeric($key))
+					continue;
 				$ar[] = $key;
 			}
 		}
@@ -540,6 +575,7 @@ class cconfigurar extends cTable {
 		$sKeyFilter = "";
 		foreach ($arKeys as $key) {
 			if ($sKeyFilter <> "") $sKeyFilter .= " OR ";
+			$this->id_configurar->CurrentValue = $key;
 			$sKeyFilter .= "(" . $this->KeyFilter() . ")";
 		}
 		return $sKeyFilter;
@@ -560,6 +596,7 @@ class cconfigurar extends cTable {
 
 	// Load row values from recordset
 	function LoadListRowValues(&$rs) {
+		$this->id_configurar->setDbValue($rs->fields('id_configurar'));
 		$this->pedido_minimo->setDbValue($rs->fields('pedido_minimo'));
 		$this->valor_minimo_parcela->setDbValue($rs->fields('valor_minimo_parcela'));
 		$this->id_empresa->setDbValue($rs->fields('id_empresa'));
@@ -573,11 +610,16 @@ class cconfigurar extends cTable {
 		$this->Row_Rendering();
 
 	// Common render codes
+		// id_configurar
 		// pedido_minimo
 		// valor_minimo_parcela
 		// id_empresa
-		// pedido_minimo
+		// id_configurar
 
+		$this->id_configurar->ViewValue = $this->id_configurar->CurrentValue;
+		$this->id_configurar->ViewCustomAttributes = "";
+
+		// pedido_minimo
 		$this->pedido_minimo->ViewValue = $this->pedido_minimo->CurrentValue;
 		$this->pedido_minimo->ViewCustomAttributes = "";
 
@@ -586,8 +628,32 @@ class cconfigurar extends cTable {
 		$this->valor_minimo_parcela->ViewCustomAttributes = "";
 
 		// id_empresa
-		$this->id_empresa->ViewValue = $this->id_empresa->CurrentValue;
+		if (strval($this->id_empresa->CurrentValue) <> "") {
+			$sFilterWrk = "`id_perfil`" . ew_SearchString("=", $this->id_empresa->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_perfil`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `empresas`";
+		$sWhereWrk = "";
+		$this->id_empresa->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_empresa, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_empresa->ViewValue = $this->id_empresa->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_empresa->ViewValue = $this->id_empresa->CurrentValue;
+			}
+		} else {
+			$this->id_empresa->ViewValue = NULL;
+		}
 		$this->id_empresa->ViewCustomAttributes = "";
+
+		// id_configurar
+		$this->id_configurar->LinkCustomAttributes = "";
+		$this->id_configurar->HrefValue = "";
+		$this->id_configurar->TooltipValue = "";
 
 		// pedido_minimo
 		$this->pedido_minimo->LinkCustomAttributes = "";
@@ -618,6 +684,12 @@ class cconfigurar extends cTable {
 		// Call Row Rendering event
 		$this->Row_Rendering();
 
+		// id_configurar
+		$this->id_configurar->EditAttrs["class"] = "form-control";
+		$this->id_configurar->EditCustomAttributes = "";
+		$this->id_configurar->EditValue = $this->id_configurar->CurrentValue;
+		$this->id_configurar->ViewCustomAttributes = "";
+
 		// pedido_minimo
 		$this->pedido_minimo->EditAttrs["class"] = "form-control";
 		$this->pedido_minimo->EditCustomAttributes = "";
@@ -635,8 +707,6 @@ class cconfigurar extends cTable {
 		// id_empresa
 		$this->id_empresa->EditAttrs["class"] = "form-control";
 		$this->id_empresa->EditCustomAttributes = "";
-		$this->id_empresa->EditValue = $this->id_empresa->CurrentValue;
-		$this->id_empresa->PlaceHolder = ew_RemoveHtml($this->id_empresa->FldCaption());
 
 		// Call Row Rendered event
 		$this->Row_Rendered();
@@ -669,6 +739,7 @@ class cconfigurar extends cTable {
 					if ($this->valor_minimo_parcela->Exportable) $Doc->ExportCaption($this->valor_minimo_parcela);
 					if ($this->id_empresa->Exportable) $Doc->ExportCaption($this->id_empresa);
 				} else {
+					if ($this->id_configurar->Exportable) $Doc->ExportCaption($this->id_configurar);
 					if ($this->pedido_minimo->Exportable) $Doc->ExportCaption($this->pedido_minimo);
 					if ($this->valor_minimo_parcela->Exportable) $Doc->ExportCaption($this->valor_minimo_parcela);
 					if ($this->id_empresa->Exportable) $Doc->ExportCaption($this->id_empresa);
@@ -707,6 +778,7 @@ class cconfigurar extends cTable {
 						if ($this->valor_minimo_parcela->Exportable) $Doc->ExportField($this->valor_minimo_parcela);
 						if ($this->id_empresa->Exportable) $Doc->ExportField($this->id_empresa);
 					} else {
+						if ($this->id_configurar->Exportable) $Doc->ExportField($this->id_configurar);
 						if ($this->pedido_minimo->Exportable) $Doc->ExportField($this->pedido_minimo);
 						if ($this->valor_minimo_parcela->Exportable) $Doc->ExportField($this->valor_minimo_parcela);
 						if ($this->id_empresa->Exportable) $Doc->ExportField($this->id_empresa);

@@ -20,13 +20,13 @@ if (!EW_IS_PHP5) die("This script requires PHP 5.4 or later. You are running " .
 define("EW_PATH_DELIMITER", ((EW_IS_WINDOWS) ? "\\" : "/"), TRUE); // Physical path delimiter
 $EW_ROOT_RELATIVE_PATH = "."; // Relative path of app root
 define("EW_UNFORMAT_YEAR", 50, TRUE); // Unformat year
-define("EW_PROJECT_NAME", "project2", TRUE); // Project name
+define("EW_PROJECT_NAME", "pedidos", TRUE); // Project name
 define("EW_CONFIG_FILE_FOLDER", EW_PROJECT_NAME, TRUE); // Config file name
-define("EW_PROJECT_ID", "{D83B9BB1-2CD4-4540-9A5B-B0E890360FB3}", TRUE); // Project ID (GUID)
+define("EW_PROJECT_ID", "{A4E38B50-67B8-459F-992C-3B232135A6E3}", TRUE); // Project ID (GUID)
 $EW_RELATED_PROJECT_ID = "";
 $EW_RELATED_LANGUAGE_FOLDER = "";
-define("EW_RANDOM_KEY", 'xo5jOTj89rd8TB1X', TRUE); // Random key for encryption
-define("EW_PROJECT_STYLESHEET_FILENAME", "phpcss/project2.css", TRUE); // Project stylesheet file name
+define("EW_RANDOM_KEY", 'DlmTK84n5H3sHJo0', TRUE); // Random key for encryption
+define("EW_PROJECT_STYLESHEET_FILENAME", "phpcss/pedidos.css", TRUE); // Project stylesheet file name
 define("EW_CHARSET", "utf-8", TRUE); // Project charset
 define("EW_EMAIL_CHARSET", EW_CHARSET, TRUE); // Email charset
 define("EW_EMAIL_KEYWORD_SEPARATOR", "", TRUE); // Email keyword separator
@@ -170,8 +170,8 @@ define("EW_SESSION_TEMP_IMAGES", EW_PROJECT_NAME . "_TempImages", TRUE); // Temp
 // Language settings
 define("EW_LANGUAGE_FOLDER", $EW_RELATIVE_PATH . "phplang/", TRUE);
 $EW_LANGUAGE_FILE = array();
-$EW_LANGUAGE_FILE[] = array("en", "", "english.xml");
-define("EW_LANGUAGE_DEFAULT_ID", "en", TRUE);
+$EW_LANGUAGE_FILE[] = array("pt-br", "", "portugues.xml");
+define("EW_LANGUAGE_DEFAULT_ID", "pt-br", TRUE);
 define("EW_SESSION_LANGUAGE_ID", EW_PROJECT_NAME . "_LanguageId", TRUE); // Language ID
 define("EW_LOCALE_FOLDER", $EW_RELATIVE_PATH . "phplocale/", TRUE);
 

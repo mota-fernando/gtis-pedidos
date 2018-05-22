@@ -21,7 +21,7 @@ class cconfigurar_list extends cconfigurar {
 	var $PageID = 'list';
 
 	// Project ID
-	var $ProjectID = '{D83B9BB1-2CD4-4540-9A5B-B0E890360FB3}';
+	var $ProjectID = '{A4E38B50-67B8-459F-992C-3B232135A6E3}';
 
 	// Table name
 	var $TableName = 'configurar';
@@ -371,6 +371,9 @@ class cconfigurar_list extends cconfigurar {
 
 		// Set up list options
 		$this->SetupListOptions();
+		$this->id_configurar->SetVisibility();
+		if ($this->IsAdd() || $this->IsCopy() || $this->IsGridAdd())
+			$this->id_configurar->Visible = FALSE;
 		$this->pedido_minimo->SetVisibility();
 		$this->valor_minimo_parcela->SetVisibility();
 		$this->id_empresa->SetVisibility();
@@ -633,7 +636,10 @@ class cconfigurar_list extends cconfigurar {
 	// Set up key values
 	function SetupKeyValues($key) {
 		$arrKeyFlds = explode($GLOBALS["EW_COMPOSITE_KEY_SEPARATOR"], $key);
-		if (count($arrKeyFlds) >= 0) {
+		if (count($arrKeyFlds) >= 1) {
+			$this->id_configurar->setFormValue($arrKeyFlds[0]);
+			if (!is_numeric($this->id_configurar->FormValue))
+				return FALSE;
 		}
 		return TRUE;
 	}
@@ -645,6 +651,7 @@ class cconfigurar_list extends cconfigurar {
 		if (@$_GET["order"] <> "") {
 			$this->CurrentOrder = @$_GET["order"];
 			$this->CurrentOrderType = @$_GET["ordertype"];
+			$this->UpdateSort($this->id_configurar); // id_configurar
 			$this->UpdateSort($this->pedido_minimo); // pedido_minimo
 			$this->UpdateSort($this->valor_minimo_parcela); // valor_minimo_parcela
 			$this->UpdateSort($this->id_empresa); // id_empresa
@@ -676,6 +683,7 @@ class cconfigurar_list extends cconfigurar {
 			if ($this->Command == "resetsort") {
 				$sOrderBy = "";
 				$this->setSessionOrderBy($sOrderBy);
+				$this->id_configurar->setSort("");
 				$this->pedido_minimo->setSort("");
 				$this->valor_minimo_parcela->setSort("");
 				$this->id_empresa->setSort("");
@@ -696,6 +704,30 @@ class cconfigurar_list extends cconfigurar {
 		$item->Body = "";
 		$item->OnLeft = FALSE;
 		$item->Visible = FALSE;
+
+		// "view"
+		$item = &$this->ListOptions->Add("view");
+		$item->CssClass = "text-nowrap";
+		$item->Visible = TRUE;
+		$item->OnLeft = FALSE;
+
+		// "edit"
+		$item = &$this->ListOptions->Add("edit");
+		$item->CssClass = "text-nowrap";
+		$item->Visible = TRUE;
+		$item->OnLeft = FALSE;
+
+		// "copy"
+		$item = &$this->ListOptions->Add("copy");
+		$item->CssClass = "text-nowrap";
+		$item->Visible = TRUE;
+		$item->OnLeft = FALSE;
+
+		// "delete"
+		$item = &$this->ListOptions->Add("delete");
+		$item->CssClass = "text-nowrap";
+		$item->Visible = TRUE;
+		$item->OnLeft = FALSE;
 
 		// List actions
 		$item = &$this->ListOptions->Add("listactions");
@@ -737,6 +769,40 @@ class cconfigurar_list extends cconfigurar {
 		// Call ListOptions_Rendering event
 		$this->ListOptions_Rendering();
 
+		// "view"
+		$oListOpt = &$this->ListOptions->Items["view"];
+		$viewcaption = ew_HtmlTitle($Language->Phrase("ViewLink"));
+		if (TRUE) {
+			$oListOpt->Body = "<a class=\"ewRowLink ewView\" title=\"" . $viewcaption . "\" data-caption=\"" . $viewcaption . "\" href=\"" . ew_HtmlEncode($this->ViewUrl) . "\">" . $Language->Phrase("ViewLink") . "</a>";
+		} else {
+			$oListOpt->Body = "";
+		}
+
+		// "edit"
+		$oListOpt = &$this->ListOptions->Items["edit"];
+		$editcaption = ew_HtmlTitle($Language->Phrase("EditLink"));
+		if (TRUE) {
+			$oListOpt->Body = "<a class=\"ewRowLink ewEdit\" title=\"" . ew_HtmlTitle($Language->Phrase("EditLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("EditLink")) . "\" href=\"" . ew_HtmlEncode($this->EditUrl) . "\">" . $Language->Phrase("EditLink") . "</a>";
+		} else {
+			$oListOpt->Body = "";
+		}
+
+		// "copy"
+		$oListOpt = &$this->ListOptions->Items["copy"];
+		$copycaption = ew_HtmlTitle($Language->Phrase("CopyLink"));
+		if (TRUE) {
+			$oListOpt->Body = "<a class=\"ewRowLink ewCopy\" title=\"" . $copycaption . "\" data-caption=\"" . $copycaption . "\" href=\"" . ew_HtmlEncode($this->CopyUrl) . "\">" . $Language->Phrase("CopyLink") . "</a>";
+		} else {
+			$oListOpt->Body = "";
+		}
+
+		// "delete"
+		$oListOpt = &$this->ListOptions->Items["delete"];
+		if (TRUE)
+			$oListOpt->Body = "<a class=\"ewRowLink ewDelete\"" . "" . " title=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" href=\"" . ew_HtmlEncode($this->DeleteUrl) . "\">" . $Language->Phrase("DeleteLink") . "</a>";
+		else
+			$oListOpt->Body = "";
+
 		// Set up list action buttons
 		$oListOpt = &$this->ListOptions->GetItem("listactions");
 		if ($oListOpt && $this->Export == "" && $this->CurrentAction == "") {
@@ -768,6 +834,7 @@ class cconfigurar_list extends cconfigurar {
 
 		// "checkbox"
 		$oListOpt = &$this->ListOptions->Items["checkbox"];
+		$oListOpt->Body = "<input type=\"checkbox\" name=\"key_m[]\" class=\"ewMultiSelect\" value=\"" . ew_HtmlEncode($this->id_configurar->CurrentValue) . "\" onclick=\"ew_ClickMultiCheckbox(event);\">";
 		$this->RenderListOptionsExt();
 
 		// Call ListOptions_Rendered event
@@ -778,6 +845,13 @@ class cconfigurar_list extends cconfigurar {
 	function SetupOtherOptions() {
 		global $Language, $Security;
 		$options = &$this->OtherOptions;
+		$option = $options["addedit"];
+
+		// Add
+		$item = &$option->Add("add");
+		$addcaption = ew_HtmlTitle($Language->Phrase("AddLink"));
+		$item->Body = "<a class=\"ewAddEdit ewAdd\" title=\"" . $addcaption . "\" data-caption=\"" . $addcaption . "\" href=\"" . ew_HtmlEncode($this->AddUrl) . "\">" . $Language->Phrase("AddLink") . "</a>";
+		$item->Visible = ($this->AddUrl <> "");
 		$option = $options["action"];
 
 		// Set up options default
@@ -1043,6 +1117,7 @@ class cconfigurar_list extends cconfigurar {
 		$this->Row_Selected($row);
 		if (!$rs || $rs->EOF)
 			return;
+		$this->id_configurar->setDbValue($row['id_configurar']);
 		$this->pedido_minimo->setDbValue($row['pedido_minimo']);
 		$this->valor_minimo_parcela->setDbValue($row['valor_minimo_parcela']);
 		$this->id_empresa->setDbValue($row['id_empresa']);
@@ -1051,6 +1126,7 @@ class cconfigurar_list extends cconfigurar {
 	// Return a row with default values
 	function NewRow() {
 		$row = array();
+		$row['id_configurar'] = NULL;
 		$row['pedido_minimo'] = NULL;
 		$row['valor_minimo_parcela'] = NULL;
 		$row['id_empresa'] = NULL;
@@ -1062,6 +1138,7 @@ class cconfigurar_list extends cconfigurar {
 		if (!$rs || !is_array($rs) && $rs->EOF)
 			return;
 		$row = is_array($rs) ? $rs : $rs->fields;
+		$this->id_configurar->DbValue = $row['id_configurar'];
 		$this->pedido_minimo->DbValue = $row['pedido_minimo'];
 		$this->valor_minimo_parcela->DbValue = $row['valor_minimo_parcela'];
 		$this->id_empresa->DbValue = $row['id_empresa'];
@@ -1069,7 +1146,24 @@ class cconfigurar_list extends cconfigurar {
 
 	// Load old record
 	function LoadOldRecord() {
-		return FALSE;
+
+		// Load key values from Session
+		$bValidKey = TRUE;
+		if (strval($this->getKey("id_configurar")) <> "")
+			$this->id_configurar->CurrentValue = $this->getKey("id_configurar"); // id_configurar
+		else
+			$bValidKey = FALSE;
+
+		// Load old record
+		$this->OldRecordset = NULL;
+		if ($bValidKey) {
+			$this->CurrentFilter = $this->KeyFilter();
+			$sSql = $this->SQL();
+			$conn = &$this->Connection();
+			$this->OldRecordset = ew_LoadRecordset($sSql, $conn);
+		}
+		$this->LoadRowValues($this->OldRecordset); // Load row values
+		return $bValidKey;
 	}
 
 	// Render row values based on field settings
@@ -1096,11 +1190,16 @@ class cconfigurar_list extends cconfigurar {
 		$this->Row_Rendering();
 
 		// Common render codes for all row types
+		// id_configurar
 		// pedido_minimo
 		// valor_minimo_parcela
 		// id_empresa
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
+
+		// id_configurar
+		$this->id_configurar->ViewValue = $this->id_configurar->CurrentValue;
+		$this->id_configurar->ViewCustomAttributes = "";
 
 		// pedido_minimo
 		$this->pedido_minimo->ViewValue = $this->pedido_minimo->CurrentValue;
@@ -1111,8 +1210,32 @@ class cconfigurar_list extends cconfigurar {
 		$this->valor_minimo_parcela->ViewCustomAttributes = "";
 
 		// id_empresa
-		$this->id_empresa->ViewValue = $this->id_empresa->CurrentValue;
+		if (strval($this->id_empresa->CurrentValue) <> "") {
+			$sFilterWrk = "`id_perfil`" . ew_SearchString("=", $this->id_empresa->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_perfil`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `empresas`";
+		$sWhereWrk = "";
+		$this->id_empresa->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_empresa, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_empresa->ViewValue = $this->id_empresa->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_empresa->ViewValue = $this->id_empresa->CurrentValue;
+			}
+		} else {
+			$this->id_empresa->ViewValue = NULL;
+		}
 		$this->id_empresa->ViewCustomAttributes = "";
+
+			// id_configurar
+			$this->id_configurar->LinkCustomAttributes = "";
+			$this->id_configurar->HrefValue = "";
+			$this->id_configurar->TooltipValue = "";
 
 			// pedido_minimo
 			$this->pedido_minimo->LinkCustomAttributes = "";
@@ -1327,8 +1450,10 @@ fconfigurarlist.Form_CustomValidate =
 fconfigurarlist.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-// Form object for search
+fconfigurarlist.Lists["x_id_empresa"] = {"LinkField":"x_id_perfil","Ajax":true,"AutoFill":false,"DisplayFields":["x_razao_social","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"empresas"};
+fconfigurarlist.Lists["x_id_empresa"].Data = "<?php echo $configurar_list->id_empresa->LookupFilterQuery(FALSE, "list") ?>";
 
+// Form object for search
 </script>
 <script type="text/javascript">
 
@@ -1393,6 +1518,15 @@ $configurar_list->RenderListOptions();
 // Render list options (header, left)
 $configurar_list->ListOptions->Render("header", "left");
 ?>
+<?php if ($configurar->id_configurar->Visible) { // id_configurar ?>
+	<?php if ($configurar->SortUrl($configurar->id_configurar) == "") { ?>
+		<th data-name="id_configurar" class="<?php echo $configurar->id_configurar->HeaderCellClass() ?>"><div id="elh_configurar_id_configurar" class="configurar_id_configurar"><div class="ewTableHeaderCaption"><?php echo $configurar->id_configurar->FldCaption() ?></div></div></th>
+	<?php } else { ?>
+		<th data-name="id_configurar" class="<?php echo $configurar->id_configurar->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $configurar->SortUrl($configurar->id_configurar) ?>',1);"><div id="elh_configurar_id_configurar" class="configurar_id_configurar">
+			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $configurar->id_configurar->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($configurar->id_configurar->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($configurar->id_configurar->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
+		</div></div></th>
+	<?php } ?>
+<?php } ?>
 <?php if ($configurar->pedido_minimo->Visible) { // pedido_minimo ?>
 	<?php if ($configurar->SortUrl($configurar->pedido_minimo) == "") { ?>
 		<th data-name="pedido_minimo" class="<?php echo $configurar->pedido_minimo->HeaderCellClass() ?>"><div id="elh_configurar_pedido_minimo" class="configurar_pedido_minimo"><div class="ewTableHeaderCaption"><?php echo $configurar->pedido_minimo->FldCaption() ?></div></div></th>
@@ -1485,6 +1619,14 @@ while ($configurar_list->RecCnt < $configurar_list->StopRec) {
 // Render list options (body, left)
 $configurar_list->ListOptions->Render("body", "left", $configurar_list->RowCnt);
 ?>
+	<?php if ($configurar->id_configurar->Visible) { // id_configurar ?>
+		<td data-name="id_configurar"<?php echo $configurar->id_configurar->CellAttributes() ?>>
+<span id="el<?php echo $configurar_list->RowCnt ?>_configurar_id_configurar" class="configurar_id_configurar">
+<span<?php echo $configurar->id_configurar->ViewAttributes() ?>>
+<?php echo $configurar->id_configurar->ListViewValue() ?></span>
+</span>
+</td>
+	<?php } ?>
 	<?php if ($configurar->pedido_minimo->Visible) { // pedido_minimo ?>
 		<td data-name="pedido_minimo"<?php echo $configurar->pedido_minimo->CellAttributes() ?>>
 <span id="el<?php echo $configurar_list->RowCnt ?>_configurar_pedido_minimo" class="configurar_pedido_minimo">

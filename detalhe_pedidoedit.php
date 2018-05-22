@@ -6,6 +6,7 @@ ob_start(); // Turn on output buffering
 <?php include_once ((EW_USE_ADODB) ? "adodb5/adodb.inc.php" : "ewmysql14.php") ?>
 <?php include_once "phpfn14.php" ?>
 <?php include_once "detalhe_pedidoinfo.php" ?>
+<?php include_once "pedidosinfo.php" ?>
 <?php include_once "userfn14.php" ?>
 <?php
 
@@ -21,7 +22,7 @@ class cdetalhe_pedido_edit extends cdetalhe_pedido {
 	var $PageID = 'edit';
 
 	// Project ID
-	var $ProjectID = '{D83B9BB1-2CD4-4540-9A5B-B0E890360FB3}';
+	var $ProjectID = '{A4E38B50-67B8-459F-992C-3B232135A6E3}';
 
 	// Table name
 	var $TableName = 'detalhe_pedido';
@@ -254,6 +255,9 @@ class cdetalhe_pedido_edit extends cdetalhe_pedido {
 			$GLOBALS["Table"] = &$GLOBALS["detalhe_pedido"];
 		}
 
+		// Table object (pedidos)
+		if (!isset($GLOBALS['pedidos'])) $GLOBALS['pedidos'] = new cpedidos();
+
 		// Page ID
 		if (!defined("EW_PAGE_ID"))
 			define("EW_PAGE_ID", 'edit', TRUE);
@@ -429,6 +433,9 @@ class cdetalhe_pedido_edit extends cdetalhe_pedido {
 				$this->id_detalhe->CurrentValue = NULL;
 			}
 		}
+
+		// Set up master detail parameters
+		$this->SetupMasterParms();
 
 		// Load current record
 		$loaded = $this->LoadRow();
@@ -680,7 +687,26 @@ class cdetalhe_pedido_edit extends cdetalhe_pedido {
 		$this->numero_pedido->ViewCustomAttributes = "";
 
 		// id_produto
-		$this->id_produto->ViewValue = $this->id_produto->CurrentValue;
+		if (strval($this->id_produto->CurrentValue) <> "") {
+			$sFilterWrk = "`id_produto`" . ew_SearchString("=", $this->id_produto->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_produto`, `nome_produto` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `produtos`";
+		$sWhereWrk = "";
+		$this->id_produto->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_produto, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_produto->ViewValue = $this->id_produto->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_produto->ViewValue = $this->id_produto->CurrentValue;
+			}
+		} else {
+			$this->id_produto->ViewValue = NULL;
+		}
 		$this->id_produto->ViewCustomAttributes = "";
 
 		// quantidade
@@ -692,7 +718,26 @@ class cdetalhe_pedido_edit extends cdetalhe_pedido {
 		$this->custo->ViewCustomAttributes = "";
 
 		// id_desconto
-		$this->id_desconto->ViewValue = $this->id_desconto->CurrentValue;
+		if (strval($this->id_desconto->CurrentValue) <> "") {
+			$sFilterWrk = "`id_desconto`" . ew_SearchString("=", $this->id_desconto->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_desconto`, `porcentagem` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `desconto`";
+		$sWhereWrk = "";
+		$this->id_desconto->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_desconto, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_desconto->ViewValue = $this->id_desconto->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_desconto->ViewValue = $this->id_desconto->CurrentValue;
+			}
+		} else {
+			$this->id_desconto->ViewValue = NULL;
+		}
 		$this->id_desconto->ViewCustomAttributes = "";
 
 			// id_detalhe
@@ -735,14 +780,33 @@ class cdetalhe_pedido_edit extends cdetalhe_pedido {
 			// numero_pedido
 			$this->numero_pedido->EditAttrs["class"] = "form-control";
 			$this->numero_pedido->EditCustomAttributes = "";
+			if ($this->numero_pedido->getSessionValue() <> "") {
+				$this->numero_pedido->CurrentValue = $this->numero_pedido->getSessionValue();
+			$this->numero_pedido->ViewValue = $this->numero_pedido->CurrentValue;
+			$this->numero_pedido->ViewCustomAttributes = "";
+			} else {
 			$this->numero_pedido->EditValue = ew_HtmlEncode($this->numero_pedido->CurrentValue);
 			$this->numero_pedido->PlaceHolder = ew_RemoveHtml($this->numero_pedido->FldCaption());
+			}
 
 			// id_produto
 			$this->id_produto->EditAttrs["class"] = "form-control";
 			$this->id_produto->EditCustomAttributes = "";
-			$this->id_produto->EditValue = ew_HtmlEncode($this->id_produto->CurrentValue);
-			$this->id_produto->PlaceHolder = ew_RemoveHtml($this->id_produto->FldCaption());
+			if (trim(strval($this->id_produto->CurrentValue)) == "") {
+				$sFilterWrk = "0=1";
+			} else {
+				$sFilterWrk = "`id_produto`" . ew_SearchString("=", $this->id_produto->CurrentValue, EW_DATATYPE_NUMBER, "");
+			}
+			$sSqlWrk = "SELECT `id_produto`, `nome_produto` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `produtos`";
+			$sWhereWrk = "";
+			$this->id_produto->LookupFilters = array();
+			ew_AddFilter($sWhereWrk, $sFilterWrk);
+			$this->Lookup_Selecting($this->id_produto, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
+			if ($rswrk) $rswrk->Close();
+			$this->id_produto->EditValue = $arwrk;
 
 			// quantidade
 			$this->quantidade->EditAttrs["class"] = "form-control";
@@ -760,8 +824,21 @@ class cdetalhe_pedido_edit extends cdetalhe_pedido {
 			// id_desconto
 			$this->id_desconto->EditAttrs["class"] = "form-control";
 			$this->id_desconto->EditCustomAttributes = "";
-			$this->id_desconto->EditValue = ew_HtmlEncode($this->id_desconto->CurrentValue);
-			$this->id_desconto->PlaceHolder = ew_RemoveHtml($this->id_desconto->FldCaption());
+			if (trim(strval($this->id_desconto->CurrentValue)) == "") {
+				$sFilterWrk = "0=1";
+			} else {
+				$sFilterWrk = "`id_desconto`" . ew_SearchString("=", $this->id_desconto->CurrentValue, EW_DATATYPE_NUMBER, "");
+			}
+			$sSqlWrk = "SELECT `id_desconto`, `porcentagem` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `desconto`";
+			$sWhereWrk = "";
+			$this->id_desconto->LookupFilters = array();
+			ew_AddFilter($sWhereWrk, $sFilterWrk);
+			$this->Lookup_Selecting($this->id_desconto, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
+			if ($rswrk) $rswrk->Close();
+			$this->id_desconto->EditValue = $arwrk;
 
 			// Edit refer script
 			// id_detalhe
@@ -810,17 +887,11 @@ class cdetalhe_pedido_edit extends cdetalhe_pedido {
 		if (!ew_CheckInteger($this->numero_pedido->FormValue)) {
 			ew_AddMessage($gsFormError, $this->numero_pedido->FldErrMsg());
 		}
-		if (!ew_CheckInteger($this->id_produto->FormValue)) {
-			ew_AddMessage($gsFormError, $this->id_produto->FldErrMsg());
-		}
 		if (!ew_CheckInteger($this->quantidade->FormValue)) {
 			ew_AddMessage($gsFormError, $this->quantidade->FldErrMsg());
 		}
 		if (!ew_CheckNumber($this->custo->FormValue)) {
 			ew_AddMessage($gsFormError, $this->custo->FldErrMsg());
-		}
-		if (!ew_CheckInteger($this->id_desconto->FormValue)) {
-			ew_AddMessage($gsFormError, $this->id_desconto->FldErrMsg());
 		}
 
 		// Return validate result
@@ -905,6 +976,69 @@ class cdetalhe_pedido_edit extends cdetalhe_pedido {
 		return $EditRow;
 	}
 
+	// Set up master/detail based on QueryString
+	function SetupMasterParms() {
+		$bValidMaster = FALSE;
+
+		// Get the keys for master table
+		if (isset($_GET[EW_TABLE_SHOW_MASTER])) {
+			$sMasterTblVar = $_GET[EW_TABLE_SHOW_MASTER];
+			if ($sMasterTblVar == "") {
+				$bValidMaster = TRUE;
+				$this->DbMasterFilter = "";
+				$this->DbDetailFilter = "";
+			}
+			if ($sMasterTblVar == "pedidos") {
+				$bValidMaster = TRUE;
+				if (@$_GET["fk_numero"] <> "") {
+					$GLOBALS["pedidos"]->numero->setQueryStringValue($_GET["fk_numero"]);
+					$this->numero_pedido->setQueryStringValue($GLOBALS["pedidos"]->numero->QueryStringValue);
+					$this->numero_pedido->setSessionValue($this->numero_pedido->QueryStringValue);
+					if (!is_numeric($GLOBALS["pedidos"]->numero->QueryStringValue)) $bValidMaster = FALSE;
+				} else {
+					$bValidMaster = FALSE;
+				}
+			}
+		} elseif (isset($_POST[EW_TABLE_SHOW_MASTER])) {
+			$sMasterTblVar = $_POST[EW_TABLE_SHOW_MASTER];
+			if ($sMasterTblVar == "") {
+				$bValidMaster = TRUE;
+				$this->DbMasterFilter = "";
+				$this->DbDetailFilter = "";
+			}
+			if ($sMasterTblVar == "pedidos") {
+				$bValidMaster = TRUE;
+				if (@$_POST["fk_numero"] <> "") {
+					$GLOBALS["pedidos"]->numero->setFormValue($_POST["fk_numero"]);
+					$this->numero_pedido->setFormValue($GLOBALS["pedidos"]->numero->FormValue);
+					$this->numero_pedido->setSessionValue($this->numero_pedido->FormValue);
+					if (!is_numeric($GLOBALS["pedidos"]->numero->FormValue)) $bValidMaster = FALSE;
+				} else {
+					$bValidMaster = FALSE;
+				}
+			}
+		}
+		if ($bValidMaster) {
+
+			// Save current master table
+			$this->setCurrentMasterTable($sMasterTblVar);
+			$this->setSessionWhere($this->GetDetailFilter());
+
+			// Reset start record counter (new master key)
+			if (!$this->IsAddOrEdit()) {
+				$this->StartRec = 1;
+				$this->setStartRecordNumber($this->StartRec);
+			}
+
+			// Clear previous master key from Session
+			if ($sMasterTblVar <> "pedidos") {
+				if ($this->numero_pedido->CurrentValue == "") $this->numero_pedido->setSessionValue("");
+			}
+		}
+		$this->DbMasterFilter = $this->GetMasterFilter(); // Get master filter
+		$this->DbDetailFilter = $this->GetDetailFilter(); // Get detail filter
+	}
+
 	// Set up Breadcrumb
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
@@ -920,6 +1054,30 @@ class cdetalhe_pedido_edit extends cdetalhe_pedido {
 		global $gsLanguage;
 		$pageId = $pageId ?: $this->PageID;
 		switch ($fld->FldVar) {
+		case "x_id_produto":
+			$sSqlWrk = "";
+			$sSqlWrk = "SELECT `id_produto` AS `LinkFld`, `nome_produto` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `produtos`";
+			$sWhereWrk = "";
+			$fld->LookupFilters = array();
+			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`id_produto` IN ({filter_value})', "t0" => "3", "fn0" => "");
+			$sSqlWrk = "";
+			$this->Lookup_Selecting($this->id_produto, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			if ($sSqlWrk <> "")
+				$fld->LookupFilters["s"] .= $sSqlWrk;
+			break;
+		case "x_id_desconto":
+			$sSqlWrk = "";
+			$sSqlWrk = "SELECT `id_desconto` AS `LinkFld`, `porcentagem` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `desconto`";
+			$sWhereWrk = "";
+			$fld->LookupFilters = array();
+			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`id_desconto` IN ({filter_value})', "t0" => "3", "fn0" => "");
+			$sSqlWrk = "";
+			$this->Lookup_Selecting($this->id_desconto, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			if ($sSqlWrk <> "")
+				$fld->LookupFilters["s"] .= $sSqlWrk;
+			break;
 		}
 	}
 
@@ -1042,18 +1200,12 @@ fdetalhe_pedidoedit.Validate = function() {
 			elm = this.GetElements("x" + infix + "_numero_pedido");
 			if (elm && !ew_CheckInteger(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($detalhe_pedido->numero_pedido->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_id_produto");
-			if (elm && !ew_CheckInteger(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($detalhe_pedido->id_produto->FldErrMsg()) ?>");
 			elm = this.GetElements("x" + infix + "_quantidade");
 			if (elm && !ew_CheckInteger(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($detalhe_pedido->quantidade->FldErrMsg()) ?>");
 			elm = this.GetElements("x" + infix + "_custo");
 			if (elm && !ew_CheckNumber(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($detalhe_pedido->custo->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_id_desconto");
-			if (elm && !ew_CheckInteger(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($detalhe_pedido->id_desconto->FldErrMsg()) ?>");
 
 			// Fire Form_CustomValidate event
 			if (!this.Form_CustomValidate(fobj))
@@ -1083,8 +1235,12 @@ fdetalhe_pedidoedit.Form_CustomValidate =
 fdetalhe_pedidoedit.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-// Form object for search
+fdetalhe_pedidoedit.Lists["x_id_produto"] = {"LinkField":"x_id_produto","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_produto","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"produtos"};
+fdetalhe_pedidoedit.Lists["x_id_produto"].Data = "<?php echo $detalhe_pedido_edit->id_produto->LookupFilterQuery(FALSE, "edit") ?>";
+fdetalhe_pedidoedit.Lists["x_id_desconto"] = {"LinkField":"x_id_desconto","Ajax":true,"AutoFill":false,"DisplayFields":["x_porcentagem","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"desconto"};
+fdetalhe_pedidoedit.Lists["x_id_desconto"].Data = "<?php echo $detalhe_pedido_edit->id_desconto->LookupFilterQuery(FALSE, "edit") ?>";
 
+// Form object for search
 </script>
 <script type="text/javascript">
 
@@ -1101,6 +1257,10 @@ $detalhe_pedido_edit->ShowMessage();
 <input type="hidden" name="t" value="detalhe_pedido">
 <input type="hidden" name="a_edit" id="a_edit" value="U">
 <input type="hidden" name="modal" value="<?php echo intval($detalhe_pedido_edit->IsModal) ?>">
+<?php if ($detalhe_pedido->getCurrentMasterTable() == "pedidos") { ?>
+<input type="hidden" name="<?php echo EW_TABLE_SHOW_MASTER ?>" value="pedidos">
+<input type="hidden" name="fk_numero" value="<?php echo $detalhe_pedido->numero_pedido->getSessionValue() ?>">
+<?php } ?>
 <div class="ewEditDiv"><!-- page* -->
 <?php if ($detalhe_pedido->id_detalhe->Visible) { // id_detalhe ?>
 	<div id="r_id_detalhe" class="form-group">
@@ -1118,9 +1278,17 @@ $detalhe_pedido_edit->ShowMessage();
 	<div id="r_numero_pedido" class="form-group">
 		<label id="elh_detalhe_pedido_numero_pedido" for="x_numero_pedido" class="<?php echo $detalhe_pedido_edit->LeftColumnClass ?>"><?php echo $detalhe_pedido->numero_pedido->FldCaption() ?></label>
 		<div class="<?php echo $detalhe_pedido_edit->RightColumnClass ?>"><div<?php echo $detalhe_pedido->numero_pedido->CellAttributes() ?>>
+<?php if ($detalhe_pedido->numero_pedido->getSessionValue() <> "") { ?>
+<span id="el_detalhe_pedido_numero_pedido">
+<span<?php echo $detalhe_pedido->numero_pedido->ViewAttributes() ?>>
+<p class="form-control-static"><?php echo $detalhe_pedido->numero_pedido->ViewValue ?></p></span>
+</span>
+<input type="hidden" id="x_numero_pedido" name="x_numero_pedido" value="<?php echo ew_HtmlEncode($detalhe_pedido->numero_pedido->CurrentValue) ?>">
+<?php } else { ?>
 <span id="el_detalhe_pedido_numero_pedido">
 <input type="text" data-table="detalhe_pedido" data-field="x_numero_pedido" name="x_numero_pedido" id="x_numero_pedido" size="30" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->numero_pedido->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->numero_pedido->EditValue ?>"<?php echo $detalhe_pedido->numero_pedido->EditAttributes() ?>>
 </span>
+<?php } ?>
 <?php echo $detalhe_pedido->numero_pedido->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
@@ -1129,7 +1297,10 @@ $detalhe_pedido_edit->ShowMessage();
 		<label id="elh_detalhe_pedido_id_produto" for="x_id_produto" class="<?php echo $detalhe_pedido_edit->LeftColumnClass ?>"><?php echo $detalhe_pedido->id_produto->FldCaption() ?></label>
 		<div class="<?php echo $detalhe_pedido_edit->RightColumnClass ?>"><div<?php echo $detalhe_pedido->id_produto->CellAttributes() ?>>
 <span id="el_detalhe_pedido_id_produto">
-<input type="text" data-table="detalhe_pedido" data-field="x_id_produto" name="x_id_produto" id="x_id_produto" size="30" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->id_produto->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->id_produto->EditValue ?>"<?php echo $detalhe_pedido->id_produto->EditAttributes() ?>>
+<select data-table="detalhe_pedido" data-field="x_id_produto" data-value-separator="<?php echo $detalhe_pedido->id_produto->DisplayValueSeparatorAttribute() ?>" id="x_id_produto" name="x_id_produto"<?php echo $detalhe_pedido->id_produto->EditAttributes() ?>>
+<?php echo $detalhe_pedido->id_produto->SelectOptionListHtml("x_id_produto") ?>
+</select>
+<button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $detalhe_pedido->id_produto->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_produto',url:'produtosaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_produto"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $detalhe_pedido->id_produto->FldCaption() ?></span></button>
 </span>
 <?php echo $detalhe_pedido->id_produto->CustomMsg ?></div></div>
 	</div>
@@ -1159,7 +1330,10 @@ $detalhe_pedido_edit->ShowMessage();
 		<label id="elh_detalhe_pedido_id_desconto" for="x_id_desconto" class="<?php echo $detalhe_pedido_edit->LeftColumnClass ?>"><?php echo $detalhe_pedido->id_desconto->FldCaption() ?></label>
 		<div class="<?php echo $detalhe_pedido_edit->RightColumnClass ?>"><div<?php echo $detalhe_pedido->id_desconto->CellAttributes() ?>>
 <span id="el_detalhe_pedido_id_desconto">
-<input type="text" data-table="detalhe_pedido" data-field="x_id_desconto" name="x_id_desconto" id="x_id_desconto" size="30" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->id_desconto->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->id_desconto->EditValue ?>"<?php echo $detalhe_pedido->id_desconto->EditAttributes() ?>>
+<select data-table="detalhe_pedido" data-field="x_id_desconto" data-value-separator="<?php echo $detalhe_pedido->id_desconto->DisplayValueSeparatorAttribute() ?>" id="x_id_desconto" name="x_id_desconto"<?php echo $detalhe_pedido->id_desconto->EditAttributes() ?>>
+<?php echo $detalhe_pedido->id_desconto->SelectOptionListHtml("x_id_desconto") ?>
+</select>
+<button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $detalhe_pedido->id_desconto->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_desconto',url:'descontoaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_desconto"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $detalhe_pedido->id_desconto->FldCaption() ?></span></button>
 </span>
 <?php echo $detalhe_pedido->id_desconto->CustomMsg ?></div></div>
 	</div>

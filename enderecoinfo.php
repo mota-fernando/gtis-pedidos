@@ -41,7 +41,7 @@ class cendereco extends cTable {
 		$this->DetailEdit = FALSE; // Allow detail edit
 		$this->DetailView = FALSE; // Allow detail view
 		$this->ShowMultipleDetails = FALSE; // Show multiple details
-		$this->GridAddRowCount = 5;
+		$this->GridAddRowCount = 1;
 		$this->AllowAddDeleteRow = TRUE; // Allow add/delete row
 		$this->UserIDAllowSecurity = 0; // User ID Allow
 		$this->BasicSearch = new cBasicSearch($this->TableVar);
@@ -758,7 +758,6 @@ class cendereco extends cTable {
 			if ($Doc->Horizontal) { // Horizontal format, write header
 				$Doc->BeginExportRow();
 				if ($ExportPageType == "view") {
-					if ($this->id_endereco->Exportable) $Doc->ExportCaption($this->id_endereco);
 					if ($this->endereco->Exportable) $Doc->ExportCaption($this->endereco);
 					if ($this->bairro->Exportable) $Doc->ExportCaption($this->bairro);
 					if ($this->estado->Exportable) $Doc->ExportCaption($this->estado);
@@ -802,7 +801,6 @@ class cendereco extends cTable {
 				if (!$Doc->ExportCustom) {
 					$Doc->BeginExportRow($RowCnt); // Allow CSS styles if enabled
 					if ($ExportPageType == "view") {
-						if ($this->id_endereco->Exportable) $Doc->ExportField($this->id_endereco);
 						if ($this->endereco->Exportable) $Doc->ExportField($this->endereco);
 						if ($this->bairro->Exportable) $Doc->ExportField($this->bairro);
 						if ($this->estado->Exportable) $Doc->ExportField($this->estado);

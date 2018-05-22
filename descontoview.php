@@ -21,7 +21,7 @@ class cdesconto_view extends cdesconto {
 	var $PageID = 'view';
 
 	// Project ID
-	var $ProjectID = '{D83B9BB1-2CD4-4540-9A5B-B0E890360FB3}';
+	var $ProjectID = '{A4E38B50-67B8-459F-992C-3B232135A6E3}';
 
 	// Table name
 	var $TableName = 'desconto';
@@ -340,9 +340,6 @@ class cdesconto_view extends cdesconto {
 		// Is modal
 		$this->IsModal = (@$_GET["modal"] == "1" || @$_POST["modal"] == "1");
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
-		$this->id_desconto->SetVisibility();
-		if ($this->IsAdd() || $this->IsCopy() || $this->IsGridAdd())
-			$this->id_desconto->Visible = FALSE;
 		$this->porcentagem->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
@@ -655,11 +652,6 @@ class cdesconto_view extends cdesconto {
 		$this->porcentagem->ViewValue = $this->porcentagem->CurrentValue;
 		$this->porcentagem->ViewCustomAttributes = "";
 
-			// id_desconto
-			$this->id_desconto->LinkCustomAttributes = "";
-			$this->id_desconto->HrefValue = "";
-			$this->id_desconto->TooltipValue = "";
-
 			// porcentagem
 			$this->porcentagem->LinkCustomAttributes = "";
 			$this->porcentagem->HrefValue = "";
@@ -847,17 +839,6 @@ $desconto_view->ShowMessage();
 <input type="hidden" name="t" value="desconto">
 <input type="hidden" name="modal" value="<?php echo intval($desconto_view->IsModal) ?>">
 <table class="table table-striped table-bordered table-hover table-condensed ewViewTable">
-<?php if ($desconto->id_desconto->Visible) { // id_desconto ?>
-	<tr id="r_id_desconto">
-		<td class="col-sm-2"><span id="elh_desconto_id_desconto"><?php echo $desconto->id_desconto->FldCaption() ?></span></td>
-		<td data-name="id_desconto"<?php echo $desconto->id_desconto->CellAttributes() ?>>
-<span id="el_desconto_id_desconto">
-<span<?php echo $desconto->id_desconto->ViewAttributes() ?>>
-<?php echo $desconto->id_desconto->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
 <?php if ($desconto->porcentagem->Visible) { // porcentagem ?>
 	<tr id="r_porcentagem">
 		<td class="col-sm-2"><span id="elh_desconto_porcentagem"><?php echo $desconto->porcentagem->FldCaption() ?></span></td>

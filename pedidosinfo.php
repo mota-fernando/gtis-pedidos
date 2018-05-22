@@ -8,6 +8,7 @@ $pedidos = NULL;
 //
 class cpedidos extends cTable {
 	var $id_pedidos;
+	var $tipo_pedido;
 	var $numero;
 	var $fecha_data;
 	var $fecha_hora;
@@ -17,7 +18,6 @@ class cpedidos extends cTable {
 	var $comentarios;
 	var $id_representante;
 	var $comissao_representante;
-	var $tipo_pedido;
 	var $id_cliente;
 
 	//
@@ -43,11 +43,11 @@ class cpedidos extends cTable {
 		$this->ExportExcelPageSize = ""; // Page size (PHPExcel only)
 		$this->ExportWordPageOrientation = "portrait"; // Page orientation (PHPWord only)
 		$this->ExportWordColumnWidth = NULL; // Cell width (PHPWord only)
-		$this->DetailAdd = FALSE; // Allow detail add
-		$this->DetailEdit = FALSE; // Allow detail edit
-		$this->DetailView = FALSE; // Allow detail view
+		$this->DetailAdd = TRUE; // Allow detail add
+		$this->DetailEdit = TRUE; // Allow detail edit
+		$this->DetailView = TRUE; // Allow detail view
 		$this->ShowMultipleDetails = FALSE; // Show multiple details
-		$this->GridAddRowCount = 5;
+		$this->GridAddRowCount = 1;
 		$this->AllowAddDeleteRow = TRUE; // Allow add/delete row
 		$this->UserIDAllowSecurity = 0; // User ID Allow
 		$this->BasicSearch = new cBasicSearch($this->TableVar);
@@ -57,6 +57,14 @@ class cpedidos extends cTable {
 		$this->id_pedidos->Sortable = TRUE; // Allow sort
 		$this->id_pedidos->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['id_pedidos'] = &$this->id_pedidos;
+
+		// tipo_pedido
+		$this->tipo_pedido = new cField('pedidos', 'pedidos', 'x_tipo_pedido', 'tipo_pedido', '`tipo_pedido`', '`tipo_pedido`', 200, -1, FALSE, '`tipo_pedido`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'SELECT');
+		$this->tipo_pedido->Sortable = TRUE; // Allow sort
+		$this->tipo_pedido->UsePleaseSelect = TRUE; // Use PleaseSelect by default
+		$this->tipo_pedido->PleaseSelectText = $Language->Phrase("PleaseSelect"); // PleaseSelect text
+		$this->tipo_pedido->OptionCount = 2;
+		$this->fields['tipo_pedido'] = &$this->tipo_pedido;
 
 		// numero
 		$this->numero = new cField('pedidos', 'pedidos', 'x_numero', 'numero', '`numero`', '`numero`', 3, -1, FALSE, '`numero`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
@@ -77,19 +85,25 @@ class cpedidos extends cTable {
 		$this->fields['fecha_hora'] = &$this->fecha_hora;
 
 		// id_fornecedor
-		$this->id_fornecedor = new cField('pedidos', 'pedidos', 'x_id_fornecedor', 'id_fornecedor', '`id_fornecedor`', '`id_fornecedor`', 3, -1, FALSE, '`id_fornecedor`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->id_fornecedor = new cField('pedidos', 'pedidos', 'x_id_fornecedor', 'id_fornecedor', '`id_fornecedor`', '`id_fornecedor`', 3, -1, FALSE, '`id_fornecedor`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'SELECT');
 		$this->id_fornecedor->Sortable = TRUE; // Allow sort
+		$this->id_fornecedor->UsePleaseSelect = TRUE; // Use PleaseSelect by default
+		$this->id_fornecedor->PleaseSelectText = $Language->Phrase("PleaseSelect"); // PleaseSelect text
 		$this->id_fornecedor->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['id_fornecedor'] = &$this->id_fornecedor;
 
 		// id_transportadora
-		$this->id_transportadora = new cField('pedidos', 'pedidos', 'x_id_transportadora', 'id_transportadora', '`id_transportadora`', '`id_transportadora`', 200, -1, FALSE, '`id_transportadora`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->id_transportadora = new cField('pedidos', 'pedidos', 'x_id_transportadora', 'id_transportadora', '`id_transportadora`', '`id_transportadora`', 3, -1, FALSE, '`id_transportadora`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'SELECT');
 		$this->id_transportadora->Sortable = TRUE; // Allow sort
+		$this->id_transportadora->UsePleaseSelect = TRUE; // Use PleaseSelect by default
+		$this->id_transportadora->PleaseSelectText = $Language->Phrase("PleaseSelect"); // PleaseSelect text
 		$this->fields['id_transportadora'] = &$this->id_transportadora;
 
 		// id_prazos
-		$this->id_prazos = new cField('pedidos', 'pedidos', 'x_id_prazos', 'id_prazos', '`id_prazos`', '`id_prazos`', 200, -1, FALSE, '`id_prazos`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->id_prazos = new cField('pedidos', 'pedidos', 'x_id_prazos', 'id_prazos', '`id_prazos`', '`id_prazos`', 200, -1, FALSE, '`id_prazos`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'SELECT');
 		$this->id_prazos->Sortable = TRUE; // Allow sort
+		$this->id_prazos->UsePleaseSelect = TRUE; // Use PleaseSelect by default
+		$this->id_prazos->PleaseSelectText = $Language->Phrase("PleaseSelect"); // PleaseSelect text
 		$this->fields['id_prazos'] = &$this->id_prazos;
 
 		// comentarios
@@ -98,20 +112,19 @@ class cpedidos extends cTable {
 		$this->fields['comentarios'] = &$this->comentarios;
 
 		// id_representante
-		$this->id_representante = new cField('pedidos', 'pedidos', 'x_id_representante', 'id_representante', '`id_representante`', '`id_representante`', 3, -1, FALSE, '`id_representante`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->id_representante = new cField('pedidos', 'pedidos', 'x_id_representante', 'id_representante', '`id_representante`', '`id_representante`', 3, -1, FALSE, '`id_representante`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'SELECT');
 		$this->id_representante->Sortable = TRUE; // Allow sort
+		$this->id_representante->UsePleaseSelect = TRUE; // Use PleaseSelect by default
+		$this->id_representante->PleaseSelectText = $Language->Phrase("PleaseSelect"); // PleaseSelect text
 		$this->id_representante->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['id_representante'] = &$this->id_representante;
 
 		// comissao_representante
-		$this->comissao_representante = new cField('pedidos', 'pedidos', 'x_comissao_representante', 'comissao_representante', '`comissao_representante`', '`comissao_representante`', 200, -1, FALSE, '`comissao_representante`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->comissao_representante = new cField('pedidos', 'pedidos', 'x_comissao_representante', 'comissao_representante', '`comissao_representante`', '`comissao_representante`', 200, -1, FALSE, '`comissao_representante`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'SELECT');
 		$this->comissao_representante->Sortable = TRUE; // Allow sort
+		$this->comissao_representante->UsePleaseSelect = TRUE; // Use PleaseSelect by default
+		$this->comissao_representante->PleaseSelectText = $Language->Phrase("PleaseSelect"); // PleaseSelect text
 		$this->fields['comissao_representante'] = &$this->comissao_representante;
-
-		// tipo_pedido
-		$this->tipo_pedido = new cField('pedidos', 'pedidos', 'x_tipo_pedido', 'tipo_pedido', '`tipo_pedido`', '`tipo_pedido`', 200, -1, FALSE, '`tipo_pedido`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
-		$this->tipo_pedido->Sortable = TRUE; // Allow sort
-		$this->fields['tipo_pedido'] = &$this->tipo_pedido;
 
 		// id_cliente
 		$this->id_cliente = new cField('pedidos', 'pedidos', 'x_id_cliente', 'id_cliente', '`id_cliente`', '`id_cliente`', 3, -1, FALSE, '`id_cliente`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
@@ -155,6 +168,30 @@ class cpedidos extends cTable {
 		} else {
 			$ofld->setSort("");
 		}
+	}
+
+	// Current detail table name
+	function getCurrentDetailTable() {
+		return @$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_DETAIL_TABLE];
+	}
+
+	function setCurrentDetailTable($v) {
+		$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_DETAIL_TABLE] = $v;
+	}
+
+	// Get detail url
+	function GetDetailUrl() {
+
+		// Detail url
+		$sDetailUrl = "";
+		if ($this->getCurrentDetailTable() == "detalhe_pedido") {
+			$sDetailUrl = $GLOBALS["detalhe_pedido"]->GetListUrl() . "?" . EW_TABLE_SHOW_MASTER . "=" . $this->TableVar;
+			$sDetailUrl .= "&fk_numero=" . urlencode($this->numero->CurrentValue);
+		}
+		if ($sDetailUrl == "") {
+			$sDetailUrl = "pedidoslist.php";
+		}
+		return $sDetailUrl;
 	}
 
 	// Table level SQL
@@ -520,7 +557,10 @@ class cpedidos extends cTable {
 
 	// Edit URL
 	function GetEditUrl($parm = "") {
-		$url = $this->KeyUrl("pedidosedit.php", $this->UrlParm($parm));
+		if ($parm <> "")
+			$url = $this->KeyUrl("pedidosedit.php", $this->UrlParm($parm));
+		else
+			$url = $this->KeyUrl("pedidosedit.php", $this->UrlParm(EW_TABLE_SHOW_DETAIL . "="));
 		return $this->AddMasterUrl($url);
 	}
 
@@ -532,7 +572,10 @@ class cpedidos extends cTable {
 
 	// Copy URL
 	function GetCopyUrl($parm = "") {
-		$url = $this->KeyUrl("pedidosadd.php", $this->UrlParm($parm));
+		if ($parm <> "")
+			$url = $this->KeyUrl("pedidosadd.php", $this->UrlParm($parm));
+		else
+			$url = $this->KeyUrl("pedidosadd.php", $this->UrlParm(EW_TABLE_SHOW_DETAIL . "="));
 		return $this->AddMasterUrl($url);
 	}
 
@@ -646,6 +689,7 @@ class cpedidos extends cTable {
 	// Load row values from recordset
 	function LoadListRowValues(&$rs) {
 		$this->id_pedidos->setDbValue($rs->fields('id_pedidos'));
+		$this->tipo_pedido->setDbValue($rs->fields('tipo_pedido'));
 		$this->numero->setDbValue($rs->fields('numero'));
 		$this->fecha_data->setDbValue($rs->fields('fecha_data'));
 		$this->fecha_hora->setDbValue($rs->fields('fecha_hora'));
@@ -655,7 +699,6 @@ class cpedidos extends cTable {
 		$this->comentarios->setDbValue($rs->fields('comentarios'));
 		$this->id_representante->setDbValue($rs->fields('id_representante'));
 		$this->comissao_representante->setDbValue($rs->fields('comissao_representante'));
-		$this->tipo_pedido->setDbValue($rs->fields('tipo_pedido'));
 		$this->id_cliente->setDbValue($rs->fields('id_cliente'));
 	}
 
@@ -668,6 +711,7 @@ class cpedidos extends cTable {
 
 	// Common render codes
 		// id_pedidos
+		// tipo_pedido
 		// numero
 		// fecha_data
 		// fecha_hora
@@ -677,12 +721,19 @@ class cpedidos extends cTable {
 		// comentarios
 		// id_representante
 		// comissao_representante
-		// tipo_pedido
 		// id_cliente
 		// id_pedidos
 
 		$this->id_pedidos->ViewValue = $this->id_pedidos->CurrentValue;
 		$this->id_pedidos->ViewCustomAttributes = "";
+
+		// tipo_pedido
+		if (strval($this->tipo_pedido->CurrentValue) <> "") {
+			$this->tipo_pedido->ViewValue = $this->tipo_pedido->OptionCaption($this->tipo_pedido->CurrentValue);
+		} else {
+			$this->tipo_pedido->ViewValue = NULL;
+		}
+		$this->tipo_pedido->ViewCustomAttributes = "";
 
 		// numero
 		$this->numero->ViewValue = $this->numero->CurrentValue;
@@ -699,15 +750,73 @@ class cpedidos extends cTable {
 		$this->fecha_hora->ViewCustomAttributes = "";
 
 		// id_fornecedor
-		$this->id_fornecedor->ViewValue = $this->id_fornecedor->CurrentValue;
+		if (strval($this->id_fornecedor->CurrentValue) <> "") {
+			$sFilterWrk = "`id_perfil`" . ew_SearchString("=", $this->id_fornecedor->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_perfil`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `empresas`";
+		$sWhereWrk = "";
+		$this->id_fornecedor->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_fornecedor, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_fornecedor->ViewValue = $this->id_fornecedor->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_fornecedor->ViewValue = $this->id_fornecedor->CurrentValue;
+			}
+		} else {
+			$this->id_fornecedor->ViewValue = NULL;
+		}
 		$this->id_fornecedor->ViewCustomAttributes = "";
 
 		// id_transportadora
-		$this->id_transportadora->ViewValue = $this->id_transportadora->CurrentValue;
+		if (strval($this->id_transportadora->CurrentValue) <> "") {
+			$sFilterWrk = "`id_transportadora`" . ew_SearchString("=", $this->id_transportadora->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_transportadora`, `transportadora` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `tranportadora`";
+		$sWhereWrk = "";
+		$this->id_transportadora->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_transportadora, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_transportadora->ViewValue = $this->id_transportadora->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_transportadora->ViewValue = $this->id_transportadora->CurrentValue;
+			}
+		} else {
+			$this->id_transportadora->ViewValue = NULL;
+		}
 		$this->id_transportadora->ViewCustomAttributes = "";
 
 		// id_prazos
-		$this->id_prazos->ViewValue = $this->id_prazos->CurrentValue;
+		if (strval($this->id_prazos->CurrentValue) <> "") {
+			$sFilterWrk = "`id_prazos`" . ew_SearchString("=", $this->id_prazos->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_prazos`, `prazo_em_dias` AS `DispFld`, `parcelas` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `prazos`";
+		$sWhereWrk = "";
+		$this->id_prazos->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_prazos, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$arwrk[2] = $rswrk->fields('Disp2Fld');
+				$this->id_prazos->ViewValue = $this->id_prazos->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_prazos->ViewValue = $this->id_prazos->CurrentValue;
+			}
+		} else {
+			$this->id_prazos->ViewValue = NULL;
+		}
 		$this->id_prazos->ViewCustomAttributes = "";
 
 		// comentarios
@@ -715,16 +824,30 @@ class cpedidos extends cTable {
 		$this->comentarios->ViewCustomAttributes = "";
 
 		// id_representante
-		$this->id_representante->ViewValue = $this->id_representante->CurrentValue;
+		if (strval($this->id_representante->CurrentValue) <> "") {
+			$sFilterWrk = "`id_representantes`" . ew_SearchString("=", $this->id_representante->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_representantes`, `id_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `representantes`";
+		$sWhereWrk = "";
+		$this->id_representante->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_representante, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_representante->ViewValue = $this->id_representante->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_representante->ViewValue = $this->id_representante->CurrentValue;
+			}
+		} else {
+			$this->id_representante->ViewValue = NULL;
+		}
 		$this->id_representante->ViewCustomAttributes = "";
 
 		// comissao_representante
-		$this->comissao_representante->ViewValue = $this->comissao_representante->CurrentValue;
 		$this->comissao_representante->ViewCustomAttributes = "";
-
-		// tipo_pedido
-		$this->tipo_pedido->ViewValue = $this->tipo_pedido->CurrentValue;
-		$this->tipo_pedido->ViewCustomAttributes = "";
 
 		// id_cliente
 		$this->id_cliente->ViewValue = $this->id_cliente->CurrentValue;
@@ -734,6 +857,11 @@ class cpedidos extends cTable {
 		$this->id_pedidos->LinkCustomAttributes = "";
 		$this->id_pedidos->HrefValue = "";
 		$this->id_pedidos->TooltipValue = "";
+
+		// tipo_pedido
+		$this->tipo_pedido->LinkCustomAttributes = "";
+		$this->tipo_pedido->HrefValue = "";
+		$this->tipo_pedido->TooltipValue = "";
 
 		// numero
 		$this->numero->LinkCustomAttributes = "";
@@ -780,11 +908,6 @@ class cpedidos extends cTable {
 		$this->comissao_representante->HrefValue = "";
 		$this->comissao_representante->TooltipValue = "";
 
-		// tipo_pedido
-		$this->tipo_pedido->LinkCustomAttributes = "";
-		$this->tipo_pedido->HrefValue = "";
-		$this->tipo_pedido->TooltipValue = "";
-
 		// id_cliente
 		$this->id_cliente->LinkCustomAttributes = "";
 		$this->id_cliente->HrefValue = "";
@@ -810,6 +933,11 @@ class cpedidos extends cTable {
 		$this->id_pedidos->EditValue = $this->id_pedidos->CurrentValue;
 		$this->id_pedidos->ViewCustomAttributes = "";
 
+		// tipo_pedido
+		$this->tipo_pedido->EditAttrs["class"] = "form-control";
+		$this->tipo_pedido->EditCustomAttributes = "";
+		$this->tipo_pedido->EditValue = $this->tipo_pedido->Options(TRUE);
+
 		// numero
 		$this->numero->EditAttrs["class"] = "form-control";
 		$this->numero->EditCustomAttributes = "";
@@ -831,20 +959,14 @@ class cpedidos extends cTable {
 		// id_fornecedor
 		$this->id_fornecedor->EditAttrs["class"] = "form-control";
 		$this->id_fornecedor->EditCustomAttributes = "";
-		$this->id_fornecedor->EditValue = $this->id_fornecedor->CurrentValue;
-		$this->id_fornecedor->PlaceHolder = ew_RemoveHtml($this->id_fornecedor->FldCaption());
 
 		// id_transportadora
 		$this->id_transportadora->EditAttrs["class"] = "form-control";
 		$this->id_transportadora->EditCustomAttributes = "";
-		$this->id_transportadora->EditValue = $this->id_transportadora->CurrentValue;
-		$this->id_transportadora->PlaceHolder = ew_RemoveHtml($this->id_transportadora->FldCaption());
 
 		// id_prazos
 		$this->id_prazos->EditAttrs["class"] = "form-control";
 		$this->id_prazos->EditCustomAttributes = "";
-		$this->id_prazos->EditValue = $this->id_prazos->CurrentValue;
-		$this->id_prazos->PlaceHolder = ew_RemoveHtml($this->id_prazos->FldCaption());
 
 		// comentarios
 		$this->comentarios->EditAttrs["class"] = "form-control";
@@ -855,20 +977,10 @@ class cpedidos extends cTable {
 		// id_representante
 		$this->id_representante->EditAttrs["class"] = "form-control";
 		$this->id_representante->EditCustomAttributes = "";
-		$this->id_representante->EditValue = $this->id_representante->CurrentValue;
-		$this->id_representante->PlaceHolder = ew_RemoveHtml($this->id_representante->FldCaption());
 
 		// comissao_representante
 		$this->comissao_representante->EditAttrs["class"] = "form-control";
 		$this->comissao_representante->EditCustomAttributes = "";
-		$this->comissao_representante->EditValue = $this->comissao_representante->CurrentValue;
-		$this->comissao_representante->PlaceHolder = ew_RemoveHtml($this->comissao_representante->FldCaption());
-
-		// tipo_pedido
-		$this->tipo_pedido->EditAttrs["class"] = "form-control";
-		$this->tipo_pedido->EditCustomAttributes = "";
-		$this->tipo_pedido->EditValue = $this->tipo_pedido->CurrentValue;
-		$this->tipo_pedido->PlaceHolder = ew_RemoveHtml($this->tipo_pedido->FldCaption());
 
 		// id_cliente
 		$this->id_cliente->EditAttrs["class"] = "form-control";
@@ -903,7 +1015,7 @@ class cpedidos extends cTable {
 			if ($Doc->Horizontal) { // Horizontal format, write header
 				$Doc->BeginExportRow();
 				if ($ExportPageType == "view") {
-					if ($this->id_pedidos->Exportable) $Doc->ExportCaption($this->id_pedidos);
+					if ($this->tipo_pedido->Exportable) $Doc->ExportCaption($this->tipo_pedido);
 					if ($this->numero->Exportable) $Doc->ExportCaption($this->numero);
 					if ($this->fecha_data->Exportable) $Doc->ExportCaption($this->fecha_data);
 					if ($this->fecha_hora->Exportable) $Doc->ExportCaption($this->fecha_hora);
@@ -913,10 +1025,10 @@ class cpedidos extends cTable {
 					if ($this->comentarios->Exportable) $Doc->ExportCaption($this->comentarios);
 					if ($this->id_representante->Exportable) $Doc->ExportCaption($this->id_representante);
 					if ($this->comissao_representante->Exportable) $Doc->ExportCaption($this->comissao_representante);
-					if ($this->tipo_pedido->Exportable) $Doc->ExportCaption($this->tipo_pedido);
 					if ($this->id_cliente->Exportable) $Doc->ExportCaption($this->id_cliente);
 				} else {
 					if ($this->id_pedidos->Exportable) $Doc->ExportCaption($this->id_pedidos);
+					if ($this->tipo_pedido->Exportable) $Doc->ExportCaption($this->tipo_pedido);
 					if ($this->numero->Exportable) $Doc->ExportCaption($this->numero);
 					if ($this->fecha_data->Exportable) $Doc->ExportCaption($this->fecha_data);
 					if ($this->fecha_hora->Exportable) $Doc->ExportCaption($this->fecha_hora);
@@ -926,7 +1038,6 @@ class cpedidos extends cTable {
 					if ($this->comentarios->Exportable) $Doc->ExportCaption($this->comentarios);
 					if ($this->id_representante->Exportable) $Doc->ExportCaption($this->id_representante);
 					if ($this->comissao_representante->Exportable) $Doc->ExportCaption($this->comissao_representante);
-					if ($this->tipo_pedido->Exportable) $Doc->ExportCaption($this->tipo_pedido);
 					if ($this->id_cliente->Exportable) $Doc->ExportCaption($this->id_cliente);
 				}
 				$Doc->EndExportRow();
@@ -959,7 +1070,7 @@ class cpedidos extends cTable {
 				if (!$Doc->ExportCustom) {
 					$Doc->BeginExportRow($RowCnt); // Allow CSS styles if enabled
 					if ($ExportPageType == "view") {
-						if ($this->id_pedidos->Exportable) $Doc->ExportField($this->id_pedidos);
+						if ($this->tipo_pedido->Exportable) $Doc->ExportField($this->tipo_pedido);
 						if ($this->numero->Exportable) $Doc->ExportField($this->numero);
 						if ($this->fecha_data->Exportable) $Doc->ExportField($this->fecha_data);
 						if ($this->fecha_hora->Exportable) $Doc->ExportField($this->fecha_hora);
@@ -969,10 +1080,10 @@ class cpedidos extends cTable {
 						if ($this->comentarios->Exportable) $Doc->ExportField($this->comentarios);
 						if ($this->id_representante->Exportable) $Doc->ExportField($this->id_representante);
 						if ($this->comissao_representante->Exportable) $Doc->ExportField($this->comissao_representante);
-						if ($this->tipo_pedido->Exportable) $Doc->ExportField($this->tipo_pedido);
 						if ($this->id_cliente->Exportable) $Doc->ExportField($this->id_cliente);
 					} else {
 						if ($this->id_pedidos->Exportable) $Doc->ExportField($this->id_pedidos);
+						if ($this->tipo_pedido->Exportable) $Doc->ExportField($this->tipo_pedido);
 						if ($this->numero->Exportable) $Doc->ExportField($this->numero);
 						if ($this->fecha_data->Exportable) $Doc->ExportField($this->fecha_data);
 						if ($this->fecha_hora->Exportable) $Doc->ExportField($this->fecha_hora);
@@ -982,7 +1093,6 @@ class cpedidos extends cTable {
 						if ($this->comentarios->Exportable) $Doc->ExportField($this->comentarios);
 						if ($this->id_representante->Exportable) $Doc->ExportField($this->id_representante);
 						if ($this->comissao_representante->Exportable) $Doc->ExportField($this->comissao_representante);
-						if ($this->tipo_pedido->Exportable) $Doc->ExportField($this->tipo_pedido);
 						if ($this->id_cliente->Exportable) $Doc->ExportField($this->id_cliente);
 					}
 					$Doc->EndExportRow($RowCnt);

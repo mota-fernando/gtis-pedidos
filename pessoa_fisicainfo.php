@@ -46,7 +46,7 @@ class cpessoa_fisica extends cTable {
 		$this->DetailEdit = FALSE; // Allow detail edit
 		$this->DetailView = FALSE; // Allow detail view
 		$this->ShowMultipleDetails = FALSE; // Show multiple details
-		$this->GridAddRowCount = 5;
+		$this->GridAddRowCount = 1;
 		$this->AllowAddDeleteRow = TRUE; // Allow add/delete row
 		$this->UserIDAllowSecurity = 0; // User ID Allow
 		$this->BasicSearch = new cBasicSearch($this->TableVar);
@@ -108,8 +108,10 @@ class cpessoa_fisica extends cTable {
 		$this->fields['endereco_numero'] = &$this->endereco_numero;
 
 		// id_endereco
-		$this->id_endereco = new cField('pessoa_fisica', 'pessoa_fisica', 'x_id_endereco', 'id_endereco', '`id_endereco`', '`id_endereco`', 3, -1, FALSE, '`id_endereco`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->id_endereco = new cField('pessoa_fisica', 'pessoa_fisica', 'x_id_endereco', 'id_endereco', '`id_endereco`', '`id_endereco`', 3, -1, FALSE, '`id_endereco`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'SELECT');
 		$this->id_endereco->Sortable = TRUE; // Allow sort
+		$this->id_endereco->UsePleaseSelect = TRUE; // Use PleaseSelect by default
+		$this->id_endereco->PleaseSelectText = $Language->Phrase("PleaseSelect"); // PleaseSelect text
 		$this->id_endereco->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['id_endereco'] = &$this->id_endereco;
 	}
@@ -714,7 +716,29 @@ class cpessoa_fisica extends cTable {
 		$this->endereco_numero->ViewCustomAttributes = "";
 
 		// id_endereco
-		$this->id_endereco->ViewValue = $this->id_endereco->CurrentValue;
+		if (strval($this->id_endereco->CurrentValue) <> "") {
+			$sFilterWrk = "`id_endereco`" . ew_SearchString("=", $this->id_endereco->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_endereco`, `endereco` AS `DispFld`, `bairro` AS `Disp2Fld`, `estado` AS `Disp3Fld`, `cidade` AS `Disp4Fld` FROM `endereco`";
+		$sWhereWrk = "";
+		$this->id_endereco->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_endereco, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$arwrk[2] = $rswrk->fields('Disp2Fld');
+				$arwrk[3] = $rswrk->fields('Disp3Fld');
+				$arwrk[4] = $rswrk->fields('Disp4Fld');
+				$this->id_endereco->ViewValue = $this->id_endereco->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_endereco->ViewValue = $this->id_endereco->CurrentValue;
+			}
+		} else {
+			$this->id_endereco->ViewValue = NULL;
+		}
 		$this->id_endereco->ViewCustomAttributes = "";
 
 		// id_pessoa
@@ -849,8 +873,6 @@ class cpessoa_fisica extends cTable {
 		// id_endereco
 		$this->id_endereco->EditAttrs["class"] = "form-control";
 		$this->id_endereco->EditCustomAttributes = "";
-		$this->id_endereco->EditValue = $this->id_endereco->CurrentValue;
-		$this->id_endereco->PlaceHolder = ew_RemoveHtml($this->id_endereco->FldCaption());
 
 		// Call Row Rendered event
 		$this->Row_Rendered();
@@ -879,7 +901,6 @@ class cpessoa_fisica extends cTable {
 			if ($Doc->Horizontal) { // Horizontal format, write header
 				$Doc->BeginExportRow();
 				if ($ExportPageType == "view") {
-					if ($this->id_pessoa->Exportable) $Doc->ExportCaption($this->id_pessoa);
 					if ($this->nome_pessoa->Exportable) $Doc->ExportCaption($this->nome_pessoa);
 					if ($this->sobrenome_pessoa->Exportable) $Doc->ExportCaption($this->sobrenome_pessoa);
 					if ($this->nascimento->Exportable) $Doc->ExportCaption($this->nascimento);
@@ -933,7 +954,6 @@ class cpessoa_fisica extends cTable {
 				if (!$Doc->ExportCustom) {
 					$Doc->BeginExportRow($RowCnt); // Allow CSS styles if enabled
 					if ($ExportPageType == "view") {
-						if ($this->id_pessoa->Exportable) $Doc->ExportField($this->id_pessoa);
 						if ($this->nome_pessoa->Exportable) $Doc->ExportField($this->nome_pessoa);
 						if ($this->sobrenome_pessoa->Exportable) $Doc->ExportField($this->sobrenome_pessoa);
 						if ($this->nascimento->Exportable) $Doc->ExportField($this->nascimento);

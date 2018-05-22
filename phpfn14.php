@@ -18,7 +18,6 @@ function ew_AutoLoad($class) {
 		$file = "ewdbhelper14.php";
 	} elseif (ew_StartsStr("c", $class)) {
 		$file = str_replace("%cls%", substr($class, 1), "%cls%info.php");
-		$file = strtolower($file);
 	}
 	if ($file <> "" && file_exists($EW_RELATIVE_PATH . $file))
 		include_once $EW_RELATIVE_PATH . $file;
@@ -53,7 +52,7 @@ function CurrentLanguageID() {
 function CurrentProjectID() {
 	if (isset($GLOBALS["Page"]))
 		return $GLOBALS["Page"]->ProjectID;
-	return "{D83B9BB1-2CD4-4540-9A5B-B0E890360FB3}";
+	return "{A4E38B50-67B8-459F-992C-3B232135A6E3}";
 }
 
 // Get current export file name

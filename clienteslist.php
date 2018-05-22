@@ -21,7 +21,7 @@ class cclientes_list extends cclientes {
 	var $PageID = 'list';
 
 	// Project ID
-	var $ProjectID = '{D83B9BB1-2CD4-4540-9A5B-B0E890360FB3}';
+	var $ProjectID = '{A4E38B50-67B8-459F-992C-3B232135A6E3}';
 
 	// Table name
 	var $TableName = 'clientes';
@@ -371,10 +371,6 @@ class cclientes_list extends cclientes {
 
 		// Set up list options
 		$this->SetupListOptions();
-		$this->id->SetVisibility();
-		$this->tipo->SetVisibility();
-		$this->data->SetVisibility();
-		$this->time->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -560,28 +556,8 @@ class cclientes_list extends cclientes {
 					$option->HideAllOptions();
 			}
 
-			// Get default search criteria
-			ew_AddFilter($this->DefaultSearchWhere, $this->BasicSearchWhere(TRUE));
-
-			// Get basic search values
-			$this->LoadBasicSearchValues();
-
-			// Process filter list
-			$this->ProcessFilterList();
-
-			// Restore search parms from Session if not searching / reset / export
-			if (($this->Export <> "" || $this->Command <> "search" && $this->Command <> "reset" && $this->Command <> "resetall") && $this->Command <> "json" && $this->CheckSearchParms())
-				$this->RestoreSearchParms();
-
-			// Call Recordset SearchValidated event
-			$this->Recordset_SearchValidated();
-
 			// Set up sorting order
 			$this->SetupSortOrder();
-
-			// Get basic search criteria
-			if ($gsSearchError == "")
-				$sSrchBasic = $this->BasicSearchWhere();
 		}
 
 		// Restore display records
@@ -594,31 +570,6 @@ class cclientes_list extends cclientes {
 		// Load Sorting Order
 		if ($this->Command <> "json")
 			$this->LoadSortOrder();
-
-		// Load search default if no existing search criteria
-		if (!$this->CheckSearchParms()) {
-
-			// Load basic search from default
-			$this->BasicSearch->LoadDefault();
-			if ($this->BasicSearch->Keyword != "")
-				$sSrchBasic = $this->BasicSearchWhere();
-		}
-
-		// Build search criteria
-		ew_AddFilter($this->SearchWhere, $sSrchAdvanced);
-		ew_AddFilter($this->SearchWhere, $sSrchBasic);
-
-		// Call Recordset_Searching event
-		$this->Recordset_Searching($this->SearchWhere);
-
-		// Save search criteria
-		if ($this->Command == "search" && !$this->RestoreSearch) {
-			$this->setSearchWhere($this->SearchWhere); // Save to Session
-			$this->StartRec = 1; // Reset start record counter
-			$this->setStartRecordNumber($this->StartRec);
-		} elseif ($this->Command <> "json") {
-			$this->SearchWhere = $this->getSearchWhere();
-		}
 
 		// Build filter
 		$sFilter = "";
@@ -679,245 +630,12 @@ class cclientes_list extends cclientes {
 	// Set up key values
 	function SetupKeyValues($key) {
 		$arrKeyFlds = explode($GLOBALS["EW_COMPOSITE_KEY_SEPARATOR"], $key);
-		if (count($arrKeyFlds) >= 0) {
+		if (count($arrKeyFlds) >= 1) {
+			$this->id_cliente->setFormValue($arrKeyFlds[0]);
+			if (!is_numeric($this->id_cliente->FormValue))
+				return FALSE;
 		}
 		return TRUE;
-	}
-
-	// Get list of filters
-	function GetFilterList() {
-		global $UserProfile;
-
-		// Initialize
-		$sFilterList = "";
-		$sSavedFilterList = "";
-
-		// Load server side filters
-		if (EW_SEARCH_FILTER_OPTION == "Server" && isset($UserProfile))
-			$sSavedFilterList = $UserProfile->GetSearchFilters(CurrentUserName(), "fclienteslistsrch");
-		$sFilterList = ew_Concat($sFilterList, $this->id->AdvancedSearch->ToJson(), ","); // Field id
-		$sFilterList = ew_Concat($sFilterList, $this->tipo->AdvancedSearch->ToJson(), ","); // Field tipo
-		$sFilterList = ew_Concat($sFilterList, $this->data->AdvancedSearch->ToJson(), ","); // Field data
-		$sFilterList = ew_Concat($sFilterList, $this->time->AdvancedSearch->ToJson(), ","); // Field time
-		if ($this->BasicSearch->Keyword <> "") {
-			$sWrk = "\"" . EW_TABLE_BASIC_SEARCH . "\":\"" . ew_JsEncode2($this->BasicSearch->Keyword) . "\",\"" . EW_TABLE_BASIC_SEARCH_TYPE . "\":\"" . ew_JsEncode2($this->BasicSearch->Type) . "\"";
-			$sFilterList = ew_Concat($sFilterList, $sWrk, ",");
-		}
-		$sFilterList = preg_replace('/,$/', "", $sFilterList);
-
-		// Return filter list in json
-		if ($sFilterList <> "")
-			$sFilterList = "\"data\":{" . $sFilterList . "}";
-		if ($sSavedFilterList <> "") {
-			if ($sFilterList <> "")
-				$sFilterList .= ",";
-			$sFilterList .= "\"filters\":" . $sSavedFilterList;
-		}
-		return ($sFilterList <> "") ? "{" . $sFilterList . "}" : "null";
-	}
-
-	// Process filter list
-	function ProcessFilterList() {
-		global $UserProfile;
-		if (@$_POST["ajax"] == "savefilters") { // Save filter request (Ajax)
-			$filters = @$_POST["filters"];
-			$UserProfile->SetSearchFilters(CurrentUserName(), "fclienteslistsrch", $filters);
-
-			// Clean output buffer
-			if (!EW_DEBUG_ENABLED && ob_get_length())
-				ob_end_clean();
-			echo ew_ArrayToJson(array(array("success" => TRUE))); // Success
-			$this->Page_Terminate();
-			exit();
-		} elseif (@$_POST["cmd"] == "resetfilter") {
-			$this->RestoreFilterList();
-		}
-	}
-
-	// Restore list of filters
-	function RestoreFilterList() {
-
-		// Return if not reset filter
-		if (@$_POST["cmd"] <> "resetfilter")
-			return FALSE;
-		$filter = json_decode(@$_POST["filter"], TRUE);
-		$this->Command = "search";
-
-		// Field id
-		$this->id->AdvancedSearch->SearchValue = @$filter["x_id"];
-		$this->id->AdvancedSearch->SearchOperator = @$filter["z_id"];
-		$this->id->AdvancedSearch->SearchCondition = @$filter["v_id"];
-		$this->id->AdvancedSearch->SearchValue2 = @$filter["y_id"];
-		$this->id->AdvancedSearch->SearchOperator2 = @$filter["w_id"];
-		$this->id->AdvancedSearch->Save();
-
-		// Field tipo
-		$this->tipo->AdvancedSearch->SearchValue = @$filter["x_tipo"];
-		$this->tipo->AdvancedSearch->SearchOperator = @$filter["z_tipo"];
-		$this->tipo->AdvancedSearch->SearchCondition = @$filter["v_tipo"];
-		$this->tipo->AdvancedSearch->SearchValue2 = @$filter["y_tipo"];
-		$this->tipo->AdvancedSearch->SearchOperator2 = @$filter["w_tipo"];
-		$this->tipo->AdvancedSearch->Save();
-
-		// Field data
-		$this->data->AdvancedSearch->SearchValue = @$filter["x_data"];
-		$this->data->AdvancedSearch->SearchOperator = @$filter["z_data"];
-		$this->data->AdvancedSearch->SearchCondition = @$filter["v_data"];
-		$this->data->AdvancedSearch->SearchValue2 = @$filter["y_data"];
-		$this->data->AdvancedSearch->SearchOperator2 = @$filter["w_data"];
-		$this->data->AdvancedSearch->Save();
-
-		// Field time
-		$this->time->AdvancedSearch->SearchValue = @$filter["x_time"];
-		$this->time->AdvancedSearch->SearchOperator = @$filter["z_time"];
-		$this->time->AdvancedSearch->SearchCondition = @$filter["v_time"];
-		$this->time->AdvancedSearch->SearchValue2 = @$filter["y_time"];
-		$this->time->AdvancedSearch->SearchOperator2 = @$filter["w_time"];
-		$this->time->AdvancedSearch->Save();
-		$this->BasicSearch->setKeyword(@$filter[EW_TABLE_BASIC_SEARCH]);
-		$this->BasicSearch->setType(@$filter[EW_TABLE_BASIC_SEARCH_TYPE]);
-	}
-
-	// Return basic search SQL
-	function BasicSearchSQL($arKeywords, $type) {
-		$sWhere = "";
-		$this->BuildBasicSearchSQL($sWhere, $this->tipo, $arKeywords, $type);
-		return $sWhere;
-	}
-
-	// Build basic search SQL
-	function BuildBasicSearchSQL(&$Where, &$Fld, $arKeywords, $type) {
-		global $EW_BASIC_SEARCH_IGNORE_PATTERN;
-		$sDefCond = ($type == "OR") ? "OR" : "AND";
-		$arSQL = array(); // Array for SQL parts
-		$arCond = array(); // Array for search conditions
-		$cnt = count($arKeywords);
-		$j = 0; // Number of SQL parts
-		for ($i = 0; $i < $cnt; $i++) {
-			$Keyword = $arKeywords[$i];
-			$Keyword = trim($Keyword);
-			if ($EW_BASIC_SEARCH_IGNORE_PATTERN <> "") {
-				$Keyword = preg_replace($EW_BASIC_SEARCH_IGNORE_PATTERN, "\\", $Keyword);
-				$ar = explode("\\", $Keyword);
-			} else {
-				$ar = array($Keyword);
-			}
-			foreach ($ar as $Keyword) {
-				if ($Keyword <> "") {
-					$sWrk = "";
-					if ($Keyword == "OR" && $type == "") {
-						if ($j > 0)
-							$arCond[$j-1] = "OR";
-					} elseif ($Keyword == EW_NULL_VALUE) {
-						$sWrk = $Fld->FldExpression . " IS NULL";
-					} elseif ($Keyword == EW_NOT_NULL_VALUE) {
-						$sWrk = $Fld->FldExpression . " IS NOT NULL";
-					} elseif ($Fld->FldIsVirtual) {
-						$sWrk = $Fld->FldVirtualExpression . ew_Like(ew_QuotedValue("%" . $Keyword . "%", EW_DATATYPE_STRING, $this->DBID), $this->DBID);
-					} elseif ($Fld->FldDataType != EW_DATATYPE_NUMBER || is_numeric($Keyword)) {
-						$sWrk = $Fld->FldBasicSearchExpression . ew_Like(ew_QuotedValue("%" . $Keyword . "%", EW_DATATYPE_STRING, $this->DBID), $this->DBID);
-					}
-					if ($sWrk <> "") {
-						$arSQL[$j] = $sWrk;
-						$arCond[$j] = $sDefCond;
-						$j += 1;
-					}
-				}
-			}
-		}
-		$cnt = count($arSQL);
-		$bQuoted = FALSE;
-		$sSql = "";
-		if ($cnt > 0) {
-			for ($i = 0; $i < $cnt-1; $i++) {
-				if ($arCond[$i] == "OR") {
-					if (!$bQuoted) $sSql .= "(";
-					$bQuoted = TRUE;
-				}
-				$sSql .= $arSQL[$i];
-				if ($bQuoted && $arCond[$i] <> "OR") {
-					$sSql .= ")";
-					$bQuoted = FALSE;
-				}
-				$sSql .= " " . $arCond[$i] . " ";
-			}
-			$sSql .= $arSQL[$cnt-1];
-			if ($bQuoted)
-				$sSql .= ")";
-		}
-		if ($sSql <> "") {
-			if ($Where <> "") $Where .= " OR ";
-			$Where .= "(" . $sSql . ")";
-		}
-	}
-
-	// Return basic search WHERE clause based on search keyword and type
-	function BasicSearchWhere($Default = FALSE) {
-		global $Security;
-		$sSearchStr = "";
-		$sSearchKeyword = ($Default) ? $this->BasicSearch->KeywordDefault : $this->BasicSearch->Keyword;
-		$sSearchType = ($Default) ? $this->BasicSearch->TypeDefault : $this->BasicSearch->Type;
-
-		// Get search SQL
-		if ($sSearchKeyword <> "") {
-			$ar = $this->BasicSearch->KeywordList($Default);
-
-			// Search keyword in any fields
-			if (($sSearchType == "OR" || $sSearchType == "AND") && $this->BasicSearch->BasicSearchAnyFields) {
-				foreach ($ar as $sKeyword) {
-					if ($sKeyword <> "") {
-						if ($sSearchStr <> "") $sSearchStr .= " " . $sSearchType . " ";
-						$sSearchStr .= "(" . $this->BasicSearchSQL(array($sKeyword), $sSearchType) . ")";
-					}
-				}
-			} else {
-				$sSearchStr = $this->BasicSearchSQL($ar, $sSearchType);
-			}
-			if (!$Default && in_array($this->Command, array("", "reset", "resetall"))) $this->Command = "search";
-		}
-		if (!$Default && $this->Command == "search") {
-			$this->BasicSearch->setKeyword($sSearchKeyword);
-			$this->BasicSearch->setType($sSearchType);
-		}
-		return $sSearchStr;
-	}
-
-	// Check if search parm exists
-	function CheckSearchParms() {
-
-		// Check basic search
-		if ($this->BasicSearch->IssetSession())
-			return TRUE;
-		return FALSE;
-	}
-
-	// Clear all search parameters
-	function ResetSearchParms() {
-
-		// Clear search WHERE clause
-		$this->SearchWhere = "";
-		$this->setSearchWhere($this->SearchWhere);
-
-		// Clear basic search parameters
-		$this->ResetBasicSearchParms();
-	}
-
-	// Load advanced search default values
-	function LoadAdvancedSearchDefault() {
-		return FALSE;
-	}
-
-	// Clear all basic search parameters
-	function ResetBasicSearchParms() {
-		$this->BasicSearch->UnsetSession();
-	}
-
-	// Restore all search parameters
-	function RestoreSearchParms() {
-		$this->RestoreSearch = TRUE;
-
-		// Restore basic search values
-		$this->BasicSearch->Load();
 	}
 
 	// Set up sort parameters
@@ -927,10 +645,6 @@ class cclientes_list extends cclientes {
 		if (@$_GET["order"] <> "") {
 			$this->CurrentOrder = @$_GET["order"];
 			$this->CurrentOrderType = @$_GET["ordertype"];
-			$this->UpdateSort($this->id); // id
-			$this->UpdateSort($this->tipo); // tipo
-			$this->UpdateSort($this->data); // data
-			$this->UpdateSort($this->time); // time
 			$this->setStartRecordNumber(1); // Reset start position
 		}
 	}
@@ -955,18 +669,10 @@ class cclientes_list extends cclientes {
 		// Check if reset command
 		if (substr($this->Command,0,5) == "reset") {
 
-			// Reset search criteria
-			if ($this->Command == "reset" || $this->Command == "resetall")
-				$this->ResetSearchParms();
-
 			// Reset sorting order
 			if ($this->Command == "resetsort") {
 				$sOrderBy = "";
 				$this->setSessionOrderBy($sOrderBy);
-				$this->id->setSort("");
-				$this->tipo->setSort("");
-				$this->data->setSort("");
-				$this->time->setSort("");
 			}
 
 			// Reset start position
@@ -984,6 +690,30 @@ class cclientes_list extends cclientes {
 		$item->Body = "";
 		$item->OnLeft = FALSE;
 		$item->Visible = FALSE;
+
+		// "view"
+		$item = &$this->ListOptions->Add("view");
+		$item->CssClass = "text-nowrap";
+		$item->Visible = TRUE;
+		$item->OnLeft = FALSE;
+
+		// "edit"
+		$item = &$this->ListOptions->Add("edit");
+		$item->CssClass = "text-nowrap";
+		$item->Visible = TRUE;
+		$item->OnLeft = FALSE;
+
+		// "copy"
+		$item = &$this->ListOptions->Add("copy");
+		$item->CssClass = "text-nowrap";
+		$item->Visible = TRUE;
+		$item->OnLeft = FALSE;
+
+		// "delete"
+		$item = &$this->ListOptions->Add("delete");
+		$item->CssClass = "text-nowrap";
+		$item->Visible = TRUE;
+		$item->OnLeft = FALSE;
 
 		// List actions
 		$item = &$this->ListOptions->Add("listactions");
@@ -1025,6 +755,40 @@ class cclientes_list extends cclientes {
 		// Call ListOptions_Rendering event
 		$this->ListOptions_Rendering();
 
+		// "view"
+		$oListOpt = &$this->ListOptions->Items["view"];
+		$viewcaption = ew_HtmlTitle($Language->Phrase("ViewLink"));
+		if (TRUE) {
+			$oListOpt->Body = "<a class=\"ewRowLink ewView\" title=\"" . $viewcaption . "\" data-caption=\"" . $viewcaption . "\" href=\"" . ew_HtmlEncode($this->ViewUrl) . "\">" . $Language->Phrase("ViewLink") . "</a>";
+		} else {
+			$oListOpt->Body = "";
+		}
+
+		// "edit"
+		$oListOpt = &$this->ListOptions->Items["edit"];
+		$editcaption = ew_HtmlTitle($Language->Phrase("EditLink"));
+		if (TRUE) {
+			$oListOpt->Body = "<a class=\"ewRowLink ewEdit\" title=\"" . ew_HtmlTitle($Language->Phrase("EditLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("EditLink")) . "\" href=\"" . ew_HtmlEncode($this->EditUrl) . "\">" . $Language->Phrase("EditLink") . "</a>";
+		} else {
+			$oListOpt->Body = "";
+		}
+
+		// "copy"
+		$oListOpt = &$this->ListOptions->Items["copy"];
+		$copycaption = ew_HtmlTitle($Language->Phrase("CopyLink"));
+		if (TRUE) {
+			$oListOpt->Body = "<a class=\"ewRowLink ewCopy\" title=\"" . $copycaption . "\" data-caption=\"" . $copycaption . "\" href=\"" . ew_HtmlEncode($this->CopyUrl) . "\">" . $Language->Phrase("CopyLink") . "</a>";
+		} else {
+			$oListOpt->Body = "";
+		}
+
+		// "delete"
+		$oListOpt = &$this->ListOptions->Items["delete"];
+		if (TRUE)
+			$oListOpt->Body = "<a class=\"ewRowLink ewDelete\"" . "" . " title=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" href=\"" . ew_HtmlEncode($this->DeleteUrl) . "\">" . $Language->Phrase("DeleteLink") . "</a>";
+		else
+			$oListOpt->Body = "";
+
 		// Set up list action buttons
 		$oListOpt = &$this->ListOptions->GetItem("listactions");
 		if ($oListOpt && $this->Export == "" && $this->CurrentAction == "") {
@@ -1056,6 +820,7 @@ class cclientes_list extends cclientes {
 
 		// "checkbox"
 		$oListOpt = &$this->ListOptions->Items["checkbox"];
+		$oListOpt->Body = "<input type=\"checkbox\" name=\"key_m[]\" class=\"ewMultiSelect\" value=\"" . ew_HtmlEncode($this->id_cliente->CurrentValue) . "\" onclick=\"ew_ClickMultiCheckbox(event);\">";
 		$this->RenderListOptionsExt();
 
 		// Call ListOptions_Rendered event
@@ -1066,6 +831,13 @@ class cclientes_list extends cclientes {
 	function SetupOtherOptions() {
 		global $Language, $Security;
 		$options = &$this->OtherOptions;
+		$option = $options["addedit"];
+
+		// Add
+		$item = &$option->Add("add");
+		$addcaption = ew_HtmlTitle($Language->Phrase("AddLink"));
+		$item->Body = "<a class=\"ewAddEdit ewAdd\" title=\"" . $addcaption . "\" data-caption=\"" . $addcaption . "\" href=\"" . ew_HtmlEncode($this->AddUrl) . "\">" . $Language->Phrase("AddLink") . "</a>";
+		$item->Visible = ($this->AddUrl <> "");
 		$option = $options["action"];
 
 		// Set up options default
@@ -1085,10 +857,10 @@ class cclientes_list extends cclientes {
 		// Filter button
 		$item = &$this->FilterOptions->Add("savecurrentfilter");
 		$item->Body = "<a class=\"ewSaveFilter\" data-form=\"fclienteslistsrch\" href=\"#\">" . $Language->Phrase("SaveCurrentFilter") . "</a>";
-		$item->Visible = TRUE;
+		$item->Visible = FALSE;
 		$item = &$this->FilterOptions->Add("deletefilter");
 		$item->Body = "<a class=\"ewDeleteFilter\" data-form=\"fclienteslistsrch\" href=\"#\">" . $Language->Phrase("DeleteFilter") . "</a>";
-		$item->Visible = TRUE;
+		$item->Visible = FALSE;
 		$this->FilterOptions->UseDropDownButton = TRUE;
 		$this->FilterOptions->UseButtonGroup = !$this->FilterOptions->UseDropDownButton;
 		$this->FilterOptions->DropDownButtonPhrase = $Language->Phrase("Filters");
@@ -1212,17 +984,6 @@ class cclientes_list extends cclientes {
 		$this->SearchOptions->Tag = "div";
 		$this->SearchOptions->TagClassName = "ewSearchOption";
 
-		// Search button
-		$item = &$this->SearchOptions->Add("searchtoggle");
-		$SearchToggleClass = ($this->SearchWhere <> "") ? " active" : " active";
-		$item->Body = "<button type=\"button\" class=\"btn btn-default ewSearchToggle" . $SearchToggleClass . "\" title=\"" . $Language->Phrase("SearchPanel") . "\" data-caption=\"" . $Language->Phrase("SearchPanel") . "\" data-toggle=\"button\" data-form=\"fclienteslistsrch\">" . $Language->Phrase("SearchLink") . "</button>";
-		$item->Visible = TRUE;
-
-		// Show all button
-		$item = &$this->SearchOptions->Add("showall");
-		$item->Body = "<a class=\"btn btn-default ewShowAll\" title=\"" . $Language->Phrase("ShowAll") . "\" data-caption=\"" . $Language->Phrase("ShowAll") . "\" href=\"" . $this->PageUrl() . "cmd=reset\">" . $Language->Phrase("ShowAllBtn") . "</a>";
-		$item->Visible = ($this->SearchWhere <> $this->DefaultSearchWhere && $this->SearchWhere <> "0=101");
-
 		// Button group for search
 		$this->SearchOptions->UseDropDownButton = FALSE;
 		$this->SearchOptions->UseImageAndText = TRUE;
@@ -1281,13 +1042,6 @@ class cclientes_list extends cclientes {
 			$this->StartRec = intval(($this->StartRec-1)/$this->DisplayRecs)*$this->DisplayRecs+1; // Point to page boundary
 			$this->setStartRecordNumber($this->StartRec);
 		}
-	}
-
-	// Load basic search values
-	function LoadBasicSearchValues() {
-		$this->BasicSearch->Keyword = @$_GET[EW_TABLE_BASIC_SEARCH];
-		if ($this->BasicSearch->Keyword <> "" && $this->Command == "") $this->Command = "search";
-		$this->BasicSearch->Type = @$_GET[EW_TABLE_BASIC_SEARCH_TYPE];
 	}
 
 	// Load recordset
@@ -1349,6 +1103,7 @@ class cclientes_list extends cclientes {
 		$this->Row_Selected($row);
 		if (!$rs || $rs->EOF)
 			return;
+		$this->id_cliente->setDbValue($row['id_cliente']);
 		$this->id->setDbValue($row['id']);
 		$this->tipo->setDbValue($row['tipo']);
 		$this->data->setDbValue($row['data']);
@@ -1358,6 +1113,7 @@ class cclientes_list extends cclientes {
 	// Return a row with default values
 	function NewRow() {
 		$row = array();
+		$row['id_cliente'] = NULL;
 		$row['id'] = NULL;
 		$row['tipo'] = NULL;
 		$row['data'] = NULL;
@@ -1370,6 +1126,7 @@ class cclientes_list extends cclientes {
 		if (!$rs || !is_array($rs) && $rs->EOF)
 			return;
 		$row = is_array($rs) ? $rs : $rs->fields;
+		$this->id_cliente->DbValue = $row['id_cliente'];
 		$this->id->DbValue = $row['id'];
 		$this->tipo->DbValue = $row['tipo'];
 		$this->data->DbValue = $row['data'];
@@ -1378,7 +1135,24 @@ class cclientes_list extends cclientes {
 
 	// Load old record
 	function LoadOldRecord() {
-		return FALSE;
+
+		// Load key values from Session
+		$bValidKey = TRUE;
+		if (strval($this->getKey("id_cliente")) <> "")
+			$this->id_cliente->CurrentValue = $this->getKey("id_cliente"); // id_cliente
+		else
+			$bValidKey = FALSE;
+
+		// Load old record
+		$this->OldRecordset = NULL;
+		if ($bValidKey) {
+			$this->CurrentFilter = $this->KeyFilter();
+			$sSql = $this->SQL();
+			$conn = &$this->Connection();
+			$this->OldRecordset = ew_LoadRecordset($sSql, $conn);
+		}
+		$this->LoadRowValues($this->OldRecordset); // Load row values
+		return $bValidKey;
 	}
 
 	// Render row values based on field settings
@@ -1397,50 +1171,21 @@ class cclientes_list extends cclientes {
 		$this->Row_Rendering();
 
 		// Common render codes for all row types
+		// id_cliente
+
+		$this->id_cliente->CellCssStyle = "white-space: nowrap;";
+
 		// id
+		$this->id->CellCssStyle = "white-space: nowrap;";
+
 		// tipo
 		// data
-		// time
 
+		$this->data->CellCssStyle = "white-space: nowrap;";
+
+		// time
+		$this->time->CellCssStyle = "white-space: nowrap;";
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
-
-		// id
-		$this->id->ViewValue = $this->id->CurrentValue;
-		$this->id->ViewCustomAttributes = "";
-
-		// tipo
-		$this->tipo->ViewValue = $this->tipo->CurrentValue;
-		$this->tipo->ViewCustomAttributes = "";
-
-		// data
-		$this->data->ViewValue = $this->data->CurrentValue;
-		$this->data->ViewValue = ew_FormatDateTime($this->data->ViewValue, 0);
-		$this->data->ViewCustomAttributes = "";
-
-		// time
-		$this->time->ViewValue = $this->time->CurrentValue;
-		$this->time->ViewValue = ew_FormatDateTime($this->time->ViewValue, 4);
-		$this->time->ViewCustomAttributes = "";
-
-			// id
-			$this->id->LinkCustomAttributes = "";
-			$this->id->HrefValue = "";
-			$this->id->TooltipValue = "";
-
-			// tipo
-			$this->tipo->LinkCustomAttributes = "";
-			$this->tipo->HrefValue = "";
-			$this->tipo->TooltipValue = "";
-
-			// data
-			$this->data->LinkCustomAttributes = "";
-			$this->data->HrefValue = "";
-			$this->data->TooltipValue = "";
-
-			// time
-			$this->time->LinkCustomAttributes = "";
-			$this->time->HrefValue = "";
-			$this->time->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -1642,7 +1387,6 @@ fclienteslist.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 // Dynamic selection lists
 // Form object for search
 
-var CurrentSearchForm = fclienteslistsrch = new ew_Form("fclienteslistsrch");
 </script>
 <script type="text/javascript">
 
@@ -1651,12 +1395,6 @@ var CurrentSearchForm = fclienteslistsrch = new ew_Form("fclienteslistsrch");
 <div class="ewToolbar">
 <?php if ($clientes_list->TotalRecs > 0 && $clientes_list->ExportOptions->Visible()) { ?>
 <?php $clientes_list->ExportOptions->Render("body") ?>
-<?php } ?>
-<?php if ($clientes_list->SearchOptions->Visible()) { ?>
-<?php $clientes_list->SearchOptions->Render("body") ?>
-<?php } ?>
-<?php if ($clientes_list->FilterOptions->Visible()) { ?>
-<?php $clientes_list->FilterOptions->Render("body") ?>
 <?php } ?>
 <div class="clearfix"></div>
 </div>
@@ -1686,33 +1424,6 @@ var CurrentSearchForm = fclienteslistsrch = new ew_Form("fclienteslistsrch");
 	}
 $clientes_list->RenderOtherOptions();
 ?>
-<?php if ($clientes->Export == "" && $clientes->CurrentAction == "") { ?>
-<form name="fclienteslistsrch" id="fclienteslistsrch" class="form-inline ewForm ewExtSearchForm" action="<?php echo ew_CurrentPage() ?>">
-<?php $SearchPanelClass = ($clientes_list->SearchWhere <> "") ? " in" : " in"; ?>
-<div id="fclienteslistsrch_SearchPanel" class="ewSearchPanel collapse<?php echo $SearchPanelClass ?>">
-<input type="hidden" name="cmd" value="search">
-<input type="hidden" name="t" value="clientes">
-	<div class="ewBasicSearch">
-<div id="xsr_1" class="ewRow">
-	<div class="ewQuickSearch input-group">
-	<input type="text" name="<?php echo EW_TABLE_BASIC_SEARCH ?>" id="<?php echo EW_TABLE_BASIC_SEARCH ?>" class="form-control" value="<?php echo ew_HtmlEncode($clientes_list->BasicSearch->getKeyword()) ?>" placeholder="<?php echo ew_HtmlEncode($Language->Phrase("Search")) ?>">
-	<input type="hidden" name="<?php echo EW_TABLE_BASIC_SEARCH_TYPE ?>" id="<?php echo EW_TABLE_BASIC_SEARCH_TYPE ?>" value="<?php echo ew_HtmlEncode($clientes_list->BasicSearch->getType()) ?>">
-	<div class="input-group-btn">
-		<button type="button" data-toggle="dropdown" class="btn btn-default"><span id="searchtype"><?php echo $clientes_list->BasicSearch->getTypeNameShort() ?></span><span class="caret"></span></button>
-		<ul class="dropdown-menu pull-right" role="menu">
-			<li<?php if ($clientes_list->BasicSearch->getType() == "") echo " class=\"active\""; ?>><a href="javascript:void(0);" onclick="ew_SetSearchType(this)"><?php echo $Language->Phrase("QuickSearchAuto") ?></a></li>
-			<li<?php if ($clientes_list->BasicSearch->getType() == "=") echo " class=\"active\""; ?>><a href="javascript:void(0);" onclick="ew_SetSearchType(this,'=')"><?php echo $Language->Phrase("QuickSearchExact") ?></a></li>
-			<li<?php if ($clientes_list->BasicSearch->getType() == "AND") echo " class=\"active\""; ?>><a href="javascript:void(0);" onclick="ew_SetSearchType(this,'AND')"><?php echo $Language->Phrase("QuickSearchAll") ?></a></li>
-			<li<?php if ($clientes_list->BasicSearch->getType() == "OR") echo " class=\"active\""; ?>><a href="javascript:void(0);" onclick="ew_SetSearchType(this,'OR')"><?php echo $Language->Phrase("QuickSearchAny") ?></a></li>
-		</ul>
-	<button class="btn btn-primary ewButton" name="btnsubmit" id="btnsubmit" type="submit"><?php echo $Language->Phrase("SearchBtn") ?></button>
-	</div>
-	</div>
-</div>
-	</div>
-</div>
-</form>
-<?php } ?>
 <?php $clientes_list->ShowPageHeader(); ?>
 <?php
 $clientes_list->ShowMessage();
@@ -1740,42 +1451,6 @@ $clientes_list->RenderListOptions();
 // Render list options (header, left)
 $clientes_list->ListOptions->Render("header", "left");
 ?>
-<?php if ($clientes->id->Visible) { // id ?>
-	<?php if ($clientes->SortUrl($clientes->id) == "") { ?>
-		<th data-name="id" class="<?php echo $clientes->id->HeaderCellClass() ?>"><div id="elh_clientes_id" class="clientes_id"><div class="ewTableHeaderCaption"><?php echo $clientes->id->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="id" class="<?php echo $clientes->id->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $clientes->SortUrl($clientes->id) ?>',1);"><div id="elh_clientes_id" class="clientes_id">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $clientes->id->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($clientes->id->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($clientes->id->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($clientes->tipo->Visible) { // tipo ?>
-	<?php if ($clientes->SortUrl($clientes->tipo) == "") { ?>
-		<th data-name="tipo" class="<?php echo $clientes->tipo->HeaderCellClass() ?>"><div id="elh_clientes_tipo" class="clientes_tipo"><div class="ewTableHeaderCaption"><?php echo $clientes->tipo->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="tipo" class="<?php echo $clientes->tipo->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $clientes->SortUrl($clientes->tipo) ?>',1);"><div id="elh_clientes_tipo" class="clientes_tipo">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $clientes->tipo->FldCaption() ?><?php echo $Language->Phrase("SrchLegend") ?></span><span class="ewTableHeaderSort"><?php if ($clientes->tipo->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($clientes->tipo->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($clientes->data->Visible) { // data ?>
-	<?php if ($clientes->SortUrl($clientes->data) == "") { ?>
-		<th data-name="data" class="<?php echo $clientes->data->HeaderCellClass() ?>"><div id="elh_clientes_data" class="clientes_data"><div class="ewTableHeaderCaption"><?php echo $clientes->data->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="data" class="<?php echo $clientes->data->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $clientes->SortUrl($clientes->data) ?>',1);"><div id="elh_clientes_data" class="clientes_data">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $clientes->data->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($clientes->data->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($clientes->data->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($clientes->time->Visible) { // time ?>
-	<?php if ($clientes->SortUrl($clientes->time) == "") { ?>
-		<th data-name="time" class="<?php echo $clientes->time->HeaderCellClass() ?>"><div id="elh_clientes_time" class="clientes_time"><div class="ewTableHeaderCaption"><?php echo $clientes->time->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="time" class="<?php echo $clientes->time->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $clientes->SortUrl($clientes->time) ?>',1);"><div id="elh_clientes_time" class="clientes_time">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $clientes->time->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($clientes->time->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($clientes->time->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
 <?php
 
 // Render list options (header, right)
@@ -1841,38 +1516,6 @@ while ($clientes_list->RecCnt < $clientes_list->StopRec) {
 // Render list options (body, left)
 $clientes_list->ListOptions->Render("body", "left", $clientes_list->RowCnt);
 ?>
-	<?php if ($clientes->id->Visible) { // id ?>
-		<td data-name="id"<?php echo $clientes->id->CellAttributes() ?>>
-<span id="el<?php echo $clientes_list->RowCnt ?>_clientes_id" class="clientes_id">
-<span<?php echo $clientes->id->ViewAttributes() ?>>
-<?php echo $clientes->id->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($clientes->tipo->Visible) { // tipo ?>
-		<td data-name="tipo"<?php echo $clientes->tipo->CellAttributes() ?>>
-<span id="el<?php echo $clientes_list->RowCnt ?>_clientes_tipo" class="clientes_tipo">
-<span<?php echo $clientes->tipo->ViewAttributes() ?>>
-<?php echo $clientes->tipo->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($clientes->data->Visible) { // data ?>
-		<td data-name="data"<?php echo $clientes->data->CellAttributes() ?>>
-<span id="el<?php echo $clientes_list->RowCnt ?>_clientes_data" class="clientes_data">
-<span<?php echo $clientes->data->ViewAttributes() ?>>
-<?php echo $clientes->data->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($clientes->time->Visible) { // time ?>
-		<td data-name="time"<?php echo $clientes->time->CellAttributes() ?>>
-<span id="el<?php echo $clientes_list->RowCnt ?>_clientes_time" class="clientes_time">
-<span<?php echo $clientes->time->ViewAttributes() ?>>
-<?php echo $clientes->time->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
 <?php
 
 // Render list options (body, right)
@@ -1971,8 +1614,6 @@ if ($clientes_list->Recordset)
 <div class="clearfix"></div>
 <?php } ?>
 <script type="text/javascript">
-fclienteslistsrch.FilterList = <?php echo $clientes_list->GetFilterList() ?>;
-fclienteslistsrch.Init();
 fclienteslist.Init();
 </script>
 <?php

@@ -21,7 +21,7 @@ class cprodutos_add extends cprodutos {
 	var $PageID = 'add';
 
 	// Project ID
-	var $ProjectID = '{D83B9BB1-2CD4-4540-9A5B-B0E890360FB3}';
+	var $ProjectID = '{A4E38B50-67B8-459F-992C-3B232135A6E3}';
 
 	// Table name
 	var $TableName = 'produtos';
@@ -289,7 +289,6 @@ class cprodutos_add extends cprodutos {
 		$this->codigo_produto->SetVisibility();
 		$this->nome_produto->SetVisibility();
 		$this->modelo_produto->SetVisibility();
-		$this->id_departamento_produto->SetVisibility();
 		$this->id_marca_produto->SetVisibility();
 		$this->status_produto->SetVisibility();
 		$this->unidade_medida_produto->SetVisibility();
@@ -544,9 +543,6 @@ class cprodutos_add extends cprodutos {
 		if (!$this->modelo_produto->FldIsDetailKey) {
 			$this->modelo_produto->setFormValue($objForm->GetValue("x_modelo_produto"));
 		}
-		if (!$this->id_departamento_produto->FldIsDetailKey) {
-			$this->id_departamento_produto->setFormValue($objForm->GetValue("x_id_departamento_produto"));
-		}
 		if (!$this->id_marca_produto->FldIsDetailKey) {
 			$this->id_marca_produto->setFormValue($objForm->GetValue("x_id_marca_produto"));
 		}
@@ -584,7 +580,6 @@ class cprodutos_add extends cprodutos {
 		$this->codigo_produto->CurrentValue = $this->codigo_produto->FormValue;
 		$this->nome_produto->CurrentValue = $this->nome_produto->FormValue;
 		$this->modelo_produto->CurrentValue = $this->modelo_produto->FormValue;
-		$this->id_departamento_produto->CurrentValue = $this->id_departamento_produto->FormValue;
 		$this->id_marca_produto->CurrentValue = $this->id_marca_produto->FormValue;
 		$this->status_produto->CurrentValue = $this->status_produto->FormValue;
 		$this->unidade_medida_produto->CurrentValue = $this->unidade_medida_produto->FormValue;
@@ -758,12 +753,27 @@ class cprodutos_add extends cprodutos {
 		$this->modelo_produto->ViewValue = $this->modelo_produto->CurrentValue;
 		$this->modelo_produto->ViewCustomAttributes = "";
 
-		// id_departamento_produto
-		$this->id_departamento_produto->ViewValue = $this->id_departamento_produto->CurrentValue;
-		$this->id_departamento_produto->ViewCustomAttributes = "";
-
 		// id_marca_produto
-		$this->id_marca_produto->ViewValue = $this->id_marca_produto->CurrentValue;
+		if (strval($this->id_marca_produto->CurrentValue) <> "") {
+			$sFilterWrk = "`id_marca`" . ew_SearchString("=", $this->id_marca_produto->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_marca`, `nome_marca` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `marcas`";
+		$sWhereWrk = "";
+		$this->id_marca_produto->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_marca_produto, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_marca_produto->ViewValue = $this->id_marca_produto->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_marca_produto->ViewValue = $this->id_marca_produto->CurrentValue;
+			}
+		} else {
+			$this->id_marca_produto->ViewValue = NULL;
+		}
 		$this->id_marca_produto->ViewCustomAttributes = "";
 
 		// status_produto
@@ -814,11 +824,6 @@ class cprodutos_add extends cprodutos {
 			$this->modelo_produto->LinkCustomAttributes = "";
 			$this->modelo_produto->HrefValue = "";
 			$this->modelo_produto->TooltipValue = "";
-
-			// id_departamento_produto
-			$this->id_departamento_produto->LinkCustomAttributes = "";
-			$this->id_departamento_produto->HrefValue = "";
-			$this->id_departamento_produto->TooltipValue = "";
 
 			// id_marca_produto
 			$this->id_marca_produto->LinkCustomAttributes = "";
@@ -884,17 +889,24 @@ class cprodutos_add extends cprodutos {
 			$this->modelo_produto->EditValue = ew_HtmlEncode($this->modelo_produto->CurrentValue);
 			$this->modelo_produto->PlaceHolder = ew_RemoveHtml($this->modelo_produto->FldCaption());
 
-			// id_departamento_produto
-			$this->id_departamento_produto->EditAttrs["class"] = "form-control";
-			$this->id_departamento_produto->EditCustomAttributes = "";
-			$this->id_departamento_produto->EditValue = ew_HtmlEncode($this->id_departamento_produto->CurrentValue);
-			$this->id_departamento_produto->PlaceHolder = ew_RemoveHtml($this->id_departamento_produto->FldCaption());
-
 			// id_marca_produto
 			$this->id_marca_produto->EditAttrs["class"] = "form-control";
 			$this->id_marca_produto->EditCustomAttributes = "";
-			$this->id_marca_produto->EditValue = ew_HtmlEncode($this->id_marca_produto->CurrentValue);
-			$this->id_marca_produto->PlaceHolder = ew_RemoveHtml($this->id_marca_produto->FldCaption());
+			if (trim(strval($this->id_marca_produto->CurrentValue)) == "") {
+				$sFilterWrk = "0=1";
+			} else {
+				$sFilterWrk = "`id_marca`" . ew_SearchString("=", $this->id_marca_produto->CurrentValue, EW_DATATYPE_NUMBER, "");
+			}
+			$sSqlWrk = "SELECT `id_marca`, `nome_marca` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `marcas`";
+			$sWhereWrk = "";
+			$this->id_marca_produto->LookupFilters = array();
+			ew_AddFilter($sWhereWrk, $sFilterWrk);
+			$this->Lookup_Selecting($this->id_marca_produto, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
+			if ($rswrk) $rswrk->Close();
+			$this->id_marca_produto->EditValue = $arwrk;
 
 			// status_produto
 			$this->status_produto->EditAttrs["class"] = "form-control";
@@ -959,10 +971,6 @@ class cprodutos_add extends cprodutos {
 			$this->modelo_produto->LinkCustomAttributes = "";
 			$this->modelo_produto->HrefValue = "";
 
-			// id_departamento_produto
-			$this->id_departamento_produto->LinkCustomAttributes = "";
-			$this->id_departamento_produto->HrefValue = "";
-
 			// id_marca_produto
 			$this->id_marca_produto->LinkCustomAttributes = "";
 			$this->id_marca_produto->HrefValue = "";
@@ -1020,12 +1028,6 @@ class cprodutos_add extends cprodutos {
 		if (!ew_CheckInteger($this->codigo_produto->FormValue)) {
 			ew_AddMessage($gsFormError, $this->codigo_produto->FldErrMsg());
 		}
-		if (!ew_CheckInteger($this->id_departamento_produto->FormValue)) {
-			ew_AddMessage($gsFormError, $this->id_departamento_produto->FldErrMsg());
-		}
-		if (!ew_CheckInteger($this->id_marca_produto->FormValue)) {
-			ew_AddMessage($gsFormError, $this->id_marca_produto->FldErrMsg());
-		}
 		if (!ew_CheckInteger($this->status_produto->FormValue)) {
 			ew_AddMessage($gsFormError, $this->status_produto->FldErrMsg());
 		}
@@ -1073,9 +1075,6 @@ class cprodutos_add extends cprodutos {
 
 		// modelo_produto
 		$this->modelo_produto->SetDbValueDef($rsnew, $this->modelo_produto->CurrentValue, NULL, FALSE);
-
-		// id_departamento_produto
-		$this->id_departamento_produto->SetDbValueDef($rsnew, $this->id_departamento_produto->CurrentValue, NULL, FALSE);
 
 		// id_marca_produto
 		$this->id_marca_produto->SetDbValueDef($rsnew, $this->id_marca_produto->CurrentValue, NULL, FALSE);
@@ -1149,6 +1148,18 @@ class cprodutos_add extends cprodutos {
 		global $gsLanguage;
 		$pageId = $pageId ?: $this->PageID;
 		switch ($fld->FldVar) {
+		case "x_id_marca_produto":
+			$sSqlWrk = "";
+			$sSqlWrk = "SELECT `id_marca` AS `LinkFld`, `nome_marca` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `marcas`";
+			$sWhereWrk = "";
+			$fld->LookupFilters = array();
+			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`id_marca` IN ({filter_value})', "t0" => "3", "fn0" => "");
+			$sSqlWrk = "";
+			$this->Lookup_Selecting($this->id_marca_produto, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			if ($sSqlWrk <> "")
+				$fld->LookupFilters["s"] .= $sSqlWrk;
+			break;
 		}
 	}
 
@@ -1271,12 +1282,6 @@ fprodutosadd.Validate = function() {
 			elm = this.GetElements("x" + infix + "_codigo_produto");
 			if (elm && !ew_CheckInteger(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($produtos->codigo_produto->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_id_departamento_produto");
-			if (elm && !ew_CheckInteger(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($produtos->id_departamento_produto->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_id_marca_produto");
-			if (elm && !ew_CheckInteger(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($produtos->id_marca_produto->FldErrMsg()) ?>");
 			elm = this.GetElements("x" + infix + "_status_produto");
 			if (elm && !ew_CheckInteger(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($produtos->status_produto->FldErrMsg()) ?>");
@@ -1321,8 +1326,10 @@ fprodutosadd.Form_CustomValidate =
 fprodutosadd.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-// Form object for search
+fprodutosadd.Lists["x_id_marca_produto"] = {"LinkField":"x_id_marca","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_marca","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"marcas"};
+fprodutosadd.Lists["x_id_marca_produto"].Data = "<?php echo $produtos_add->id_marca_produto->LookupFilterQuery(FALSE, "add") ?>";
 
+// Form object for search
 </script>
 <script type="text/javascript">
 
@@ -1370,22 +1377,15 @@ $produtos_add->ShowMessage();
 <?php echo $produtos->modelo_produto->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
-<?php if ($produtos->id_departamento_produto->Visible) { // id_departamento_produto ?>
-	<div id="r_id_departamento_produto" class="form-group">
-		<label id="elh_produtos_id_departamento_produto" for="x_id_departamento_produto" class="<?php echo $produtos_add->LeftColumnClass ?>"><?php echo $produtos->id_departamento_produto->FldCaption() ?></label>
-		<div class="<?php echo $produtos_add->RightColumnClass ?>"><div<?php echo $produtos->id_departamento_produto->CellAttributes() ?>>
-<span id="el_produtos_id_departamento_produto">
-<input type="text" data-table="produtos" data-field="x_id_departamento_produto" name="x_id_departamento_produto" id="x_id_departamento_produto" size="30" placeholder="<?php echo ew_HtmlEncode($produtos->id_departamento_produto->getPlaceHolder()) ?>" value="<?php echo $produtos->id_departamento_produto->EditValue ?>"<?php echo $produtos->id_departamento_produto->EditAttributes() ?>>
-</span>
-<?php echo $produtos->id_departamento_produto->CustomMsg ?></div></div>
-	</div>
-<?php } ?>
 <?php if ($produtos->id_marca_produto->Visible) { // id_marca_produto ?>
 	<div id="r_id_marca_produto" class="form-group">
 		<label id="elh_produtos_id_marca_produto" for="x_id_marca_produto" class="<?php echo $produtos_add->LeftColumnClass ?>"><?php echo $produtos->id_marca_produto->FldCaption() ?></label>
 		<div class="<?php echo $produtos_add->RightColumnClass ?>"><div<?php echo $produtos->id_marca_produto->CellAttributes() ?>>
 <span id="el_produtos_id_marca_produto">
-<input type="text" data-table="produtos" data-field="x_id_marca_produto" name="x_id_marca_produto" id="x_id_marca_produto" size="30" placeholder="<?php echo ew_HtmlEncode($produtos->id_marca_produto->getPlaceHolder()) ?>" value="<?php echo $produtos->id_marca_produto->EditValue ?>"<?php echo $produtos->id_marca_produto->EditAttributes() ?>>
+<select data-table="produtos" data-field="x_id_marca_produto" data-value-separator="<?php echo $produtos->id_marca_produto->DisplayValueSeparatorAttribute() ?>" id="x_id_marca_produto" name="x_id_marca_produto"<?php echo $produtos->id_marca_produto->EditAttributes() ?>>
+<?php echo $produtos->id_marca_produto->SelectOptionListHtml("x_id_marca_produto") ?>
+</select>
+<button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $produtos->id_marca_produto->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_marca_produto',url:'marcasaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_marca_produto"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $produtos->id_marca_produto->FldCaption() ?></span></button>
 </span>
 <?php echo $produtos->id_marca_produto->CustomMsg ?></div></div>
 	</div>

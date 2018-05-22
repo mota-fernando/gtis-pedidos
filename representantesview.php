@@ -21,7 +21,7 @@ class crepresentantes_view extends crepresentantes {
 	var $PageID = 'view';
 
 	// Project ID
-	var $ProjectID = '{D83B9BB1-2CD4-4540-9A5B-B0E890360FB3}';
+	var $ProjectID = '{A4E38B50-67B8-459F-992C-3B232135A6E3}';
 
 	// Table name
 	var $TableName = 'representantes';
@@ -340,9 +340,6 @@ class crepresentantes_view extends crepresentantes {
 		// Is modal
 		$this->IsModal = (@$_GET["modal"] == "1" || @$_POST["modal"] == "1");
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
-		$this->id_representantes->SetVisibility();
-		if ($this->IsAdd() || $this->IsCopy() || $this->IsGridAdd())
-			$this->id_representantes->Visible = FALSE;
 		$this->id_pessoa->SetVisibility();
 		$this->comissao->SetVisibility();
 
@@ -664,11 +661,6 @@ class crepresentantes_view extends crepresentantes {
 		$this->comissao->ViewValue = $this->comissao->CurrentValue;
 		$this->comissao->ViewCustomAttributes = "";
 
-			// id_representantes
-			$this->id_representantes->LinkCustomAttributes = "";
-			$this->id_representantes->HrefValue = "";
-			$this->id_representantes->TooltipValue = "";
-
 			// id_pessoa
 			$this->id_pessoa->LinkCustomAttributes = "";
 			$this->id_pessoa->HrefValue = "";
@@ -861,17 +853,6 @@ $representantes_view->ShowMessage();
 <input type="hidden" name="t" value="representantes">
 <input type="hidden" name="modal" value="<?php echo intval($representantes_view->IsModal) ?>">
 <table class="table table-striped table-bordered table-hover table-condensed ewViewTable">
-<?php if ($representantes->id_representantes->Visible) { // id_representantes ?>
-	<tr id="r_id_representantes">
-		<td class="col-sm-2"><span id="elh_representantes_id_representantes"><?php echo $representantes->id_representantes->FldCaption() ?></span></td>
-		<td data-name="id_representantes"<?php echo $representantes->id_representantes->CellAttributes() ?>>
-<span id="el_representantes_id_representantes">
-<span<?php echo $representantes->id_representantes->ViewAttributes() ?>>
-<?php echo $representantes->id_representantes->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
 <?php if ($representantes->id_pessoa->Visible) { // id_pessoa ?>
 	<tr id="r_id_pessoa">
 		<td class="col-sm-2"><span id="elh_representantes_id_pessoa"><?php echo $representantes->id_pessoa->FldCaption() ?></span></td>

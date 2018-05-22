@@ -7,6 +7,7 @@ $clientes = NULL;
 // Table class for clientes
 //
 class cclientes extends cTable {
+	var $id_cliente;
 	var $id;
 	var $tipo;
 	var $data;
@@ -39,31 +40,40 @@ class cclientes extends cTable {
 		$this->DetailEdit = FALSE; // Allow detail edit
 		$this->DetailView = FALSE; // Allow detail view
 		$this->ShowMultipleDetails = FALSE; // Show multiple details
-		$this->GridAddRowCount = 5;
+		$this->GridAddRowCount = 1;
 		$this->AllowAddDeleteRow = TRUE; // Allow add/delete row
 		$this->UserIDAllowSecurity = 0; // User ID Allow
 		$this->BasicSearch = new cBasicSearch($this->TableVar);
 
+		// id_cliente
+		$this->id_cliente = new cField('clientes', 'clientes', 'x_id_cliente', 'id_cliente', '`id_cliente`', '`id_cliente`', 3, -1, FALSE, '`id_cliente`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'NO');
+		$this->id_cliente->Sortable = FALSE; // Allow sort
+		$this->id_cliente->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
+		$this->fields['id_cliente'] = &$this->id_cliente;
+
 		// id
 		$this->id = new cField('clientes', 'clientes', 'x_id', 'id', '`id`', '`id`', 3, -1, FALSE, '`id`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
-		$this->id->Sortable = TRUE; // Allow sort
+		$this->id->Sortable = FALSE; // Allow sort
 		$this->id->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['id'] = &$this->id;
 
 		// tipo
-		$this->tipo = new cField('clientes', 'clientes', 'x_tipo', 'tipo', '`tipo`', '`tipo`', 200, -1, FALSE, '`tipo`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
-		$this->tipo->Sortable = TRUE; // Allow sort
+		$this->tipo = new cField('clientes', 'clientes', 'x_tipo', 'tipo', '`tipo`', '`tipo`', 200, -1, FALSE, '`tipo`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'SELECT');
+		$this->tipo->Sortable = FALSE; // Allow sort
+		$this->tipo->UsePleaseSelect = TRUE; // Use PleaseSelect by default
+		$this->tipo->PleaseSelectText = $Language->Phrase("PleaseSelect"); // PleaseSelect text
+		$this->tipo->OptionCount = 2;
 		$this->fields['tipo'] = &$this->tipo;
 
 		// data
 		$this->data = new cField('clientes', 'clientes', 'x_data', 'data', '`data`', ew_CastDateFieldForLike('`data`', 0, "DB"), 133, 0, FALSE, '`data`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
-		$this->data->Sortable = TRUE; // Allow sort
+		$this->data->Sortable = FALSE; // Allow sort
 		$this->data->FldDefaultErrMsg = str_replace("%s", $GLOBALS["EW_DATE_FORMAT"], $Language->Phrase("IncorrectDate"));
 		$this->fields['data'] = &$this->data;
 
 		// time
 		$this->time = new cField('clientes', 'clientes', 'x_time', 'time', '`time`', ew_CastDateFieldForLike('`time`', 4, "DB"), 134, 4, FALSE, '`time`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
-		$this->time->Sortable = TRUE; // Allow sort
+		$this->time->Sortable = FALSE; // Allow sort
 		$this->time->FldDefaultErrMsg = str_replace("%s", $GLOBALS["EW_TIME_SEPARATOR"], $Language->Phrase("IncorrectTime"));
 		$this->fields['time'] = &$this->time;
 	}
@@ -335,6 +345,10 @@ class cclientes extends cTable {
 		$conn = &$this->Connection();
 		$bInsert = $conn->Execute($this->InsertSQL($rs));
 		if ($bInsert) {
+
+			// Get insert id if necessary
+			$this->id_cliente->setDbValue($conn->Insert_ID());
+			$rs['id_cliente'] = $this->id_cliente->DbValue;
 		}
 		return $bInsert;
 	}
@@ -370,6 +384,8 @@ class cclientes extends cTable {
 		if (is_array($where))
 			$where = $this->ArrayToFilter($where);
 		if ($rs) {
+			if (array_key_exists('id_cliente', $rs))
+				ew_AddFilter($where, ew_QuotedName('id_cliente', $this->DBID) . '=' . ew_QuotedValue($rs['id_cliente'], $this->id_cliente->FldDataType, $this->DBID));
 		}
 		$filter = ($curfilter) ? $this->CurrentFilter : "";
 		ew_AddFilter($filter, $where);
@@ -391,12 +407,18 @@ class cclientes extends cTable {
 
 	// Key filter WHERE clause
 	function SqlKeyFilter() {
-		return "";
+		return "`id_cliente` = @id_cliente@";
 	}
 
 	// Key filter
 	function KeyFilter() {
 		$sKeyFilter = $this->SqlKeyFilter();
+		if (!is_numeric($this->id_cliente->CurrentValue))
+			return "0=1"; // Invalid key
+		if (is_null($this->id_cliente->CurrentValue))
+			return "0=1"; // Invalid key
+		else
+			$sKeyFilter = str_replace("@id_cliente@", ew_AdjustSql($this->id_cliente->CurrentValue, $this->DBID), $sKeyFilter); // Replace key value
 		return $sKeyFilter;
 	}
 
@@ -490,6 +512,7 @@ class cclientes extends cTable {
 
 	function KeyToJson() {
 		$json = "";
+		$json .= "id_cliente:" . ew_VarToJson($this->id_cliente->CurrentValue, "number", "'");
 		return "{" . $json . "}";
 	}
 
@@ -497,6 +520,11 @@ class cclientes extends cTable {
 	function KeyUrl($url, $parm = "") {
 		$sUrl = $url . "?";
 		if ($parm <> "") $sUrl .= $parm . "&";
+		if (!is_null($this->id_cliente->CurrentValue)) {
+			$sUrl .= "id_cliente=" . urlencode($this->id_cliente->CurrentValue);
+		} else {
+			return "javascript:ew_Alert(ewLanguage.Phrase('InvalidRecord'));";
+		}
 		return $sUrl;
 	}
 
@@ -526,6 +554,12 @@ class cclientes extends cTable {
 			$cnt = count($arKeys);
 		} elseif (!empty($_GET) || !empty($_POST)) {
 			$isPost = ew_IsPost();
+			if ($isPost && isset($_POST["id_cliente"]))
+				$arKeys[] = $_POST["id_cliente"];
+			elseif (isset($_GET["id_cliente"]))
+				$arKeys[] = $_GET["id_cliente"];
+			else
+				$arKeys = NULL; // Do not setup
 
 			//return $arKeys; // Do not return yet, so the values will also be checked by the following code
 		}
@@ -534,6 +568,8 @@ class cclientes extends cTable {
 		$ar = array();
 		if (is_array($arKeys)) {
 			foreach ($arKeys as $key) {
+				if (!is_numeric($key))
+					continue;
 				$ar[] = $key;
 			}
 		}
@@ -546,6 +582,7 @@ class cclientes extends cTable {
 		$sKeyFilter = "";
 		foreach ($arKeys as $key) {
 			if ($sKeyFilter <> "") $sKeyFilter .= " OR ";
+			$this->id_cliente->CurrentValue = $key;
 			$sKeyFilter .= "(" . $this->KeyFilter() . ")";
 		}
 		return $sKeyFilter;
@@ -566,6 +603,7 @@ class cclientes extends cTable {
 
 	// Load row values from recordset
 	function LoadListRowValues(&$rs) {
+		$this->id_cliente->setDbValue($rs->fields('id_cliente'));
 		$this->id->setDbValue($rs->fields('id'));
 		$this->tipo->setDbValue($rs->fields('tipo'));
 		$this->data->setDbValue($rs->fields('data'));
@@ -580,17 +618,35 @@ class cclientes extends cTable {
 		$this->Row_Rendering();
 
 	// Common render codes
+		// id_cliente
+
+		$this->id_cliente->CellCssStyle = "white-space: nowrap;";
+
 		// id
+		$this->id->CellCssStyle = "white-space: nowrap;";
+
 		// tipo
 		// data
-		// time
-		// id
 
+		$this->data->CellCssStyle = "white-space: nowrap;";
+
+		// time
+		$this->time->CellCssStyle = "white-space: nowrap;";
+
+		// id_cliente
+		$this->id_cliente->ViewValue = $this->id_cliente->CurrentValue;
+		$this->id_cliente->ViewCustomAttributes = "";
+
+		// id
 		$this->id->ViewValue = $this->id->CurrentValue;
 		$this->id->ViewCustomAttributes = "";
 
 		// tipo
-		$this->tipo->ViewValue = $this->tipo->CurrentValue;
+		if (strval($this->tipo->CurrentValue) <> "") {
+			$this->tipo->ViewValue = $this->tipo->OptionCaption($this->tipo->CurrentValue);
+		} else {
+			$this->tipo->ViewValue = NULL;
+		}
 		$this->tipo->ViewCustomAttributes = "";
 
 		// data
@@ -602,6 +658,11 @@ class cclientes extends cTable {
 		$this->time->ViewValue = $this->time->CurrentValue;
 		$this->time->ViewValue = ew_FormatDateTime($this->time->ViewValue, 4);
 		$this->time->ViewCustomAttributes = "";
+
+		// id_cliente
+		$this->id_cliente->LinkCustomAttributes = "";
+		$this->id_cliente->HrefValue = "";
+		$this->id_cliente->TooltipValue = "";
 
 		// id
 		$this->id->LinkCustomAttributes = "";
@@ -637,6 +698,12 @@ class cclientes extends cTable {
 		// Call Row Rendering event
 		$this->Row_Rendering();
 
+		// id_cliente
+		$this->id_cliente->EditAttrs["class"] = "form-control";
+		$this->id_cliente->EditCustomAttributes = "";
+		$this->id_cliente->EditValue = $this->id_cliente->CurrentValue;
+		$this->id_cliente->ViewCustomAttributes = "";
+
 		// id
 		$this->id->EditAttrs["class"] = "form-control";
 		$this->id->EditCustomAttributes = "";
@@ -646,8 +713,7 @@ class cclientes extends cTable {
 		// tipo
 		$this->tipo->EditAttrs["class"] = "form-control";
 		$this->tipo->EditCustomAttributes = "";
-		$this->tipo->EditValue = $this->tipo->CurrentValue;
-		$this->tipo->PlaceHolder = ew_RemoveHtml($this->tipo->FldCaption());
+		$this->tipo->EditValue = $this->tipo->Options(TRUE);
 
 		// data
 		$this->data->EditAttrs["class"] = "form-control";
@@ -688,15 +754,7 @@ class cclientes extends cTable {
 			if ($Doc->Horizontal) { // Horizontal format, write header
 				$Doc->BeginExportRow();
 				if ($ExportPageType == "view") {
-					if ($this->id->Exportable) $Doc->ExportCaption($this->id);
-					if ($this->tipo->Exportable) $Doc->ExportCaption($this->tipo);
-					if ($this->data->Exportable) $Doc->ExportCaption($this->data);
-					if ($this->time->Exportable) $Doc->ExportCaption($this->time);
 				} else {
-					if ($this->id->Exportable) $Doc->ExportCaption($this->id);
-					if ($this->tipo->Exportable) $Doc->ExportCaption($this->tipo);
-					if ($this->data->Exportable) $Doc->ExportCaption($this->data);
-					if ($this->time->Exportable) $Doc->ExportCaption($this->time);
 				}
 				$Doc->EndExportRow();
 			}
@@ -728,15 +786,7 @@ class cclientes extends cTable {
 				if (!$Doc->ExportCustom) {
 					$Doc->BeginExportRow($RowCnt); // Allow CSS styles if enabled
 					if ($ExportPageType == "view") {
-						if ($this->id->Exportable) $Doc->ExportField($this->id);
-						if ($this->tipo->Exportable) $Doc->ExportField($this->tipo);
-						if ($this->data->Exportable) $Doc->ExportField($this->data);
-						if ($this->time->Exportable) $Doc->ExportField($this->time);
 					} else {
-						if ($this->id->Exportable) $Doc->ExportField($this->id);
-						if ($this->tipo->Exportable) $Doc->ExportField($this->tipo);
-						if ($this->data->Exportable) $Doc->ExportField($this->data);
-						if ($this->time->Exportable) $Doc->ExportField($this->time);
 					}
 					$Doc->EndExportRow($RowCnt);
 				}

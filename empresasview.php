@@ -21,7 +21,7 @@ class cempresas_view extends cempresas {
 	var $PageID = 'view';
 
 	// Project ID
-	var $ProjectID = '{D83B9BB1-2CD4-4540-9A5B-B0E890360FB3}';
+	var $ProjectID = '{A4E38B50-67B8-459F-992C-3B232135A6E3}';
 
 	// Table name
 	var $TableName = 'empresas';
@@ -340,9 +340,6 @@ class cempresas_view extends cempresas {
 		// Is modal
 		$this->IsModal = (@$_GET["modal"] == "1" || @$_POST["modal"] == "1");
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
-		$this->id_perfil->SetVisibility();
-		if ($this->IsAdd() || $this->IsCopy() || $this->IsGridAdd())
-			$this->id_perfil->Visible = FALSE;
 		$this->razao_social->SetVisibility();
 		$this->proprietario->SetVisibility();
 		$this->telefone->SetVisibility();
@@ -732,7 +729,29 @@ class cempresas_view extends cempresas {
 		$this->_email->ViewCustomAttributes = "";
 
 		// id_endereco
-		$this->id_endereco->ViewValue = $this->id_endereco->CurrentValue;
+		if (strval($this->id_endereco->CurrentValue) <> "") {
+			$sFilterWrk = "`id_endereco`" . ew_SearchString("=", $this->id_endereco->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_endereco`, `endereco` AS `DispFld`, `bairro` AS `Disp2Fld`, `estado` AS `Disp3Fld`, `cidade` AS `Disp4Fld` FROM `endereco`";
+		$sWhereWrk = "";
+		$this->id_endereco->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_endereco, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$arwrk[2] = $rswrk->fields('Disp2Fld');
+				$arwrk[3] = $rswrk->fields('Disp3Fld');
+				$arwrk[4] = $rswrk->fields('Disp4Fld');
+				$this->id_endereco->ViewValue = $this->id_endereco->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_endereco->ViewValue = $this->id_endereco->CurrentValue;
+			}
+		} else {
+			$this->id_endereco->ViewValue = NULL;
+		}
 		$this->id_endereco->ViewCustomAttributes = "";
 
 		// nome_fantasia
@@ -762,11 +781,6 @@ class cempresas_view extends cempresas {
 		// endereco_numero
 		$this->endereco_numero->ViewValue = $this->endereco_numero->CurrentValue;
 		$this->endereco_numero->ViewCustomAttributes = "";
-
-			// id_perfil
-			$this->id_perfil->LinkCustomAttributes = "";
-			$this->id_perfil->HrefValue = "";
-			$this->id_perfil->TooltipValue = "";
 
 			// razao_social
 			$this->razao_social->LinkCustomAttributes = "";
@@ -989,8 +1003,10 @@ fempresasview.Form_CustomValidate =
 fempresasview.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-// Form object for search
+fempresasview.Lists["x_id_endereco"] = {"LinkField":"x_id_endereco","Ajax":true,"AutoFill":false,"DisplayFields":["x_endereco","x_bairro","x_estado","x_cidade"],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"endereco"};
+fempresasview.Lists["x_id_endereco"].Data = "<?php echo $empresas_view->id_endereco->LookupFilterQuery(FALSE, "view") ?>";
 
+// Form object for search
 </script>
 <script type="text/javascript">
 
@@ -1015,17 +1031,6 @@ $empresas_view->ShowMessage();
 <input type="hidden" name="t" value="empresas">
 <input type="hidden" name="modal" value="<?php echo intval($empresas_view->IsModal) ?>">
 <table class="table table-striped table-bordered table-hover table-condensed ewViewTable">
-<?php if ($empresas->id_perfil->Visible) { // id_perfil ?>
-	<tr id="r_id_perfil">
-		<td class="col-sm-2"><span id="elh_empresas_id_perfil"><?php echo $empresas->id_perfil->FldCaption() ?></span></td>
-		<td data-name="id_perfil"<?php echo $empresas->id_perfil->CellAttributes() ?>>
-<span id="el_empresas_id_perfil">
-<span<?php echo $empresas->id_perfil->ViewAttributes() ?>>
-<?php echo $empresas->id_perfil->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
 <?php if ($empresas->razao_social->Visible) { // razao_social ?>
 	<tr id="r_razao_social">
 		<td class="col-sm-2"><span id="elh_empresas_razao_social"><?php echo $empresas->razao_social->FldCaption() ?></span></td>

@@ -49,7 +49,7 @@ class cempresas extends cTable {
 		$this->DetailEdit = FALSE; // Allow detail edit
 		$this->DetailView = FALSE; // Allow detail view
 		$this->ShowMultipleDetails = FALSE; // Show multiple details
-		$this->GridAddRowCount = 5;
+		$this->GridAddRowCount = 1;
 		$this->AllowAddDeleteRow = TRUE; // Allow add/delete row
 		$this->UserIDAllowSecurity = 0; // User ID Allow
 		$this->BasicSearch = new cBasicSearch($this->TableVar);
@@ -86,8 +86,10 @@ class cempresas extends cTable {
 		$this->fields['email'] = &$this->_email;
 
 		// id_endereco
-		$this->id_endereco = new cField('empresas', 'empresas', 'x_id_endereco', 'id_endereco', '`id_endereco`', '`id_endereco`', 3, -1, FALSE, '`id_endereco`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->id_endereco = new cField('empresas', 'empresas', 'x_id_endereco', 'id_endereco', '`id_endereco`', '`id_endereco`', 3, -1, FALSE, '`id_endereco`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'SELECT');
 		$this->id_endereco->Sortable = TRUE; // Allow sort
+		$this->id_endereco->UsePleaseSelect = TRUE; // Use PleaseSelect by default
+		$this->id_endereco->PleaseSelectText = $Language->Phrase("PleaseSelect"); // PleaseSelect text
 		$this->id_endereco->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['id_endereco'] = &$this->id_endereco;
 
@@ -721,7 +723,29 @@ class cempresas extends cTable {
 		$this->_email->ViewCustomAttributes = "";
 
 		// id_endereco
-		$this->id_endereco->ViewValue = $this->id_endereco->CurrentValue;
+		if (strval($this->id_endereco->CurrentValue) <> "") {
+			$sFilterWrk = "`id_endereco`" . ew_SearchString("=", $this->id_endereco->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_endereco`, `endereco` AS `DispFld`, `bairro` AS `Disp2Fld`, `estado` AS `Disp3Fld`, `cidade` AS `Disp4Fld` FROM `endereco`";
+		$sWhereWrk = "";
+		$this->id_endereco->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_endereco, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$arwrk[2] = $rswrk->fields('Disp2Fld');
+				$arwrk[3] = $rswrk->fields('Disp3Fld');
+				$arwrk[4] = $rswrk->fields('Disp4Fld');
+				$this->id_endereco->ViewValue = $this->id_endereco->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_endereco->ViewValue = $this->id_endereco->CurrentValue;
+			}
+		} else {
+			$this->id_endereco->ViewValue = NULL;
+		}
 		$this->id_endereco->ViewCustomAttributes = "";
 
 		// nome_fantasia
@@ -875,8 +899,6 @@ class cempresas extends cTable {
 		// id_endereco
 		$this->id_endereco->EditAttrs["class"] = "form-control";
 		$this->id_endereco->EditCustomAttributes = "";
-		$this->id_endereco->EditValue = $this->id_endereco->CurrentValue;
-		$this->id_endereco->PlaceHolder = ew_RemoveHtml($this->id_endereco->FldCaption());
 
 		// nome_fantasia
 		$this->nome_fantasia->EditAttrs["class"] = "form-control";
@@ -947,7 +969,6 @@ class cempresas extends cTable {
 			if ($Doc->Horizontal) { // Horizontal format, write header
 				$Doc->BeginExportRow();
 				if ($ExportPageType == "view") {
-					if ($this->id_perfil->Exportable) $Doc->ExportCaption($this->id_perfil);
 					if ($this->razao_social->Exportable) $Doc->ExportCaption($this->razao_social);
 					if ($this->proprietario->Exportable) $Doc->ExportCaption($this->proprietario);
 					if ($this->telefone->Exportable) $Doc->ExportCaption($this->telefone);
@@ -1007,7 +1028,6 @@ class cempresas extends cTable {
 				if (!$Doc->ExportCustom) {
 					$Doc->BeginExportRow($RowCnt); // Allow CSS styles if enabled
 					if ($ExportPageType == "view") {
-						if ($this->id_perfil->Exportable) $Doc->ExportField($this->id_perfil);
 						if ($this->razao_social->Exportable) $Doc->ExportField($this->razao_social);
 						if ($this->proprietario->Exportable) $Doc->ExportField($this->proprietario);
 						if ($this->telefone->Exportable) $Doc->ExportField($this->telefone);

@@ -21,7 +21,7 @@ class cprazos_view extends cprazos {
 	var $PageID = 'view';
 
 	// Project ID
-	var $ProjectID = '{D83B9BB1-2CD4-4540-9A5B-B0E890360FB3}';
+	var $ProjectID = '{A4E38B50-67B8-459F-992C-3B232135A6E3}';
 
 	// Table name
 	var $TableName = 'prazos';
@@ -340,9 +340,6 @@ class cprazos_view extends cprazos {
 		// Is modal
 		$this->IsModal = (@$_GET["modal"] == "1" || @$_POST["modal"] == "1");
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
-		$this->id_prazos->SetVisibility();
-		if ($this->IsAdd() || $this->IsCopy() || $this->IsGridAdd())
-			$this->id_prazos->Visible = FALSE;
 		$this->prazo_em_dias->SetVisibility();
 		$this->parcelas->SetVisibility();
 
@@ -664,11 +661,6 @@ class cprazos_view extends cprazos {
 		$this->parcelas->ViewValue = $this->parcelas->CurrentValue;
 		$this->parcelas->ViewCustomAttributes = "";
 
-			// id_prazos
-			$this->id_prazos->LinkCustomAttributes = "";
-			$this->id_prazos->HrefValue = "";
-			$this->id_prazos->TooltipValue = "";
-
 			// prazo_em_dias
 			$this->prazo_em_dias->LinkCustomAttributes = "";
 			$this->prazo_em_dias->HrefValue = "";
@@ -861,17 +853,6 @@ $prazos_view->ShowMessage();
 <input type="hidden" name="t" value="prazos">
 <input type="hidden" name="modal" value="<?php echo intval($prazos_view->IsModal) ?>">
 <table class="table table-striped table-bordered table-hover table-condensed ewViewTable">
-<?php if ($prazos->id_prazos->Visible) { // id_prazos ?>
-	<tr id="r_id_prazos">
-		<td class="col-sm-2"><span id="elh_prazos_id_prazos"><?php echo $prazos->id_prazos->FldCaption() ?></span></td>
-		<td data-name="id_prazos"<?php echo $prazos->id_prazos->CellAttributes() ?>>
-<span id="el_prazos_id_prazos">
-<span<?php echo $prazos->id_prazos->ViewAttributes() ?>>
-<?php echo $prazos->id_prazos->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
 <?php if ($prazos->prazo_em_dias->Visible) { // prazo_em_dias ?>
 	<tr id="r_prazo_em_dias">
 		<td class="col-sm-2"><span id="elh_prazos_prazo_em_dias"><?php echo $prazos->prazo_em_dias->FldCaption() ?></span></td>

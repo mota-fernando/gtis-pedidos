@@ -37,11 +37,11 @@ class cdetalhe_pedido extends cTable {
 		$this->ExportExcelPageSize = ""; // Page size (PHPExcel only)
 		$this->ExportWordPageOrientation = "portrait"; // Page orientation (PHPWord only)
 		$this->ExportWordColumnWidth = NULL; // Cell width (PHPWord only)
-		$this->DetailAdd = FALSE; // Allow detail add
-		$this->DetailEdit = FALSE; // Allow detail edit
-		$this->DetailView = FALSE; // Allow detail view
+		$this->DetailAdd = TRUE; // Allow detail add
+		$this->DetailEdit = TRUE; // Allow detail edit
+		$this->DetailView = TRUE; // Allow detail view
 		$this->ShowMultipleDetails = FALSE; // Show multiple details
-		$this->GridAddRowCount = 5;
+		$this->GridAddRowCount = 1;
 		$this->AllowAddDeleteRow = TRUE; // Allow add/delete row
 		$this->UserIDAllowSecurity = 0; // User ID Allow
 		$this->BasicSearch = new cBasicSearch($this->TableVar);
@@ -59,8 +59,10 @@ class cdetalhe_pedido extends cTable {
 		$this->fields['numero_pedido'] = &$this->numero_pedido;
 
 		// id_produto
-		$this->id_produto = new cField('detalhe_pedido', 'detalhe_pedido', 'x_id_produto', 'id_produto', '`id_produto`', '`id_produto`', 3, -1, FALSE, '`id_produto`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->id_produto = new cField('detalhe_pedido', 'detalhe_pedido', 'x_id_produto', 'id_produto', '`id_produto`', '`id_produto`', 3, -1, FALSE, '`id_produto`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'SELECT');
 		$this->id_produto->Sortable = TRUE; // Allow sort
+		$this->id_produto->UsePleaseSelect = TRUE; // Use PleaseSelect by default
+		$this->id_produto->PleaseSelectText = $Language->Phrase("PleaseSelect"); // PleaseSelect text
 		$this->id_produto->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['id_produto'] = &$this->id_produto;
 
@@ -77,8 +79,10 @@ class cdetalhe_pedido extends cTable {
 		$this->fields['custo'] = &$this->custo;
 
 		// id_desconto
-		$this->id_desconto = new cField('detalhe_pedido', 'detalhe_pedido', 'x_id_desconto', 'id_desconto', '`id_desconto`', '`id_desconto`', 3, -1, FALSE, '`id_desconto`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->id_desconto = new cField('detalhe_pedido', 'detalhe_pedido', 'x_id_desconto', 'id_desconto', '`id_desconto`', '`id_desconto`', 3, -1, FALSE, '`id_desconto`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'SELECT');
 		$this->id_desconto->Sortable = TRUE; // Allow sort
+		$this->id_desconto->UsePleaseSelect = TRUE; // Use PleaseSelect by default
+		$this->id_desconto->PleaseSelectText = $Language->Phrase("PleaseSelect"); // PleaseSelect text
 		$this->id_desconto->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['id_desconto'] = &$this->id_desconto;
 	}
@@ -118,6 +122,53 @@ class cdetalhe_pedido extends cTable {
 		} else {
 			$ofld->setSort("");
 		}
+	}
+
+	// Current master table name
+	function getCurrentMasterTable() {
+		return @$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_MASTER_TABLE];
+	}
+
+	function setCurrentMasterTable($v) {
+		$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_MASTER_TABLE] = $v;
+	}
+
+	// Session master WHERE clause
+	function GetMasterFilter() {
+
+		// Master filter
+		$sMasterFilter = "";
+		if ($this->getCurrentMasterTable() == "pedidos") {
+			if ($this->numero_pedido->getSessionValue() <> "")
+				$sMasterFilter .= "`numero`=" . ew_QuotedValue($this->numero_pedido->getSessionValue(), EW_DATATYPE_NUMBER, "DB");
+			else
+				return "";
+		}
+		return $sMasterFilter;
+	}
+
+	// Session detail WHERE clause
+	function GetDetailFilter() {
+
+		// Detail filter
+		$sDetailFilter = "";
+		if ($this->getCurrentMasterTable() == "pedidos") {
+			if ($this->numero_pedido->getSessionValue() <> "")
+				$sDetailFilter .= "`numero_pedido`=" . ew_QuotedValue($this->numero_pedido->getSessionValue(), EW_DATATYPE_NUMBER, "DB");
+			else
+				return "";
+		}
+		return $sDetailFilter;
+	}
+
+	// Master filter
+	function SqlMasterFilter_pedidos() {
+		return "`numero`=@numero@";
+	}
+
+	// Detail filter
+	function SqlDetailFilter_pedidos() {
+		return "`numero_pedido`=@numero_pedido@";
 	}
 
 	// Table level SQL
@@ -512,6 +563,10 @@ class cdetalhe_pedido extends cTable {
 
 	// Add master url
 	function AddMasterUrl($url) {
+		if ($this->getCurrentMasterTable() == "pedidos" && strpos($url, EW_TABLE_SHOW_MASTER . "=") === FALSE) {
+			$url .= (strpos($url, "?") !== FALSE ? "&" : "?") . EW_TABLE_SHOW_MASTER . "=" . $this->getCurrentMasterTable();
+			$url .= "&fk_numero=" . urlencode($this->numero_pedido->CurrentValue);
+		}
 		return $url;
 	}
 
@@ -640,7 +695,26 @@ class cdetalhe_pedido extends cTable {
 		$this->numero_pedido->ViewCustomAttributes = "";
 
 		// id_produto
-		$this->id_produto->ViewValue = $this->id_produto->CurrentValue;
+		if (strval($this->id_produto->CurrentValue) <> "") {
+			$sFilterWrk = "`id_produto`" . ew_SearchString("=", $this->id_produto->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_produto`, `nome_produto` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `produtos`";
+		$sWhereWrk = "";
+		$this->id_produto->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_produto, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_produto->ViewValue = $this->id_produto->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_produto->ViewValue = $this->id_produto->CurrentValue;
+			}
+		} else {
+			$this->id_produto->ViewValue = NULL;
+		}
 		$this->id_produto->ViewCustomAttributes = "";
 
 		// quantidade
@@ -652,7 +726,26 @@ class cdetalhe_pedido extends cTable {
 		$this->custo->ViewCustomAttributes = "";
 
 		// id_desconto
-		$this->id_desconto->ViewValue = $this->id_desconto->CurrentValue;
+		if (strval($this->id_desconto->CurrentValue) <> "") {
+			$sFilterWrk = "`id_desconto`" . ew_SearchString("=", $this->id_desconto->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_desconto`, `porcentagem` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `desconto`";
+		$sWhereWrk = "";
+		$this->id_desconto->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_desconto, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_desconto->ViewValue = $this->id_desconto->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_desconto->ViewValue = $this->id_desconto->CurrentValue;
+			}
+		} else {
+			$this->id_desconto->ViewValue = NULL;
+		}
 		$this->id_desconto->ViewCustomAttributes = "";
 
 		// id_detalhe
@@ -708,14 +801,18 @@ class cdetalhe_pedido extends cTable {
 		// numero_pedido
 		$this->numero_pedido->EditAttrs["class"] = "form-control";
 		$this->numero_pedido->EditCustomAttributes = "";
+		if ($this->numero_pedido->getSessionValue() <> "") {
+			$this->numero_pedido->CurrentValue = $this->numero_pedido->getSessionValue();
+		$this->numero_pedido->ViewValue = $this->numero_pedido->CurrentValue;
+		$this->numero_pedido->ViewCustomAttributes = "";
+		} else {
 		$this->numero_pedido->EditValue = $this->numero_pedido->CurrentValue;
 		$this->numero_pedido->PlaceHolder = ew_RemoveHtml($this->numero_pedido->FldCaption());
+		}
 
 		// id_produto
 		$this->id_produto->EditAttrs["class"] = "form-control";
 		$this->id_produto->EditCustomAttributes = "";
-		$this->id_produto->EditValue = $this->id_produto->CurrentValue;
-		$this->id_produto->PlaceHolder = ew_RemoveHtml($this->id_produto->FldCaption());
 
 		// quantidade
 		$this->quantidade->EditAttrs["class"] = "form-control";
@@ -733,8 +830,6 @@ class cdetalhe_pedido extends cTable {
 		// id_desconto
 		$this->id_desconto->EditAttrs["class"] = "form-control";
 		$this->id_desconto->EditCustomAttributes = "";
-		$this->id_desconto->EditValue = $this->id_desconto->CurrentValue;
-		$this->id_desconto->PlaceHolder = ew_RemoveHtml($this->id_desconto->FldCaption());
 
 		// Call Row Rendered event
 		$this->Row_Rendered();
@@ -763,7 +858,6 @@ class cdetalhe_pedido extends cTable {
 			if ($Doc->Horizontal) { // Horizontal format, write header
 				$Doc->BeginExportRow();
 				if ($ExportPageType == "view") {
-					if ($this->id_detalhe->Exportable) $Doc->ExportCaption($this->id_detalhe);
 					if ($this->numero_pedido->Exportable) $Doc->ExportCaption($this->numero_pedido);
 					if ($this->id_produto->Exportable) $Doc->ExportCaption($this->id_produto);
 					if ($this->quantidade->Exportable) $Doc->ExportCaption($this->quantidade);
@@ -807,7 +901,6 @@ class cdetalhe_pedido extends cTable {
 				if (!$Doc->ExportCustom) {
 					$Doc->BeginExportRow($RowCnt); // Allow CSS styles if enabled
 					if ($ExportPageType == "view") {
-						if ($this->id_detalhe->Exportable) $Doc->ExportField($this->id_detalhe);
 						if ($this->numero_pedido->Exportable) $Doc->ExportField($this->numero_pedido);
 						if ($this->id_produto->Exportable) $Doc->ExportField($this->id_produto);
 						if ($this->quantidade->Exportable) $Doc->ExportField($this->quantidade);

@@ -38,7 +38,7 @@ class ctranportadora extends cTable {
 		$this->DetailEdit = FALSE; // Allow detail edit
 		$this->DetailView = FALSE; // Allow detail view
 		$this->ShowMultipleDetails = FALSE; // Show multiple details
-		$this->GridAddRowCount = 5;
+		$this->GridAddRowCount = 1;
 		$this->AllowAddDeleteRow = TRUE; // Allow add/delete row
 		$this->UserIDAllowSecurity = 0; // User ID Allow
 		$this->BasicSearch = new cBasicSearch($this->TableVar);
@@ -55,8 +55,10 @@ class ctranportadora extends cTable {
 		$this->fields['transportadora'] = &$this->transportadora;
 
 		// id_empresa_transportadora
-		$this->id_empresa_transportadora = new cField('tranportadora', 'tranportadora', 'x_id_empresa_transportadora', 'id_empresa_transportadora', '`id_empresa_transportadora`', '`id_empresa_transportadora`', 3, -1, FALSE, '`id_empresa_transportadora`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->id_empresa_transportadora = new cField('tranportadora', 'tranportadora', 'x_id_empresa_transportadora', 'id_empresa_transportadora', '`id_empresa_transportadora`', '`id_empresa_transportadora`', 3, -1, FALSE, '`id_empresa_transportadora`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'SELECT');
 		$this->id_empresa_transportadora->Sortable = TRUE; // Allow sort
+		$this->id_empresa_transportadora->UsePleaseSelect = TRUE; // Use PleaseSelect by default
+		$this->id_empresa_transportadora->PleaseSelectText = $Language->Phrase("PleaseSelect"); // PleaseSelect text
 		$this->id_empresa_transportadora->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['id_empresa_transportadora'] = &$this->id_empresa_transportadora;
 	}
@@ -612,7 +614,26 @@ class ctranportadora extends cTable {
 		$this->transportadora->ViewCustomAttributes = "";
 
 		// id_empresa_transportadora
-		$this->id_empresa_transportadora->ViewValue = $this->id_empresa_transportadora->CurrentValue;
+		if (strval($this->id_empresa_transportadora->CurrentValue) <> "") {
+			$sFilterWrk = "`id_perfil`" . ew_SearchString("=", $this->id_empresa_transportadora->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_perfil`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `empresas`";
+		$sWhereWrk = "";
+		$this->id_empresa_transportadora->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_empresa_transportadora, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_empresa_transportadora->ViewValue = $this->id_empresa_transportadora->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_empresa_transportadora->ViewValue = $this->id_empresa_transportadora->CurrentValue;
+			}
+		} else {
+			$this->id_empresa_transportadora->ViewValue = NULL;
+		}
 		$this->id_empresa_transportadora->ViewCustomAttributes = "";
 
 		// id_transportadora
@@ -659,8 +680,6 @@ class ctranportadora extends cTable {
 		// id_empresa_transportadora
 		$this->id_empresa_transportadora->EditAttrs["class"] = "form-control";
 		$this->id_empresa_transportadora->EditCustomAttributes = "";
-		$this->id_empresa_transportadora->EditValue = $this->id_empresa_transportadora->CurrentValue;
-		$this->id_empresa_transportadora->PlaceHolder = ew_RemoveHtml($this->id_empresa_transportadora->FldCaption());
 
 		// Call Row Rendered event
 		$this->Row_Rendered();
@@ -689,7 +708,6 @@ class ctranportadora extends cTable {
 			if ($Doc->Horizontal) { // Horizontal format, write header
 				$Doc->BeginExportRow();
 				if ($ExportPageType == "view") {
-					if ($this->id_transportadora->Exportable) $Doc->ExportCaption($this->id_transportadora);
 					if ($this->transportadora->Exportable) $Doc->ExportCaption($this->transportadora);
 					if ($this->id_empresa_transportadora->Exportable) $Doc->ExportCaption($this->id_empresa_transportadora);
 				} else {
@@ -727,7 +745,6 @@ class ctranportadora extends cTable {
 				if (!$Doc->ExportCustom) {
 					$Doc->BeginExportRow($RowCnt); // Allow CSS styles if enabled
 					if ($ExportPageType == "view") {
-						if ($this->id_transportadora->Exportable) $Doc->ExportField($this->id_transportadora);
 						if ($this->transportadora->Exportable) $Doc->ExportField($this->transportadora);
 						if ($this->id_empresa_transportadora->Exportable) $Doc->ExportField($this->id_empresa_transportadora);
 					} else {

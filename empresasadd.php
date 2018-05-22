@@ -21,7 +21,7 @@ class cempresas_add extends cempresas {
 	var $PageID = 'add';
 
 	// Project ID
-	var $ProjectID = '{D83B9BB1-2CD4-4540-9A5B-B0E890360FB3}';
+	var $ProjectID = '{A4E38B50-67B8-459F-992C-3B232135A6E3}';
 
 	// Table name
 	var $TableName = 'empresas';
@@ -758,7 +758,29 @@ class cempresas_add extends cempresas {
 		$this->_email->ViewCustomAttributes = "";
 
 		// id_endereco
-		$this->id_endereco->ViewValue = $this->id_endereco->CurrentValue;
+		if (strval($this->id_endereco->CurrentValue) <> "") {
+			$sFilterWrk = "`id_endereco`" . ew_SearchString("=", $this->id_endereco->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_endereco`, `endereco` AS `DispFld`, `bairro` AS `Disp2Fld`, `estado` AS `Disp3Fld`, `cidade` AS `Disp4Fld` FROM `endereco`";
+		$sWhereWrk = "";
+		$this->id_endereco->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_endereco, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$arwrk[2] = $rswrk->fields('Disp2Fld');
+				$arwrk[3] = $rswrk->fields('Disp3Fld');
+				$arwrk[4] = $rswrk->fields('Disp4Fld');
+				$this->id_endereco->ViewValue = $this->id_endereco->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_endereco->ViewValue = $this->id_endereco->CurrentValue;
+			}
+		} else {
+			$this->id_endereco->ViewValue = NULL;
+		}
 		$this->id_endereco->ViewCustomAttributes = "";
 
 		// nome_fantasia
@@ -888,8 +910,21 @@ class cempresas_add extends cempresas {
 			// id_endereco
 			$this->id_endereco->EditAttrs["class"] = "form-control";
 			$this->id_endereco->EditCustomAttributes = "";
-			$this->id_endereco->EditValue = ew_HtmlEncode($this->id_endereco->CurrentValue);
-			$this->id_endereco->PlaceHolder = ew_RemoveHtml($this->id_endereco->FldCaption());
+			if (trim(strval($this->id_endereco->CurrentValue)) == "") {
+				$sFilterWrk = "0=1";
+			} else {
+				$sFilterWrk = "`id_endereco`" . ew_SearchString("=", $this->id_endereco->CurrentValue, EW_DATATYPE_NUMBER, "");
+			}
+			$sSqlWrk = "SELECT `id_endereco`, `endereco` AS `DispFld`, `bairro` AS `Disp2Fld`, `estado` AS `Disp3Fld`, `cidade` AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `endereco`";
+			$sWhereWrk = "";
+			$this->id_endereco->LookupFilters = array();
+			ew_AddFilter($sWhereWrk, $sFilterWrk);
+			$this->Lookup_Selecting($this->id_endereco, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
+			if ($rswrk) $rswrk->Close();
+			$this->id_endereco->EditValue = $arwrk;
 
 			// nome_fantasia
 			$this->nome_fantasia->EditAttrs["class"] = "form-control";
@@ -1005,9 +1040,6 @@ class cempresas_add extends cempresas {
 		// Check if validation required
 		if (!EW_SERVER_VALIDATE)
 			return ($gsFormError == "");
-		if (!ew_CheckInteger($this->id_endereco->FormValue)) {
-			ew_AddMessage($gsFormError, $this->id_endereco->FldErrMsg());
-		}
 		if (!ew_CheckInteger($this->cnpj->FormValue)) {
 			ew_AddMessage($gsFormError, $this->cnpj->FldErrMsg());
 		}
@@ -1131,6 +1163,18 @@ class cempresas_add extends cempresas {
 		global $gsLanguage;
 		$pageId = $pageId ?: $this->PageID;
 		switch ($fld->FldVar) {
+		case "x_id_endereco":
+			$sSqlWrk = "";
+			$sSqlWrk = "SELECT `id_endereco` AS `LinkFld`, `endereco` AS `DispFld`, `bairro` AS `Disp2Fld`, `estado` AS `Disp3Fld`, `cidade` AS `Disp4Fld` FROM `endereco`";
+			$sWhereWrk = "";
+			$fld->LookupFilters = array();
+			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`id_endereco` IN ({filter_value})', "t0" => "3", "fn0" => "");
+			$sSqlWrk = "";
+			$this->Lookup_Selecting($this->id_endereco, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			if ($sSqlWrk <> "")
+				$fld->LookupFilters["s"] .= $sSqlWrk;
+			break;
 		}
 	}
 
@@ -1250,9 +1294,6 @@ fempresasadd.Validate = function() {
 	for (var i = startcnt; i <= rowcnt; i++) {
 		var infix = ($k[0]) ? String(i) : "";
 		$fobj.data("rowindex", infix);
-			elm = this.GetElements("x" + infix + "_id_endereco");
-			if (elm && !ew_CheckInteger(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($empresas->id_endereco->FldErrMsg()) ?>");
 			elm = this.GetElements("x" + infix + "_cnpj");
 			if (elm && !ew_CheckInteger(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($empresas->cnpj->FldErrMsg()) ?>");
@@ -1297,8 +1338,10 @@ fempresasadd.Form_CustomValidate =
 fempresasadd.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-// Form object for search
+fempresasadd.Lists["x_id_endereco"] = {"LinkField":"x_id_endereco","Ajax":true,"AutoFill":false,"DisplayFields":["x_endereco","x_bairro","x_estado","x_cidade"],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"endereco"};
+fempresasadd.Lists["x_id_endereco"].Data = "<?php echo $empresas_add->id_endereco->LookupFilterQuery(FALSE, "add") ?>";
 
+// Form object for search
 </script>
 <script type="text/javascript">
 
@@ -1371,7 +1414,10 @@ $empresas_add->ShowMessage();
 		<label id="elh_empresas_id_endereco" for="x_id_endereco" class="<?php echo $empresas_add->LeftColumnClass ?>"><?php echo $empresas->id_endereco->FldCaption() ?></label>
 		<div class="<?php echo $empresas_add->RightColumnClass ?>"><div<?php echo $empresas->id_endereco->CellAttributes() ?>>
 <span id="el_empresas_id_endereco">
-<input type="text" data-table="empresas" data-field="x_id_endereco" name="x_id_endereco" id="x_id_endereco" size="30" placeholder="<?php echo ew_HtmlEncode($empresas->id_endereco->getPlaceHolder()) ?>" value="<?php echo $empresas->id_endereco->EditValue ?>"<?php echo $empresas->id_endereco->EditAttributes() ?>>
+<select data-table="empresas" data-field="x_id_endereco" data-value-separator="<?php echo $empresas->id_endereco->DisplayValueSeparatorAttribute() ?>" id="x_id_endereco" name="x_id_endereco"<?php echo $empresas->id_endereco->EditAttributes() ?>>
+<?php echo $empresas->id_endereco->SelectOptionListHtml("x_id_endereco") ?>
+</select>
+<button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $empresas->id_endereco->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_endereco',url:'enderecoaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_endereco"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $empresas->id_endereco->FldCaption() ?></span></button>
 </span>
 <?php echo $empresas->id_endereco->CustomMsg ?></div></div>
 	</div>

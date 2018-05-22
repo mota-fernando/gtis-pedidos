@@ -37,7 +37,7 @@ class cdesconto extends cTable {
 		$this->DetailEdit = FALSE; // Allow detail edit
 		$this->DetailView = FALSE; // Allow detail view
 		$this->ShowMultipleDetails = FALSE; // Show multiple details
-		$this->GridAddRowCount = 5;
+		$this->GridAddRowCount = 1;
 		$this->AllowAddDeleteRow = TRUE; // Allow add/delete row
 		$this->UserIDAllowSecurity = 0; // User ID Allow
 		$this->BasicSearch = new cBasicSearch($this->TableVar);
@@ -666,7 +666,6 @@ class cdesconto extends cTable {
 			if ($Doc->Horizontal) { // Horizontal format, write header
 				$Doc->BeginExportRow();
 				if ($ExportPageType == "view") {
-					if ($this->id_desconto->Exportable) $Doc->ExportCaption($this->id_desconto);
 					if ($this->porcentagem->Exportable) $Doc->ExportCaption($this->porcentagem);
 				} else {
 					if ($this->id_desconto->Exportable) $Doc->ExportCaption($this->id_desconto);
@@ -702,7 +701,6 @@ class cdesconto extends cTable {
 				if (!$Doc->ExportCustom) {
 					$Doc->BeginExportRow($RowCnt); // Allow CSS styles if enabled
 					if ($ExportPageType == "view") {
-						if ($this->id_desconto->Exportable) $Doc->ExportField($this->id_desconto);
 						if ($this->porcentagem->Exportable) $Doc->ExportField($this->porcentagem);
 					} else {
 						if ($this->id_desconto->Exportable) $Doc->ExportField($this->id_desconto);

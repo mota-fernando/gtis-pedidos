@@ -6,6 +6,7 @@ ob_start(); // Turn on output buffering
 <?php include_once ((EW_USE_ADODB) ? "adodb5/adodb.inc.php" : "ewmysql14.php") ?>
 <?php include_once "phpfn14.php" ?>
 <?php include_once "detalhe_pedidoinfo.php" ?>
+<?php include_once "pedidosinfo.php" ?>
 <?php include_once "userfn14.php" ?>
 <?php
 
@@ -21,7 +22,7 @@ class cdetalhe_pedido_delete extends cdetalhe_pedido {
 	var $PageID = 'delete';
 
 	// Project ID
-	var $ProjectID = '{D83B9BB1-2CD4-4540-9A5B-B0E890360FB3}';
+	var $ProjectID = '{A4E38B50-67B8-459F-992C-3B232135A6E3}';
 
 	// Table name
 	var $TableName = 'detalhe_pedido';
@@ -254,6 +255,9 @@ class cdetalhe_pedido_delete extends cdetalhe_pedido {
 			$GLOBALS["Table"] = &$GLOBALS["detalhe_pedido"];
 		}
 
+		// Table object (pedidos)
+		if (!isset($GLOBALS['pedidos'])) $GLOBALS['pedidos'] = new cpedidos();
+
 		// Page ID
 		if (!defined("EW_PAGE_ID"))
 			define("EW_PAGE_ID", 'delete', TRUE);
@@ -364,6 +368,9 @@ class cdetalhe_pedido_delete extends cdetalhe_pedido {
 	//
 	function Page_Main() {
 		global $Language;
+
+		// Set up master/detail parameters
+		$this->SetupMasterParms();
 
 		// Set up Breadcrumb
 		$this->SetupBreadcrumb();
@@ -532,7 +539,26 @@ class cdetalhe_pedido_delete extends cdetalhe_pedido {
 		$this->numero_pedido->ViewCustomAttributes = "";
 
 		// id_produto
-		$this->id_produto->ViewValue = $this->id_produto->CurrentValue;
+		if (strval($this->id_produto->CurrentValue) <> "") {
+			$sFilterWrk = "`id_produto`" . ew_SearchString("=", $this->id_produto->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_produto`, `nome_produto` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `produtos`";
+		$sWhereWrk = "";
+		$this->id_produto->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_produto, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_produto->ViewValue = $this->id_produto->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_produto->ViewValue = $this->id_produto->CurrentValue;
+			}
+		} else {
+			$this->id_produto->ViewValue = NULL;
+		}
 		$this->id_produto->ViewCustomAttributes = "";
 
 		// quantidade
@@ -544,7 +570,26 @@ class cdetalhe_pedido_delete extends cdetalhe_pedido {
 		$this->custo->ViewCustomAttributes = "";
 
 		// id_desconto
-		$this->id_desconto->ViewValue = $this->id_desconto->CurrentValue;
+		if (strval($this->id_desconto->CurrentValue) <> "") {
+			$sFilterWrk = "`id_desconto`" . ew_SearchString("=", $this->id_desconto->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_desconto`, `porcentagem` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `desconto`";
+		$sWhereWrk = "";
+		$this->id_desconto->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_desconto, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_desconto->ViewValue = $this->id_desconto->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_desconto->ViewValue = $this->id_desconto->CurrentValue;
+			}
+		} else {
+			$this->id_desconto->ViewValue = NULL;
+		}
 		$this->id_desconto->ViewCustomAttributes = "";
 
 			// id_detalhe
@@ -657,6 +702,68 @@ class cdetalhe_pedido_delete extends cdetalhe_pedido {
 			}
 		}
 		return $DeleteRows;
+	}
+
+	// Set up master/detail based on QueryString
+	function SetupMasterParms() {
+		$bValidMaster = FALSE;
+
+		// Get the keys for master table
+		if (isset($_GET[EW_TABLE_SHOW_MASTER])) {
+			$sMasterTblVar = $_GET[EW_TABLE_SHOW_MASTER];
+			if ($sMasterTblVar == "") {
+				$bValidMaster = TRUE;
+				$this->DbMasterFilter = "";
+				$this->DbDetailFilter = "";
+			}
+			if ($sMasterTblVar == "pedidos") {
+				$bValidMaster = TRUE;
+				if (@$_GET["fk_numero"] <> "") {
+					$GLOBALS["pedidos"]->numero->setQueryStringValue($_GET["fk_numero"]);
+					$this->numero_pedido->setQueryStringValue($GLOBALS["pedidos"]->numero->QueryStringValue);
+					$this->numero_pedido->setSessionValue($this->numero_pedido->QueryStringValue);
+					if (!is_numeric($GLOBALS["pedidos"]->numero->QueryStringValue)) $bValidMaster = FALSE;
+				} else {
+					$bValidMaster = FALSE;
+				}
+			}
+		} elseif (isset($_POST[EW_TABLE_SHOW_MASTER])) {
+			$sMasterTblVar = $_POST[EW_TABLE_SHOW_MASTER];
+			if ($sMasterTblVar == "") {
+				$bValidMaster = TRUE;
+				$this->DbMasterFilter = "";
+				$this->DbDetailFilter = "";
+			}
+			if ($sMasterTblVar == "pedidos") {
+				$bValidMaster = TRUE;
+				if (@$_POST["fk_numero"] <> "") {
+					$GLOBALS["pedidos"]->numero->setFormValue($_POST["fk_numero"]);
+					$this->numero_pedido->setFormValue($GLOBALS["pedidos"]->numero->FormValue);
+					$this->numero_pedido->setSessionValue($this->numero_pedido->FormValue);
+					if (!is_numeric($GLOBALS["pedidos"]->numero->FormValue)) $bValidMaster = FALSE;
+				} else {
+					$bValidMaster = FALSE;
+				}
+			}
+		}
+		if ($bValidMaster) {
+
+			// Save current master table
+			$this->setCurrentMasterTable($sMasterTblVar);
+
+			// Reset start record counter (new master key)
+			if (!$this->IsAddOrEdit()) {
+				$this->StartRec = 1;
+				$this->setStartRecordNumber($this->StartRec);
+			}
+
+			// Clear previous master key from Session
+			if ($sMasterTblVar <> "pedidos") {
+				if ($this->numero_pedido->CurrentValue == "") $this->numero_pedido->setSessionValue("");
+			}
+		}
+		$this->DbMasterFilter = $this->GetMasterFilter(); // Get master filter
+		$this->DbDetailFilter = $this->GetDetailFilter(); // Get detail filter
 	}
 
 	// Set up Breadcrumb
@@ -783,8 +890,12 @@ fdetalhe_pedidodelete.Form_CustomValidate =
 fdetalhe_pedidodelete.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-// Form object for search
+fdetalhe_pedidodelete.Lists["x_id_produto"] = {"LinkField":"x_id_produto","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_produto","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"produtos"};
+fdetalhe_pedidodelete.Lists["x_id_produto"].Data = "<?php echo $detalhe_pedido_delete->id_produto->LookupFilterQuery(FALSE, "delete") ?>";
+fdetalhe_pedidodelete.Lists["x_id_desconto"] = {"LinkField":"x_id_desconto","Ajax":true,"AutoFill":false,"DisplayFields":["x_porcentagem","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"desconto"};
+fdetalhe_pedidodelete.Lists["x_id_desconto"].Data = "<?php echo $detalhe_pedido_delete->id_desconto->LookupFilterQuery(FALSE, "delete") ?>";
 
+// Form object for search
 </script>
 <script type="text/javascript">
 

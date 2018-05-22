@@ -21,7 +21,7 @@ class ctranportadora_view extends ctranportadora {
 	var $PageID = 'view';
 
 	// Project ID
-	var $ProjectID = '{D83B9BB1-2CD4-4540-9A5B-B0E890360FB3}';
+	var $ProjectID = '{A4E38B50-67B8-459F-992C-3B232135A6E3}';
 
 	// Table name
 	var $TableName = 'tranportadora';
@@ -340,9 +340,6 @@ class ctranportadora_view extends ctranportadora {
 		// Is modal
 		$this->IsModal = (@$_GET["modal"] == "1" || @$_POST["modal"] == "1");
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
-		$this->id_transportadora->SetVisibility();
-		if ($this->IsAdd() || $this->IsCopy() || $this->IsGridAdd())
-			$this->id_transportadora->Visible = FALSE;
 		$this->transportadora->SetVisibility();
 		$this->id_empresa_transportadora->SetVisibility();
 
@@ -661,13 +658,27 @@ class ctranportadora_view extends ctranportadora {
 		$this->transportadora->ViewCustomAttributes = "";
 
 		// id_empresa_transportadora
-		$this->id_empresa_transportadora->ViewValue = $this->id_empresa_transportadora->CurrentValue;
+		if (strval($this->id_empresa_transportadora->CurrentValue) <> "") {
+			$sFilterWrk = "`id_perfil`" . ew_SearchString("=", $this->id_empresa_transportadora->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_perfil`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `empresas`";
+		$sWhereWrk = "";
+		$this->id_empresa_transportadora->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_empresa_transportadora, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_empresa_transportadora->ViewValue = $this->id_empresa_transportadora->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_empresa_transportadora->ViewValue = $this->id_empresa_transportadora->CurrentValue;
+			}
+		} else {
+			$this->id_empresa_transportadora->ViewValue = NULL;
+		}
 		$this->id_empresa_transportadora->ViewCustomAttributes = "";
-
-			// id_transportadora
-			$this->id_transportadora->LinkCustomAttributes = "";
-			$this->id_transportadora->HrefValue = "";
-			$this->id_transportadora->TooltipValue = "";
 
 			// transportadora
 			$this->transportadora->LinkCustomAttributes = "";
@@ -835,8 +846,10 @@ ftranportadoraview.Form_CustomValidate =
 ftranportadoraview.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-// Form object for search
+ftranportadoraview.Lists["x_id_empresa_transportadora"] = {"LinkField":"x_id_perfil","Ajax":true,"AutoFill":false,"DisplayFields":["x_razao_social","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"empresas"};
+ftranportadoraview.Lists["x_id_empresa_transportadora"].Data = "<?php echo $tranportadora_view->id_empresa_transportadora->LookupFilterQuery(FALSE, "view") ?>";
 
+// Form object for search
 </script>
 <script type="text/javascript">
 
@@ -861,17 +874,6 @@ $tranportadora_view->ShowMessage();
 <input type="hidden" name="t" value="tranportadora">
 <input type="hidden" name="modal" value="<?php echo intval($tranportadora_view->IsModal) ?>">
 <table class="table table-striped table-bordered table-hover table-condensed ewViewTable">
-<?php if ($tranportadora->id_transportadora->Visible) { // id_transportadora ?>
-	<tr id="r_id_transportadora">
-		<td class="col-sm-2"><span id="elh_tranportadora_id_transportadora"><?php echo $tranportadora->id_transportadora->FldCaption() ?></span></td>
-		<td data-name="id_transportadora"<?php echo $tranportadora->id_transportadora->CellAttributes() ?>>
-<span id="el_tranportadora_id_transportadora">
-<span<?php echo $tranportadora->id_transportadora->ViewAttributes() ?>>
-<?php echo $tranportadora->id_transportadora->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
 <?php if ($tranportadora->transportadora->Visible) { // transportadora ?>
 	<tr id="r_transportadora">
 		<td class="col-sm-2"><span id="elh_tranportadora_transportadora"><?php echo $tranportadora->transportadora->FldCaption() ?></span></td>

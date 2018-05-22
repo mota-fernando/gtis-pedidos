@@ -20,7 +20,7 @@ class cewsession {
 	var $PageID = "session";
 
 	// Project ID
-	var $ProjectID = "{D83B9BB1-2CD4-4540-9A5B-B0E890360FB3}";
+	var $ProjectID = "{A4E38B50-67B8-459F-992C-3B232135A6E3}";
 
 	// Page object name
 	var $PageObjName = "session";
