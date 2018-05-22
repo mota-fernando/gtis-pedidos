@@ -426,6 +426,7 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 		$this->RG->SetVisibility();
 		$this->id_endereco->SetVisibility();
 		$this->endereco_numero->SetVisibility();
+		$this->id_empresa->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -771,6 +772,7 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 		$sFilterList = ew_Concat($sFilterList, $this->RG->AdvancedSearch->ToJson(), ","); // Field RG
 		$sFilterList = ew_Concat($sFilterList, $this->id_endereco->AdvancedSearch->ToJson(), ","); // Field id_endereco
 		$sFilterList = ew_Concat($sFilterList, $this->endereco_numero->AdvancedSearch->ToJson(), ","); // Field endereco_numero
+		$sFilterList = ew_Concat($sFilterList, $this->id_empresa->AdvancedSearch->ToJson(), ","); // Field id_empresa
 		if ($this->BasicSearch->Keyword <> "") {
 			$sWrk = "\"" . EW_TABLE_BASIC_SEARCH . "\":\"" . ew_JsEncode2($this->BasicSearch->Keyword) . "\",\"" . EW_TABLE_BASIC_SEARCH_TYPE . "\":\"" . ew_JsEncode2($this->BasicSearch->Type) . "\"";
 			$sFilterList = ew_Concat($sFilterList, $sWrk, ",");
@@ -902,6 +904,14 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 		$this->endereco_numero->AdvancedSearch->SearchValue2 = @$filter["y_endereco_numero"];
 		$this->endereco_numero->AdvancedSearch->SearchOperator2 = @$filter["w_endereco_numero"];
 		$this->endereco_numero->AdvancedSearch->Save();
+
+		// Field id_empresa
+		$this->id_empresa->AdvancedSearch->SearchValue = @$filter["x_id_empresa"];
+		$this->id_empresa->AdvancedSearch->SearchOperator = @$filter["z_id_empresa"];
+		$this->id_empresa->AdvancedSearch->SearchCondition = @$filter["v_id_empresa"];
+		$this->id_empresa->AdvancedSearch->SearchValue2 = @$filter["y_id_empresa"];
+		$this->id_empresa->AdvancedSearch->SearchOperator2 = @$filter["w_id_empresa"];
+		$this->id_empresa->AdvancedSearch->Save();
 		$this->BasicSearch->setKeyword(@$filter[EW_TABLE_BASIC_SEARCH]);
 		$this->BasicSearch->setType(@$filter[EW_TABLE_BASIC_SEARCH_TYPE]);
 	}
@@ -1069,6 +1079,7 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 			$this->UpdateSort($this->RG); // RG
 			$this->UpdateSort($this->id_endereco); // id_endereco
 			$this->UpdateSort($this->endereco_numero); // endereco_numero
+			$this->UpdateSort($this->id_empresa); // id_empresa
 			$this->setStartRecordNumber(1); // Reset start position
 		}
 	}
@@ -1112,6 +1123,7 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 				$this->RG->setSort("");
 				$this->id_endereco->setSort("");
 				$this->endereco_numero->setSort("");
+				$this->id_empresa->setSort("");
 			}
 
 			// Reset start position
@@ -1571,6 +1583,7 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 		$this->RG->setDbValue($row['RG']);
 		$this->id_endereco->setDbValue($row['id_endereco']);
 		$this->endereco_numero->setDbValue($row['endereco_numero']);
+		$this->id_empresa->setDbValue($row['id_empresa']);
 	}
 
 	// Return a row with default values
@@ -1587,6 +1600,7 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 		$row['RG'] = NULL;
 		$row['id_endereco'] = NULL;
 		$row['endereco_numero'] = NULL;
+		$row['id_empresa'] = NULL;
 		return $row;
 	}
 
@@ -1606,6 +1620,7 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 		$this->RG->DbValue = $row['RG'];
 		$this->id_endereco->DbValue = $row['id_endereco'];
 		$this->endereco_numero->DbValue = $row['endereco_numero'];
+		$this->id_empresa->DbValue = $row['id_empresa'];
 	}
 
 	// Load old record
@@ -1657,6 +1672,7 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 		// RG
 		// id_endereco
 		// endereco_numero
+		// id_empresa
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -1727,6 +1743,30 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 		$this->endereco_numero->ViewValue = $this->endereco_numero->CurrentValue;
 		$this->endereco_numero->ViewCustomAttributes = "";
 
+		// id_empresa
+		$this->id_empresa->ViewValue = $this->id_empresa->CurrentValue;
+		if (strval($this->id_empresa->CurrentValue) <> "") {
+			$sFilterWrk = "`id_perfil`" . ew_SearchString("=", $this->id_empresa->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_perfil`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `empresas`";
+		$sWhereWrk = "";
+		$this->id_empresa->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_empresa, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_empresa->ViewValue = $this->id_empresa->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_empresa->ViewValue = $this->id_empresa->CurrentValue;
+			}
+		} else {
+			$this->id_empresa->ViewValue = NULL;
+		}
+		$this->id_empresa->ViewCustomAttributes = "";
+
 			// id_pessoa
 			$this->id_pessoa->LinkCustomAttributes = "";
 			$this->id_pessoa->HrefValue = "";
@@ -1781,6 +1821,11 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 			$this->endereco_numero->LinkCustomAttributes = "";
 			$this->endereco_numero->HrefValue = "";
 			$this->endereco_numero->TooltipValue = "";
+
+			// id_empresa
+			$this->id_empresa->LinkCustomAttributes = "";
+			$this->id_empresa->HrefValue = "";
+			$this->id_empresa->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -2136,6 +2181,9 @@ fpessoa_fisicalist.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE)
 // Dynamic selection lists
 fpessoa_fisicalist.Lists["x_id_endereco"] = {"LinkField":"x_id_endereco","Ajax":true,"AutoFill":false,"DisplayFields":["x_endereco","x_bairro","x_estado","x_cidade"],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"endereco"};
 fpessoa_fisicalist.Lists["x_id_endereco"].Data = "<?php echo $pessoa_fisica_list->id_endereco->LookupFilterQuery(FALSE, "list") ?>";
+fpessoa_fisicalist.Lists["x_id_empresa"] = {"LinkField":"x_id_perfil","Ajax":true,"AutoFill":false,"DisplayFields":["x_razao_social","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"empresas"};
+fpessoa_fisicalist.Lists["x_id_empresa"].Data = "<?php echo $pessoa_fisica_list->id_empresa->LookupFilterQuery(FALSE, "list") ?>";
+fpessoa_fisicalist.AutoSuggests["x_id_empresa"] = <?php echo json_encode(array("data" => "ajax=autosuggest&" . $pessoa_fisica_list->id_empresa->LookupFilterQuery(TRUE, "list"))) ?>;
 
 // Form object for search
 var CurrentSearchForm = fpessoa_fisicalistsrch = new ew_Form("fpessoa_fisicalistsrch");
@@ -2339,6 +2387,15 @@ $pessoa_fisica_list->ListOptions->Render("header", "left");
 		</div></div></th>
 	<?php } ?>
 <?php } ?>
+<?php if ($pessoa_fisica->id_empresa->Visible) { // id_empresa ?>
+	<?php if ($pessoa_fisica->SortUrl($pessoa_fisica->id_empresa) == "") { ?>
+		<th data-name="id_empresa" class="<?php echo $pessoa_fisica->id_empresa->HeaderCellClass() ?>"><div id="elh_pessoa_fisica_id_empresa" class="pessoa_fisica_id_empresa"><div class="ewTableHeaderCaption"><?php echo $pessoa_fisica->id_empresa->FldCaption() ?></div></div></th>
+	<?php } else { ?>
+		<th data-name="id_empresa" class="<?php echo $pessoa_fisica->id_empresa->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $pessoa_fisica->SortUrl($pessoa_fisica->id_empresa) ?>',1);"><div id="elh_pessoa_fisica_id_empresa" class="pessoa_fisica_id_empresa">
+			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $pessoa_fisica->id_empresa->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($pessoa_fisica->id_empresa->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($pessoa_fisica->id_empresa->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
+		</div></div></th>
+	<?php } ?>
+<?php } ?>
 <?php
 
 // Render list options (header, right)
@@ -2489,6 +2546,14 @@ $pessoa_fisica_list->ListOptions->Render("body", "left", $pessoa_fisica_list->Ro
 <span id="el<?php echo $pessoa_fisica_list->RowCnt ?>_pessoa_fisica_endereco_numero" class="pessoa_fisica_endereco_numero">
 <span<?php echo $pessoa_fisica->endereco_numero->ViewAttributes() ?>>
 <?php echo $pessoa_fisica->endereco_numero->ListViewValue() ?></span>
+</span>
+</td>
+	<?php } ?>
+	<?php if ($pessoa_fisica->id_empresa->Visible) { // id_empresa ?>
+		<td data-name="id_empresa"<?php echo $pessoa_fisica->id_empresa->CellAttributes() ?>>
+<span id="el<?php echo $pessoa_fisica_list->RowCnt ?>_pessoa_fisica_id_empresa" class="pessoa_fisica_id_empresa">
+<span<?php echo $pessoa_fisica->id_empresa->ViewAttributes() ?>>
+<?php echo $pessoa_fisica->id_empresa->ListViewValue() ?></span>
 </span>
 </td>
 	<?php } ?>

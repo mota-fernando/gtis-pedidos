@@ -293,6 +293,7 @@ class cpessoa_fisica_delete extends cpessoa_fisica {
 		$this->RG->SetVisibility();
 		$this->id_endereco->SetVisibility();
 		$this->endereco_numero->SetVisibility();
+		$this->id_empresa->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -483,6 +484,7 @@ class cpessoa_fisica_delete extends cpessoa_fisica {
 		$this->RG->setDbValue($row['RG']);
 		$this->id_endereco->setDbValue($row['id_endereco']);
 		$this->endereco_numero->setDbValue($row['endereco_numero']);
+		$this->id_empresa->setDbValue($row['id_empresa']);
 	}
 
 	// Return a row with default values
@@ -499,6 +501,7 @@ class cpessoa_fisica_delete extends cpessoa_fisica {
 		$row['RG'] = NULL;
 		$row['id_endereco'] = NULL;
 		$row['endereco_numero'] = NULL;
+		$row['id_empresa'] = NULL;
 		return $row;
 	}
 
@@ -518,6 +521,7 @@ class cpessoa_fisica_delete extends cpessoa_fisica {
 		$this->RG->DbValue = $row['RG'];
 		$this->id_endereco->DbValue = $row['id_endereco'];
 		$this->endereco_numero->DbValue = $row['endereco_numero'];
+		$this->id_empresa->DbValue = $row['id_empresa'];
 	}
 
 	// Render row values based on field settings
@@ -541,6 +545,7 @@ class cpessoa_fisica_delete extends cpessoa_fisica {
 		// RG
 		// id_endereco
 		// endereco_numero
+		// id_empresa
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -611,6 +616,30 @@ class cpessoa_fisica_delete extends cpessoa_fisica {
 		$this->endereco_numero->ViewValue = $this->endereco_numero->CurrentValue;
 		$this->endereco_numero->ViewCustomAttributes = "";
 
+		// id_empresa
+		$this->id_empresa->ViewValue = $this->id_empresa->CurrentValue;
+		if (strval($this->id_empresa->CurrentValue) <> "") {
+			$sFilterWrk = "`id_perfil`" . ew_SearchString("=", $this->id_empresa->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_perfil`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `empresas`";
+		$sWhereWrk = "";
+		$this->id_empresa->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_empresa, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_empresa->ViewValue = $this->id_empresa->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_empresa->ViewValue = $this->id_empresa->CurrentValue;
+			}
+		} else {
+			$this->id_empresa->ViewValue = NULL;
+		}
+		$this->id_empresa->ViewCustomAttributes = "";
+
 			// id_pessoa
 			$this->id_pessoa->LinkCustomAttributes = "";
 			$this->id_pessoa->HrefValue = "";
@@ -665,6 +694,11 @@ class cpessoa_fisica_delete extends cpessoa_fisica {
 			$this->endereco_numero->LinkCustomAttributes = "";
 			$this->endereco_numero->HrefValue = "";
 			$this->endereco_numero->TooltipValue = "";
+
+			// id_empresa
+			$this->id_empresa->LinkCustomAttributes = "";
+			$this->id_empresa->HrefValue = "";
+			$this->id_empresa->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -874,6 +908,9 @@ fpessoa_fisicadelete.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDAT
 // Dynamic selection lists
 fpessoa_fisicadelete.Lists["x_id_endereco"] = {"LinkField":"x_id_endereco","Ajax":true,"AutoFill":false,"DisplayFields":["x_endereco","x_bairro","x_estado","x_cidade"],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"endereco"};
 fpessoa_fisicadelete.Lists["x_id_endereco"].Data = "<?php echo $pessoa_fisica_delete->id_endereco->LookupFilterQuery(FALSE, "delete") ?>";
+fpessoa_fisicadelete.Lists["x_id_empresa"] = {"LinkField":"x_id_perfil","Ajax":true,"AutoFill":false,"DisplayFields":["x_razao_social","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"empresas"};
+fpessoa_fisicadelete.Lists["x_id_empresa"].Data = "<?php echo $pessoa_fisica_delete->id_empresa->LookupFilterQuery(FALSE, "delete") ?>";
+fpessoa_fisicadelete.AutoSuggests["x_id_empresa"] = <?php echo json_encode(array("data" => "ajax=autosuggest&" . $pessoa_fisica_delete->id_empresa->LookupFilterQuery(TRUE, "delete"))) ?>;
 
 // Form object for search
 </script>
@@ -932,6 +969,9 @@ $pessoa_fisica_delete->ShowMessage();
 <?php } ?>
 <?php if ($pessoa_fisica->endereco_numero->Visible) { // endereco_numero ?>
 		<th class="<?php echo $pessoa_fisica->endereco_numero->HeaderCellClass() ?>"><span id="elh_pessoa_fisica_endereco_numero" class="pessoa_fisica_endereco_numero"><?php echo $pessoa_fisica->endereco_numero->FldCaption() ?></span></th>
+<?php } ?>
+<?php if ($pessoa_fisica->id_empresa->Visible) { // id_empresa ?>
+		<th class="<?php echo $pessoa_fisica->id_empresa->HeaderCellClass() ?>"><span id="elh_pessoa_fisica_id_empresa" class="pessoa_fisica_id_empresa"><?php echo $pessoa_fisica->id_empresa->FldCaption() ?></span></th>
 <?php } ?>
 	</tr>
 	</thead>
@@ -1039,6 +1079,14 @@ while (!$pessoa_fisica_delete->Recordset->EOF) {
 <span id="el<?php echo $pessoa_fisica_delete->RowCnt ?>_pessoa_fisica_endereco_numero" class="pessoa_fisica_endereco_numero">
 <span<?php echo $pessoa_fisica->endereco_numero->ViewAttributes() ?>>
 <?php echo $pessoa_fisica->endereco_numero->ListViewValue() ?></span>
+</span>
+</td>
+<?php } ?>
+<?php if ($pessoa_fisica->id_empresa->Visible) { // id_empresa ?>
+		<td<?php echo $pessoa_fisica->id_empresa->CellAttributes() ?>>
+<span id="el<?php echo $pessoa_fisica_delete->RowCnt ?>_pessoa_fisica_id_empresa" class="pessoa_fisica_id_empresa">
+<span<?php echo $pessoa_fisica->id_empresa->ViewAttributes() ?>>
+<?php echo $pessoa_fisica->id_empresa->ListViewValue() ?></span>
 </span>
 </td>
 <?php } ?>

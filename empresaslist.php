@@ -426,7 +426,6 @@ class cempresas_list extends cempresas {
 		$this->nome_fantasia->SetVisibility();
 		$this->cnpj->SetVisibility();
 		$this->ie->SetVisibility();
-		$this->fonecedor->SetVisibility();
 		$this->celular->SetVisibility();
 		$this->whatsapp->SetVisibility();
 
@@ -1102,7 +1101,6 @@ class cempresas_list extends cempresas {
 			$this->UpdateSort($this->nome_fantasia); // nome_fantasia
 			$this->UpdateSort($this->cnpj); // cnpj
 			$this->UpdateSort($this->ie); // ie
-			$this->UpdateSort($this->fonecedor); // fonecedor
 			$this->UpdateSort($this->celular); // celular
 			$this->UpdateSort($this->whatsapp); // whatsapp
 			$this->setStartRecordNumber(1); // Reset start position
@@ -1137,6 +1135,7 @@ class cempresas_list extends cempresas {
 			if ($this->Command == "resetsort") {
 				$sOrderBy = "";
 				$this->setSessionOrderBy($sOrderBy);
+				$this->setSessionOrderByList($sOrderBy);
 				$this->id_perfil->setSort("");
 				$this->razao_social->setSort("");
 				$this->proprietario->setSort("");
@@ -1148,7 +1147,6 @@ class cempresas_list extends cempresas {
 				$this->nome_fantasia->setSort("");
 				$this->cnpj->setSort("");
 				$this->ie->setSort("");
-				$this->fonecedor->setSort("");
 				$this->celular->setSort("");
 				$this->whatsapp->setSort("");
 			}
@@ -1552,7 +1550,7 @@ class cempresas_list extends cempresas {
 		if ($this->UseSelectLimit) {
 			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
 			if ($dbtype == "MSSQL") {
-				$rs = $conn->SelectLimit($sSql, $rowcnt, $offset, array("_hasOrderBy" => trim($this->getOrderBy()) || trim($this->getSessionOrderBy())));
+				$rs = $conn->SelectLimit($sSql, $rowcnt, $offset, array("_hasOrderBy" => trim($this->getOrderBy()) || trim($this->getSessionOrderByList())));
 			} else {
 				$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 			}
@@ -1604,8 +1602,18 @@ class cempresas_list extends cempresas {
 		$this->proprietario->setDbValue($row['proprietario']);
 		$this->telefone->setDbValue($row['telefone']);
 		$this->direcao->setDbValue($row['direcao']);
+		if (array_key_exists('EV__direcao', $rs->fields)) {
+			$this->direcao->VirtualValue = $rs->fields('EV__direcao'); // Set up virtual field value
+		} else {
+			$this->direcao->VirtualValue = ""; // Clear value
+		}
 		$this->_email->setDbValue($row['email']);
 		$this->id_endereco->setDbValue($row['id_endereco']);
+		if (array_key_exists('EV__id_endereco', $rs->fields)) {
+			$this->id_endereco->VirtualValue = $rs->fields('EV__id_endereco'); // Set up virtual field value
+		} else {
+			$this->id_endereco->VirtualValue = ""; // Clear value
+		}
 		$this->endereco_numero->setDbValue($row['endereco_numero']);
 		$this->nome_fantasia->setDbValue($row['nome_fantasia']);
 		$this->cnpj->setDbValue($row['cnpj']);
@@ -1728,7 +1736,31 @@ class cempresas_list extends cempresas {
 		$this->telefone->ViewCustomAttributes = "";
 
 		// direcao
-		$this->direcao->ViewValue = $this->direcao->CurrentValue;
+		if ($this->direcao->VirtualValue <> "") {
+			$this->direcao->ViewValue = $this->direcao->VirtualValue;
+		} else {
+			$this->direcao->ViewValue = $this->direcao->CurrentValue;
+		if (strval($this->direcao->CurrentValue) <> "") {
+			$sFilterWrk = "`nome_pessoa`" . ew_SearchString("=", $this->direcao->CurrentValue, EW_DATATYPE_STRING, "");
+		$sSqlWrk = "SELECT `nome_pessoa`, `nome_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `pessoa_fisica`";
+		$sWhereWrk = "";
+		$this->direcao->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->direcao, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->direcao->ViewValue = $this->direcao->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->direcao->ViewValue = $this->direcao->CurrentValue;
+			}
+		} else {
+			$this->direcao->ViewValue = NULL;
+		}
+		}
 		$this->direcao->ViewCustomAttributes = "";
 
 		// email
@@ -1736,6 +1768,9 @@ class cempresas_list extends cempresas {
 		$this->_email->ViewCustomAttributes = "";
 
 		// id_endereco
+		if ($this->id_endereco->VirtualValue <> "") {
+			$this->id_endereco->ViewValue = $this->id_endereco->VirtualValue;
+		} else {
 		if (strval($this->id_endereco->CurrentValue) <> "") {
 			$sFilterWrk = "`id_endereco`" . ew_SearchString("=", $this->id_endereco->CurrentValue, EW_DATATYPE_NUMBER, "");
 		$sSqlWrk = "SELECT `id_endereco`, `endereco` AS `DispFld`, `bairro` AS `Disp2Fld`, `estado` AS `Disp3Fld`, `cidade` AS `Disp4Fld` FROM `endereco`";
@@ -1759,6 +1794,7 @@ class cempresas_list extends cempresas {
 		} else {
 			$this->id_endereco->ViewValue = NULL;
 		}
+		}
 		$this->id_endereco->ViewCustomAttributes = "";
 
 		// endereco_numero
@@ -1776,10 +1812,6 @@ class cempresas_list extends cempresas {
 		// ie
 		$this->ie->ViewValue = $this->ie->CurrentValue;
 		$this->ie->ViewCustomAttributes = "";
-
-		// fonecedor
-		$this->fonecedor->ViewValue = $this->fonecedor->CurrentValue;
-		$this->fonecedor->ViewCustomAttributes = "";
 
 		// celular
 		$this->celular->ViewValue = $this->celular->CurrentValue;
@@ -1843,11 +1875,6 @@ class cempresas_list extends cempresas {
 			$this->ie->LinkCustomAttributes = "";
 			$this->ie->HrefValue = "";
 			$this->ie->TooltipValue = "";
-
-			// fonecedor
-			$this->fonecedor->LinkCustomAttributes = "";
-			$this->fonecedor->HrefValue = "";
-			$this->fonecedor->TooltipValue = "";
 
 			// celular
 			$this->celular->LinkCustomAttributes = "";
@@ -2211,6 +2238,9 @@ fempresaslist.Form_CustomValidate =
 fempresaslist.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
+fempresaslist.Lists["x_direcao"] = {"LinkField":"x_nome_pessoa","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_pessoa","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"pessoa_fisica"};
+fempresaslist.Lists["x_direcao"].Data = "<?php echo $empresas_list->direcao->LookupFilterQuery(FALSE, "list") ?>";
+fempresaslist.AutoSuggests["x_direcao"] = <?php echo json_encode(array("data" => "ajax=autosuggest&" . $empresas_list->direcao->LookupFilterQuery(TRUE, "list"))) ?>;
 fempresaslist.Lists["x_id_endereco"] = {"LinkField":"x_id_endereco","Ajax":true,"AutoFill":false,"DisplayFields":["x_endereco","x_bairro","x_estado","x_cidade"],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"endereco"};
 fempresaslist.Lists["x_id_endereco"].Data = "<?php echo $empresas_list->id_endereco->LookupFilterQuery(FALSE, "list") ?>";
 
@@ -2416,15 +2446,6 @@ $empresas_list->ListOptions->Render("header", "left");
 		</div></div></th>
 	<?php } ?>
 <?php } ?>
-<?php if ($empresas->fonecedor->Visible) { // fonecedor ?>
-	<?php if ($empresas->SortUrl($empresas->fonecedor) == "") { ?>
-		<th data-name="fonecedor" class="<?php echo $empresas->fonecedor->HeaderCellClass() ?>"><div id="elh_empresas_fonecedor" class="empresas_fonecedor"><div class="ewTableHeaderCaption"><?php echo $empresas->fonecedor->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="fonecedor" class="<?php echo $empresas->fonecedor->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $empresas->SortUrl($empresas->fonecedor) ?>',1);"><div id="elh_empresas_fonecedor" class="empresas_fonecedor">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $empresas->fonecedor->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($empresas->fonecedor->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($empresas->fonecedor->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
 <?php if ($empresas->celular->Visible) { // celular ?>
 	<?php if ($empresas->SortUrl($empresas->celular) == "") { ?>
 		<th data-name="celular" class="<?php echo $empresas->celular->HeaderCellClass() ?>"><div id="elh_empresas_celular" class="empresas_celular"><div class="ewTableHeaderCaption"><?php echo $empresas->celular->FldCaption() ?></div></div></th>
@@ -2593,14 +2614,6 @@ $empresas_list->ListOptions->Render("body", "left", $empresas_list->RowCnt);
 <span id="el<?php echo $empresas_list->RowCnt ?>_empresas_ie" class="empresas_ie">
 <span<?php echo $empresas->ie->ViewAttributes() ?>>
 <?php echo $empresas->ie->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($empresas->fonecedor->Visible) { // fonecedor ?>
-		<td data-name="fonecedor"<?php echo $empresas->fonecedor->CellAttributes() ?>>
-<span id="el<?php echo $empresas_list->RowCnt ?>_empresas_fonecedor" class="empresas_fonecedor">
-<span<?php echo $empresas->fonecedor->ViewAttributes() ?>>
-<?php echo $empresas->fonecedor->ListViewValue() ?></span>
 </span>
 </td>
 	<?php } ?>

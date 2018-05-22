@@ -299,6 +299,7 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 		$this->RG->SetVisibility();
 		$this->id_endereco->SetVisibility();
 		$this->endereco_numero->SetVisibility();
+		$this->id_empresa->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -568,6 +569,9 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 		if (!$this->endereco_numero->FldIsDetailKey) {
 			$this->endereco_numero->setFormValue($objForm->GetValue("x_endereco_numero"));
 		}
+		if (!$this->id_empresa->FldIsDetailKey) {
+			$this->id_empresa->setFormValue($objForm->GetValue("x_id_empresa"));
+		}
 	}
 
 	// Restore form values
@@ -585,6 +589,7 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 		$this->RG->CurrentValue = $this->RG->FormValue;
 		$this->id_endereco->CurrentValue = $this->id_endereco->FormValue;
 		$this->endereco_numero->CurrentValue = $this->endereco_numero->FormValue;
+		$this->id_empresa->CurrentValue = $this->id_empresa->FormValue;
 	}
 
 	// Load row based on key values
@@ -631,6 +636,7 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 		$this->RG->setDbValue($row['RG']);
 		$this->id_endereco->setDbValue($row['id_endereco']);
 		$this->endereco_numero->setDbValue($row['endereco_numero']);
+		$this->id_empresa->setDbValue($row['id_empresa']);
 	}
 
 	// Return a row with default values
@@ -647,6 +653,7 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 		$row['RG'] = NULL;
 		$row['id_endereco'] = NULL;
 		$row['endereco_numero'] = NULL;
+		$row['id_empresa'] = NULL;
 		return $row;
 	}
 
@@ -666,6 +673,7 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 		$this->RG->DbValue = $row['RG'];
 		$this->id_endereco->DbValue = $row['id_endereco'];
 		$this->endereco_numero->DbValue = $row['endereco_numero'];
+		$this->id_empresa->DbValue = $row['id_empresa'];
 	}
 
 	// Load old record
@@ -711,6 +719,7 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 		// RG
 		// id_endereco
 		// endereco_numero
+		// id_empresa
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -781,6 +790,30 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 		$this->endereco_numero->ViewValue = $this->endereco_numero->CurrentValue;
 		$this->endereco_numero->ViewCustomAttributes = "";
 
+		// id_empresa
+		$this->id_empresa->ViewValue = $this->id_empresa->CurrentValue;
+		if (strval($this->id_empresa->CurrentValue) <> "") {
+			$sFilterWrk = "`id_perfil`" . ew_SearchString("=", $this->id_empresa->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_perfil`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `empresas`";
+		$sWhereWrk = "";
+		$this->id_empresa->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_empresa, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_empresa->ViewValue = $this->id_empresa->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_empresa->ViewValue = $this->id_empresa->CurrentValue;
+			}
+		} else {
+			$this->id_empresa->ViewValue = NULL;
+		}
+		$this->id_empresa->ViewCustomAttributes = "";
+
 			// id_pessoa
 			$this->id_pessoa->LinkCustomAttributes = "";
 			$this->id_pessoa->HrefValue = "";
@@ -835,6 +868,11 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 			$this->endereco_numero->LinkCustomAttributes = "";
 			$this->endereco_numero->HrefValue = "";
 			$this->endereco_numero->TooltipValue = "";
+
+			// id_empresa
+			$this->id_empresa->LinkCustomAttributes = "";
+			$this->id_empresa->HrefValue = "";
+			$this->id_empresa->TooltipValue = "";
 		} elseif ($this->RowType == EW_ROWTYPE_EDIT) { // Edit row
 
 			// id_pessoa
@@ -916,6 +954,32 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 			$this->endereco_numero->EditValue = ew_HtmlEncode($this->endereco_numero->CurrentValue);
 			$this->endereco_numero->PlaceHolder = ew_RemoveHtml($this->endereco_numero->FldCaption());
 
+			// id_empresa
+			$this->id_empresa->EditAttrs["class"] = "form-control";
+			$this->id_empresa->EditCustomAttributes = "";
+			$this->id_empresa->EditValue = ew_HtmlEncode($this->id_empresa->CurrentValue);
+			if (strval($this->id_empresa->CurrentValue) <> "") {
+				$sFilterWrk = "`id_perfil`" . ew_SearchString("=", $this->id_empresa->CurrentValue, EW_DATATYPE_NUMBER, "");
+			$sSqlWrk = "SELECT `id_perfil`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `empresas`";
+			$sWhereWrk = "";
+			$this->id_empresa->LookupFilters = array();
+			ew_AddFilter($sWhereWrk, $sFilterWrk);
+			$this->Lookup_Selecting($this->id_empresa, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+				$rswrk = Conn()->Execute($sSqlWrk);
+				if ($rswrk && !$rswrk->EOF) { // Lookup values found
+					$arwrk = array();
+					$arwrk[1] = ew_HtmlEncode($rswrk->fields('DispFld'));
+					$this->id_empresa->EditValue = $this->id_empresa->DisplayValue($arwrk);
+					$rswrk->Close();
+				} else {
+					$this->id_empresa->EditValue = ew_HtmlEncode($this->id_empresa->CurrentValue);
+				}
+			} else {
+				$this->id_empresa->EditValue = NULL;
+			}
+			$this->id_empresa->PlaceHolder = ew_RemoveHtml($this->id_empresa->FldCaption());
+
 			// Edit refer script
 			// id_pessoa
 
@@ -961,6 +1025,10 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 			// endereco_numero
 			$this->endereco_numero->LinkCustomAttributes = "";
 			$this->endereco_numero->HrefValue = "";
+
+			// id_empresa
+			$this->id_empresa->LinkCustomAttributes = "";
+			$this->id_empresa->HrefValue = "";
 		}
 		if ($this->RowType == EW_ROWTYPE_ADD || $this->RowType == EW_ROWTYPE_EDIT || $this->RowType == EW_ROWTYPE_SEARCH) // Add/Edit/Search row
 			$this->SetupFieldTitles();
@@ -994,6 +1062,12 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 		}
 		if (!ew_CheckInteger($this->RG->FormValue)) {
 			ew_AddMessage($gsFormError, $this->RG->FldErrMsg());
+		}
+		if (!$this->id_empresa->FldIsDetailKey && !is_null($this->id_empresa->FormValue) && $this->id_empresa->FormValue == "") {
+			ew_AddMessage($gsFormError, str_replace("%s", $this->id_empresa->FldCaption(), $this->id_empresa->ReqErrMsg));
+		}
+		if (!ew_CheckInteger($this->id_empresa->FormValue)) {
+			ew_AddMessage($gsFormError, $this->id_empresa->FldErrMsg());
 		}
 
 		// Return validate result
@@ -1061,6 +1135,9 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 			// endereco_numero
 			$this->endereco_numero->SetDbValueDef($rsnew, $this->endereco_numero->CurrentValue, NULL, $this->endereco_numero->ReadOnly);
 
+			// id_empresa
+			$this->id_empresa->SetDbValueDef($rsnew, $this->id_empresa->CurrentValue, 0, $this->id_empresa->ReadOnly);
+
 			// Call Row Updating event
 			$bUpdateRow = $this->Row_Updating($rsold, $rsnew);
 			if ($bUpdateRow) {
@@ -1120,6 +1197,18 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 			if ($sSqlWrk <> "")
 				$fld->LookupFilters["s"] .= $sSqlWrk;
 			break;
+		case "x_id_empresa":
+			$sSqlWrk = "";
+			$sSqlWrk = "SELECT `id_perfil` AS `LinkFld`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `empresas`";
+			$sWhereWrk = "{filter}";
+			$fld->LookupFilters = array();
+			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`id_perfil` IN ({filter_value})', "t0" => "3", "fn0" => "");
+			$sSqlWrk = "";
+			$this->Lookup_Selecting($this->id_empresa, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			if ($sSqlWrk <> "")
+				$fld->LookupFilters["s"] .= $sSqlWrk;
+			break;
 		}
 	}
 
@@ -1128,6 +1217,18 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 		global $gsLanguage;
 		$pageId = $pageId ?: $this->PageID;
 		switch ($fld->FldVar) {
+		case "x_id_empresa":
+			$sSqlWrk = "";
+			$sSqlWrk = "SELECT `id_perfil`, `razao_social` AS `DispFld` FROM `empresas`";
+			$sWhereWrk = "`razao_social` LIKE '{query_value}%'";
+			$fld->LookupFilters = array();
+			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "");
+			$sSqlWrk = "";
+			$this->Lookup_Selecting($this->id_empresa, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			if ($sSqlWrk <> "")
+				$fld->LookupFilters["s"] .= $sSqlWrk;
+			break;
 		}
 	}
 
@@ -1254,6 +1355,12 @@ fpessoa_fisicaedit.Validate = function() {
 			elm = this.GetElements("x" + infix + "_RG");
 			if (elm && !ew_CheckInteger(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($pessoa_fisica->RG->FldErrMsg()) ?>");
+			elm = this.GetElements("x" + infix + "_id_empresa");
+			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
+				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $pessoa_fisica->id_empresa->FldCaption(), $pessoa_fisica->id_empresa->ReqErrMsg)) ?>");
+			elm = this.GetElements("x" + infix + "_id_empresa");
+			if (elm && !ew_CheckInteger(elm.value))
+				return this.OnError(elm, "<?php echo ew_JsEncode2($pessoa_fisica->id_empresa->FldErrMsg()) ?>");
 
 			// Fire Form_CustomValidate event
 			if (!this.Form_CustomValidate(fobj))
@@ -1285,6 +1392,9 @@ fpessoa_fisicaedit.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE)
 // Dynamic selection lists
 fpessoa_fisicaedit.Lists["x_id_endereco"] = {"LinkField":"x_id_endereco","Ajax":true,"AutoFill":false,"DisplayFields":["x_endereco","x_bairro","x_estado","x_cidade"],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"endereco"};
 fpessoa_fisicaedit.Lists["x_id_endereco"].Data = "<?php echo $pessoa_fisica_edit->id_endereco->LookupFilterQuery(FALSE, "edit") ?>";
+fpessoa_fisicaedit.Lists["x_id_empresa"] = {"LinkField":"x_id_perfil","Ajax":true,"AutoFill":false,"DisplayFields":["x_razao_social","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"empresas"};
+fpessoa_fisicaedit.Lists["x_id_empresa"].Data = "<?php echo $pessoa_fisica_edit->id_empresa->LookupFilterQuery(FALSE, "edit") ?>";
+fpessoa_fisicaedit.AutoSuggests["x_id_empresa"] = <?php echo json_encode(array("data" => "ajax=autosuggest&" . $pessoa_fisica_edit->id_empresa->LookupFilterQuery(TRUE, "edit"))) ?>;
 
 // Form object for search
 </script>
@@ -1417,6 +1527,28 @@ $pessoa_fisica_edit->ShowMessage();
 <input type="text" data-table="pessoa_fisica" data-field="x_endereco_numero" name="x_endereco_numero" id="x_endereco_numero" size="30" maxlength="11" placeholder="<?php echo ew_HtmlEncode($pessoa_fisica->endereco_numero->getPlaceHolder()) ?>" value="<?php echo $pessoa_fisica->endereco_numero->EditValue ?>"<?php echo $pessoa_fisica->endereco_numero->EditAttributes() ?>>
 </span>
 <?php echo $pessoa_fisica->endereco_numero->CustomMsg ?></div></div>
+	</div>
+<?php } ?>
+<?php if ($pessoa_fisica->id_empresa->Visible) { // id_empresa ?>
+	<div id="r_id_empresa" class="form-group">
+		<label id="elh_pessoa_fisica_id_empresa" class="<?php echo $pessoa_fisica_edit->LeftColumnClass ?>"><?php echo $pessoa_fisica->id_empresa->FldCaption() ?><?php echo $Language->Phrase("FieldRequiredIndicator") ?></label>
+		<div class="<?php echo $pessoa_fisica_edit->RightColumnClass ?>"><div<?php echo $pessoa_fisica->id_empresa->CellAttributes() ?>>
+<span id="el_pessoa_fisica_id_empresa">
+<?php
+$wrkonchange = trim(" " . @$pessoa_fisica->id_empresa->EditAttrs["onchange"]);
+if ($wrkonchange <> "") $wrkonchange = " onchange=\"" . ew_JsEncode2($wrkonchange) . "\"";
+$pessoa_fisica->id_empresa->EditAttrs["onchange"] = "";
+?>
+<span id="as_x_id_empresa" style="white-space: nowrap; z-index: 8880">
+	<input type="text" name="sv_x_id_empresa" id="sv_x_id_empresa" value="<?php echo $pessoa_fisica->id_empresa->EditValue ?>" size="30" placeholder="<?php echo ew_HtmlEncode($pessoa_fisica->id_empresa->getPlaceHolder()) ?>" data-placeholder="<?php echo ew_HtmlEncode($pessoa_fisica->id_empresa->getPlaceHolder()) ?>"<?php echo $pessoa_fisica->id_empresa->EditAttributes() ?>>
+</span>
+<input type="hidden" data-table="pessoa_fisica" data-field="x_id_empresa" data-value-separator="<?php echo $pessoa_fisica->id_empresa->DisplayValueSeparatorAttribute() ?>" name="x_id_empresa" id="x_id_empresa" value="<?php echo ew_HtmlEncode($pessoa_fisica->id_empresa->CurrentValue) ?>"<?php echo $wrkonchange ?>>
+<script type="text/javascript">
+fpessoa_fisicaedit.CreateAutoSuggest({"id":"x_id_empresa","forceSelect":false});
+</script>
+<button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $pessoa_fisica->id_empresa->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_empresa',url:'empresasaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_empresa"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $pessoa_fisica->id_empresa->FldCaption() ?></span></button>
+</span>
+<?php echo $pessoa_fisica->id_empresa->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
 </div><!-- /page* -->

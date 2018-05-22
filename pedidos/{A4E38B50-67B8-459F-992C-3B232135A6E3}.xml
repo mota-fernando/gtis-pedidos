@@ -1,10 +1,9 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <configuration date="2018/05/22" author="e.World Technology Ltd.">
-  <project id="{A4E38B50-67B8-459F-992C-3B232135A6E3}" file="C:\Users\Root\Documents\PHPMaker\Projects\pedidos.pmp" name="pedidos" product="PHPMaker" version="14.0" datetime="2018/05/22 11:27:59" languagefolder="phplang" userlevel="-2,&quot;Anonymous&quot;,0;">
+  <project id="{A4E38B50-67B8-459F-992C-3B232135A6E3}" file="C:\Users\Root\Documents\PHPMaker\Projects\pedidos.pmp" name="pedidos" product="PHPMaker" version="14.0" datetime="2018/05/22 11:50:39" languagefolder="phplang" userlevel="-2,&quot;Anonymous&quot;,0;">
     <table id="pedidos" name="pedidos" caption="Pedidos" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />
-    <table id="clientes" name="clientes" caption="Clientes" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />
     <table id="detalhe_pedido" name="detalhe_pedido" caption="Ítens do Pedido" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />
-    <table id="pessoa_fisica" name="pessoa_fisica" caption="Pessoa física" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />
+    <table id="pessoa_fisica" name="pessoa_fisica" caption="Clientes" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />
     <table id="endereco" name="endereco" caption="Endereço" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />
     <table id="empresas" name="empresas" caption="Empresas" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />
     <table id="marcas" name="marcas" caption="Marcas" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />

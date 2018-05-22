@@ -76,7 +76,7 @@ class cempresas extends cTable {
 		$this->fields['telefone'] = &$this->telefone;
 
 		// direcao
-		$this->direcao = new cField('empresas', 'empresas', 'x_direcao', 'direcao', '`direcao`', '`direcao`', 200, -1, FALSE, '`direcao`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->direcao = new cField('empresas', 'empresas', 'x_direcao', 'direcao', '`direcao`', '`direcao`', 200, -1, FALSE, '`EV__direcao`', TRUE, FALSE, TRUE, 'FORMATTED TEXT', 'TEXT');
 		$this->direcao->Sortable = TRUE; // Allow sort
 		$this->fields['direcao'] = &$this->direcao;
 
@@ -86,7 +86,7 @@ class cempresas extends cTable {
 		$this->fields['email'] = &$this->_email;
 
 		// id_endereco
-		$this->id_endereco = new cField('empresas', 'empresas', 'x_id_endereco', 'id_endereco', '`id_endereco`', '`id_endereco`', 3, -1, FALSE, '`id_endereco`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'SELECT');
+		$this->id_endereco = new cField('empresas', 'empresas', 'x_id_endereco', 'id_endereco', '`id_endereco`', '`id_endereco`', 3, -1, FALSE, '`EV__id_endereco`', TRUE, TRUE, TRUE, 'FORMATTED TEXT', 'SELECT');
 		$this->id_endereco->Sortable = TRUE; // Allow sort
 		$this->id_endereco->UsePleaseSelect = TRUE; // Use PleaseSelect by default
 		$this->id_endereco->PleaseSelectText = $Language->Phrase("PleaseSelect"); // PleaseSelect text
@@ -117,7 +117,7 @@ class cempresas extends cTable {
 
 		// fonecedor
 		$this->fonecedor = new cField('empresas', 'empresas', 'x_fonecedor', 'fonecedor', '`fonecedor`', '`fonecedor`', 3, -1, FALSE, '`fonecedor`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
-		$this->fonecedor->Sortable = TRUE; // Allow sort
+		$this->fonecedor->Sortable = FALSE; // Allow sort
 		$this->fonecedor->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['fonecedor'] = &$this->fonecedor;
 
@@ -166,9 +166,20 @@ class cempresas extends cTable {
 			}
 			$ofld->setSort($sThisSort);
 			$this->setSessionOrderBy($sSortField . " " . $sThisSort); // Save to Session
+			$sSortFieldList = ($ofld->FldVirtualExpression <> "") ? $ofld->FldVirtualExpression : $sSortField;
+			$this->setSessionOrderByList($sSortFieldList . " " . $sThisSort); // Save to Session
 		} else {
 			$ofld->setSort("");
 		}
+	}
+
+	// Session ORDER BY for List page
+	function getSessionOrderByList() {
+		return @$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_ORDER_BY_LIST];
+	}
+
+	function setSessionOrderByList($v) {
+		$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_ORDER_BY_LIST] = $v;
 	}
 
 	// Table level SQL
@@ -197,6 +208,23 @@ class cempresas extends cTable {
 
 	function setSqlSelect($v) {
 		$this->_SqlSelect = $v;
+	}
+	var $_SqlSelectList = "";
+
+	function getSqlSelectList() { // Select for List page
+		$select = "";
+		$select = "SELECT * FROM (" .
+			"SELECT *, (SELECT `nome_pessoa` FROM `pessoa_fisica` `EW_TMP_LOOKUPTABLE` WHERE `EW_TMP_LOOKUPTABLE`.`nome_pessoa` = `empresas`.`direcao` LIMIT 1) AS `EV__direcao`, (SELECT CONCAT(`endereco`,'" . ew_ValueSeparator(1, $this->id_endereco) . "',`bairro`,'" . ew_ValueSeparator(2, $this->id_endereco) . "',`estado`,'" . ew_ValueSeparator(3, $this->id_endereco) . "',`cidade`) FROM `endereco` `EW_TMP_LOOKUPTABLE` WHERE `EW_TMP_LOOKUPTABLE`.`id_endereco` = `empresas`.`id_endereco` LIMIT 1) AS `EV__id_endereco` FROM `empresas`" .
+			") `EW_TMP_TABLE`";
+		return ($this->_SqlSelectList <> "") ? $this->_SqlSelectList : $select;
+	}
+
+	function SqlSelectList() { // For backward compatibility
+		return $this->getSqlSelectList();
+	}
+
+	function setSqlSelectList($v) {
+		$this->_SqlSelectList = $v;
 	}
 	var $_SqlWhere = "";
 
@@ -309,16 +337,46 @@ class cempresas extends cTable {
 		ew_AddFilter($sFilter, $this->CurrentFilter);
 		$sFilter = $this->ApplyUserIDFilters($sFilter);
 		$this->Recordset_Selecting($sFilter);
-		$sSelect = $this->getSqlSelect();
-		$sSort = $this->UseSessionForListSQL ? $this->getSessionOrderBy() : "";
+		if ($this->UseVirtualFields()) {
+			$sSelect = $this->getSqlSelectList();
+			$sSort = $this->UseSessionForListSQL ? $this->getSessionOrderByList() : "";
+		} else {
+			$sSelect = $this->getSqlSelect();
+			$sSort = $this->UseSessionForListSQL ? $this->getSessionOrderBy() : "";
+		}
 		return ew_BuildSelectSql($sSelect, $this->getSqlWhere(), $this->getSqlGroupBy(),
 			$this->getSqlHaving(), $this->getSqlOrderBy(), $sFilter, $sSort);
 	}
 
 	// Get ORDER BY clause
 	function GetOrderBy() {
-		$sSort = $this->getSessionOrderBy();
+		$sSort = ($this->UseVirtualFields()) ? $this->getSessionOrderByList() : $this->getSessionOrderBy();
 		return ew_BuildSelectSql("", "", "", "", $this->getSqlOrderBy(), "", $sSort);
+	}
+
+	// Check if virtual fields is used in SQL
+	function UseVirtualFields() {
+		$sWhere = $this->UseSessionForListSQL ? $this->getSessionWhere() : $this->CurrentFilter;
+		$sOrderBy = $this->UseSessionForListSQL ? $this->getSessionOrderByList() : "";
+		if ($sWhere <> "")
+			$sWhere = " " . str_replace(array("(",")"), array("",""), $sWhere) . " ";
+		if ($sOrderBy <> "")
+			$sOrderBy = " " . str_replace(array("(",")"), array("",""), $sOrderBy) . " ";
+		if ($this->BasicSearch->getKeyword() <> "")
+			return TRUE;
+		if ($this->direcao->AdvancedSearch->SearchValue <> "" ||
+			$this->direcao->AdvancedSearch->SearchValue2 <> "" ||
+			strpos($sWhere, " " . $this->direcao->FldVirtualExpression . " ") !== FALSE)
+			return TRUE;
+		if (strpos($sOrderBy, " " . $this->direcao->FldVirtualExpression . " ") !== FALSE)
+			return TRUE;
+		if ($this->id_endereco->AdvancedSearch->SearchValue <> "" ||
+			$this->id_endereco->AdvancedSearch->SearchValue2 <> "" ||
+			strpos($sWhere, " " . $this->id_endereco->FldVirtualExpression . " ") !== FALSE)
+			return TRUE;
+		if (strpos($sOrderBy, " " . $this->id_endereco->FldVirtualExpression . " ") !== FALSE)
+			return TRUE;
+		return FALSE;
 	}
 
 	// Try to get record count
@@ -369,7 +427,10 @@ class cempresas extends cTable {
 		$select = $this->TableType == 'CUSTOMVIEW' ? $this->getSqlSelect() : "SELECT * FROM " . $this->getSqlFrom();
 		$groupBy = $this->TableType == 'CUSTOMVIEW' ? $this->getSqlGroupBy() : "";
 		$having = $this->TableType == 'CUSTOMVIEW' ? $this->getSqlHaving() : "";
-		$sql = ew_BuildSelectSql($select, $this->getSqlWhere(), $groupBy, $having, "", $filter, "");
+		if ($this->UseVirtualFields())
+			$sql = ew_BuildSelectSql($this->getSqlSelectList(), $this->getSqlWhere(), $groupBy, $having, "", $filter, "");
+		else
+			$sql = ew_BuildSelectSql($select, $this->getSqlWhere(), $groupBy, $having, "", $filter, "");
 		$cnt = $this->TryGetRecordCount($sql);
 		if ($cnt == -1) {
 			$conn = &$this->Connection();
@@ -715,7 +776,31 @@ class cempresas extends cTable {
 		$this->telefone->ViewCustomAttributes = "";
 
 		// direcao
-		$this->direcao->ViewValue = $this->direcao->CurrentValue;
+		if ($this->direcao->VirtualValue <> "") {
+			$this->direcao->ViewValue = $this->direcao->VirtualValue;
+		} else {
+			$this->direcao->ViewValue = $this->direcao->CurrentValue;
+		if (strval($this->direcao->CurrentValue) <> "") {
+			$sFilterWrk = "`nome_pessoa`" . ew_SearchString("=", $this->direcao->CurrentValue, EW_DATATYPE_STRING, "");
+		$sSqlWrk = "SELECT `nome_pessoa`, `nome_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `pessoa_fisica`";
+		$sWhereWrk = "";
+		$this->direcao->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->direcao, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->direcao->ViewValue = $this->direcao->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->direcao->ViewValue = $this->direcao->CurrentValue;
+			}
+		} else {
+			$this->direcao->ViewValue = NULL;
+		}
+		}
 		$this->direcao->ViewCustomAttributes = "";
 
 		// email
@@ -723,6 +808,9 @@ class cempresas extends cTable {
 		$this->_email->ViewCustomAttributes = "";
 
 		// id_endereco
+		if ($this->id_endereco->VirtualValue <> "") {
+			$this->id_endereco->ViewValue = $this->id_endereco->VirtualValue;
+		} else {
 		if (strval($this->id_endereco->CurrentValue) <> "") {
 			$sFilterWrk = "`id_endereco`" . ew_SearchString("=", $this->id_endereco->CurrentValue, EW_DATATYPE_NUMBER, "");
 		$sSqlWrk = "SELECT `id_endereco`, `endereco` AS `DispFld`, `bairro` AS `Disp2Fld`, `estado` AS `Disp3Fld`, `cidade` AS `Disp4Fld` FROM `endereco`";
@@ -745,6 +833,7 @@ class cempresas extends cTable {
 			}
 		} else {
 			$this->id_endereco->ViewValue = NULL;
+		}
 		}
 		$this->id_endereco->ViewCustomAttributes = "";
 
@@ -979,7 +1068,6 @@ class cempresas extends cTable {
 					if ($this->nome_fantasia->Exportable) $Doc->ExportCaption($this->nome_fantasia);
 					if ($this->cnpj->Exportable) $Doc->ExportCaption($this->cnpj);
 					if ($this->ie->Exportable) $Doc->ExportCaption($this->ie);
-					if ($this->fonecedor->Exportable) $Doc->ExportCaption($this->fonecedor);
 					if ($this->celular->Exportable) $Doc->ExportCaption($this->celular);
 					if ($this->whatsapp->Exportable) $Doc->ExportCaption($this->whatsapp);
 				} else {
@@ -994,7 +1082,6 @@ class cempresas extends cTable {
 					if ($this->nome_fantasia->Exportable) $Doc->ExportCaption($this->nome_fantasia);
 					if ($this->cnpj->Exportable) $Doc->ExportCaption($this->cnpj);
 					if ($this->ie->Exportable) $Doc->ExportCaption($this->ie);
-					if ($this->fonecedor->Exportable) $Doc->ExportCaption($this->fonecedor);
 					if ($this->celular->Exportable) $Doc->ExportCaption($this->celular);
 					if ($this->whatsapp->Exportable) $Doc->ExportCaption($this->whatsapp);
 				}
@@ -1038,7 +1125,6 @@ class cempresas extends cTable {
 						if ($this->nome_fantasia->Exportable) $Doc->ExportField($this->nome_fantasia);
 						if ($this->cnpj->Exportable) $Doc->ExportField($this->cnpj);
 						if ($this->ie->Exportable) $Doc->ExportField($this->ie);
-						if ($this->fonecedor->Exportable) $Doc->ExportField($this->fonecedor);
 						if ($this->celular->Exportable) $Doc->ExportField($this->celular);
 						if ($this->whatsapp->Exportable) $Doc->ExportField($this->whatsapp);
 					} else {
@@ -1053,7 +1139,6 @@ class cempresas extends cTable {
 						if ($this->nome_fantasia->Exportable) $Doc->ExportField($this->nome_fantasia);
 						if ($this->cnpj->Exportable) $Doc->ExportField($this->cnpj);
 						if ($this->ie->Exportable) $Doc->ExportField($this->ie);
-						if ($this->fonecedor->Exportable) $Doc->ExportField($this->fonecedor);
 						if ($this->celular->Exportable) $Doc->ExportField($this->celular);
 						if ($this->whatsapp->Exportable) $Doc->ExportField($this->whatsapp);
 					}

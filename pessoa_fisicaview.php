@@ -350,6 +350,7 @@ class cpessoa_fisica_view extends cpessoa_fisica {
 		$this->RG->SetVisibility();
 		$this->id_endereco->SetVisibility();
 		$this->endereco_numero->SetVisibility();
+		$this->id_empresa->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -625,6 +626,7 @@ class cpessoa_fisica_view extends cpessoa_fisica {
 		$this->RG->setDbValue($row['RG']);
 		$this->id_endereco->setDbValue($row['id_endereco']);
 		$this->endereco_numero->setDbValue($row['endereco_numero']);
+		$this->id_empresa->setDbValue($row['id_empresa']);
 	}
 
 	// Return a row with default values
@@ -641,6 +643,7 @@ class cpessoa_fisica_view extends cpessoa_fisica {
 		$row['RG'] = NULL;
 		$row['id_endereco'] = NULL;
 		$row['endereco_numero'] = NULL;
+		$row['id_empresa'] = NULL;
 		return $row;
 	}
 
@@ -660,6 +663,7 @@ class cpessoa_fisica_view extends cpessoa_fisica {
 		$this->RG->DbValue = $row['RG'];
 		$this->id_endereco->DbValue = $row['id_endereco'];
 		$this->endereco_numero->DbValue = $row['endereco_numero'];
+		$this->id_empresa->DbValue = $row['id_empresa'];
 	}
 
 	// Render row values based on field settings
@@ -689,6 +693,7 @@ class cpessoa_fisica_view extends cpessoa_fisica {
 		// RG
 		// id_endereco
 		// endereco_numero
+		// id_empresa
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -759,6 +764,30 @@ class cpessoa_fisica_view extends cpessoa_fisica {
 		$this->endereco_numero->ViewValue = $this->endereco_numero->CurrentValue;
 		$this->endereco_numero->ViewCustomAttributes = "";
 
+		// id_empresa
+		$this->id_empresa->ViewValue = $this->id_empresa->CurrentValue;
+		if (strval($this->id_empresa->CurrentValue) <> "") {
+			$sFilterWrk = "`id_perfil`" . ew_SearchString("=", $this->id_empresa->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_perfil`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `empresas`";
+		$sWhereWrk = "";
+		$this->id_empresa->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_empresa, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_empresa->ViewValue = $this->id_empresa->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_empresa->ViewValue = $this->id_empresa->CurrentValue;
+			}
+		} else {
+			$this->id_empresa->ViewValue = NULL;
+		}
+		$this->id_empresa->ViewCustomAttributes = "";
+
 			// nome_pessoa
 			$this->nome_pessoa->LinkCustomAttributes = "";
 			$this->nome_pessoa->HrefValue = "";
@@ -808,6 +837,11 @@ class cpessoa_fisica_view extends cpessoa_fisica {
 			$this->endereco_numero->LinkCustomAttributes = "";
 			$this->endereco_numero->HrefValue = "";
 			$this->endereco_numero->TooltipValue = "";
+
+			// id_empresa
+			$this->id_empresa->LinkCustomAttributes = "";
+			$this->id_empresa->HrefValue = "";
+			$this->id_empresa->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -967,6 +1001,9 @@ fpessoa_fisicaview.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE)
 // Dynamic selection lists
 fpessoa_fisicaview.Lists["x_id_endereco"] = {"LinkField":"x_id_endereco","Ajax":true,"AutoFill":false,"DisplayFields":["x_endereco","x_bairro","x_estado","x_cidade"],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"endereco"};
 fpessoa_fisicaview.Lists["x_id_endereco"].Data = "<?php echo $pessoa_fisica_view->id_endereco->LookupFilterQuery(FALSE, "view") ?>";
+fpessoa_fisicaview.Lists["x_id_empresa"] = {"LinkField":"x_id_perfil","Ajax":true,"AutoFill":false,"DisplayFields":["x_razao_social","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"empresas"};
+fpessoa_fisicaview.Lists["x_id_empresa"].Data = "<?php echo $pessoa_fisica_view->id_empresa->LookupFilterQuery(FALSE, "view") ?>";
+fpessoa_fisicaview.AutoSuggests["x_id_empresa"] = <?php echo json_encode(array("data" => "ajax=autosuggest&" . $pessoa_fisica_view->id_empresa->LookupFilterQuery(TRUE, "view"))) ?>;
 
 // Form object for search
 </script>
@@ -1099,6 +1136,17 @@ $pessoa_fisica_view->ShowMessage();
 <span id="el_pessoa_fisica_endereco_numero">
 <span<?php echo $pessoa_fisica->endereco_numero->ViewAttributes() ?>>
 <?php echo $pessoa_fisica->endereco_numero->ViewValue ?></span>
+</span>
+</td>
+	</tr>
+<?php } ?>
+<?php if ($pessoa_fisica->id_empresa->Visible) { // id_empresa ?>
+	<tr id="r_id_empresa">
+		<td class="col-sm-2"><span id="elh_pessoa_fisica_id_empresa"><?php echo $pessoa_fisica->id_empresa->FldCaption() ?></span></td>
+		<td data-name="id_empresa"<?php echo $pessoa_fisica->id_empresa->CellAttributes() ?>>
+<span id="el_pessoa_fisica_id_empresa">
+<span<?php echo $pessoa_fisica->id_empresa->ViewAttributes() ?>>
+<?php echo $pessoa_fisica->id_empresa->ViewValue ?></span>
 </span>
 </td>
 	</tr>

@@ -18,6 +18,7 @@ class cpessoa_fisica extends cTable {
 	var $RG;
 	var $id_endereco;
 	var $endereco_numero;
+	var $id_empresa;
 
 	//
 	// Table class constructor
@@ -114,6 +115,12 @@ class cpessoa_fisica extends cTable {
 		$this->endereco_numero = new cField('pessoa_fisica', 'pessoa_fisica', 'x_endereco_numero', 'endereco_numero', '`endereco_numero`', '`endereco_numero`', 200, -1, FALSE, '`endereco_numero`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
 		$this->endereco_numero->Sortable = TRUE; // Allow sort
 		$this->fields['endereco_numero'] = &$this->endereco_numero;
+
+		// id_empresa
+		$this->id_empresa = new cField('pessoa_fisica', 'pessoa_fisica', 'x_id_empresa', 'id_empresa', '`id_empresa`', '`id_empresa`', 3, -1, FALSE, '`id_empresa`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->id_empresa->Sortable = TRUE; // Allow sort
+		$this->id_empresa->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
+		$this->fields['id_empresa'] = &$this->id_empresa;
 	}
 
 	// Field Visibility
@@ -652,6 +659,7 @@ class cpessoa_fisica extends cTable {
 		$this->RG->setDbValue($rs->fields('RG'));
 		$this->id_endereco->setDbValue($rs->fields('id_endereco'));
 		$this->endereco_numero->setDbValue($rs->fields('endereco_numero'));
+		$this->id_empresa->setDbValue($rs->fields('id_empresa'));
 	}
 
 	// Render list row values
@@ -673,6 +681,7 @@ class cpessoa_fisica extends cTable {
 		// RG
 		// id_endereco
 		// endereco_numero
+		// id_empresa
 		// id_pessoa
 
 		$this->id_pessoa->ViewValue = $this->id_pessoa->CurrentValue;
@@ -741,6 +750,30 @@ class cpessoa_fisica extends cTable {
 		$this->endereco_numero->ViewValue = $this->endereco_numero->CurrentValue;
 		$this->endereco_numero->ViewCustomAttributes = "";
 
+		// id_empresa
+		$this->id_empresa->ViewValue = $this->id_empresa->CurrentValue;
+		if (strval($this->id_empresa->CurrentValue) <> "") {
+			$sFilterWrk = "`id_perfil`" . ew_SearchString("=", $this->id_empresa->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_perfil`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `empresas`";
+		$sWhereWrk = "";
+		$this->id_empresa->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_empresa, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_empresa->ViewValue = $this->id_empresa->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_empresa->ViewValue = $this->id_empresa->CurrentValue;
+			}
+		} else {
+			$this->id_empresa->ViewValue = NULL;
+		}
+		$this->id_empresa->ViewCustomAttributes = "";
+
 		// id_pessoa
 		$this->id_pessoa->LinkCustomAttributes = "";
 		$this->id_pessoa->HrefValue = "";
@@ -795,6 +828,11 @@ class cpessoa_fisica extends cTable {
 		$this->endereco_numero->LinkCustomAttributes = "";
 		$this->endereco_numero->HrefValue = "";
 		$this->endereco_numero->TooltipValue = "";
+
+		// id_empresa
+		$this->id_empresa->LinkCustomAttributes = "";
+		$this->id_empresa->HrefValue = "";
+		$this->id_empresa->TooltipValue = "";
 
 		// Call Row Rendered event
 		$this->Row_Rendered();
@@ -874,6 +912,12 @@ class cpessoa_fisica extends cTable {
 		$this->endereco_numero->EditValue = $this->endereco_numero->CurrentValue;
 		$this->endereco_numero->PlaceHolder = ew_RemoveHtml($this->endereco_numero->FldCaption());
 
+		// id_empresa
+		$this->id_empresa->EditAttrs["class"] = "form-control";
+		$this->id_empresa->EditCustomAttributes = "";
+		$this->id_empresa->EditValue = $this->id_empresa->CurrentValue;
+		$this->id_empresa->PlaceHolder = ew_RemoveHtml($this->id_empresa->FldCaption());
+
 		// Call Row Rendered event
 		$this->Row_Rendered();
 	}
@@ -911,6 +955,7 @@ class cpessoa_fisica extends cTable {
 					if ($this->RG->Exportable) $Doc->ExportCaption($this->RG);
 					if ($this->id_endereco->Exportable) $Doc->ExportCaption($this->id_endereco);
 					if ($this->endereco_numero->Exportable) $Doc->ExportCaption($this->endereco_numero);
+					if ($this->id_empresa->Exportable) $Doc->ExportCaption($this->id_empresa);
 				} else {
 					if ($this->id_pessoa->Exportable) $Doc->ExportCaption($this->id_pessoa);
 					if ($this->nome_pessoa->Exportable) $Doc->ExportCaption($this->nome_pessoa);
@@ -923,6 +968,7 @@ class cpessoa_fisica extends cTable {
 					if ($this->RG->Exportable) $Doc->ExportCaption($this->RG);
 					if ($this->id_endereco->Exportable) $Doc->ExportCaption($this->id_endereco);
 					if ($this->endereco_numero->Exportable) $Doc->ExportCaption($this->endereco_numero);
+					if ($this->id_empresa->Exportable) $Doc->ExportCaption($this->id_empresa);
 				}
 				$Doc->EndExportRow();
 			}
@@ -964,6 +1010,7 @@ class cpessoa_fisica extends cTable {
 						if ($this->RG->Exportable) $Doc->ExportField($this->RG);
 						if ($this->id_endereco->Exportable) $Doc->ExportField($this->id_endereco);
 						if ($this->endereco_numero->Exportable) $Doc->ExportField($this->endereco_numero);
+						if ($this->id_empresa->Exportable) $Doc->ExportField($this->id_empresa);
 					} else {
 						if ($this->id_pessoa->Exportable) $Doc->ExportField($this->id_pessoa);
 						if ($this->nome_pessoa->Exportable) $Doc->ExportField($this->nome_pessoa);
@@ -976,6 +1023,7 @@ class cpessoa_fisica extends cTable {
 						if ($this->RG->Exportable) $Doc->ExportField($this->RG);
 						if ($this->id_endereco->Exportable) $Doc->ExportField($this->id_endereco);
 						if ($this->endereco_numero->Exportable) $Doc->ExportField($this->endereco_numero);
+						if ($this->id_empresa->Exportable) $Doc->ExportField($this->id_empresa);
 					}
 					$Doc->EndExportRow($RowCnt);
 				}

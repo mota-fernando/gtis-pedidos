@@ -577,8 +577,18 @@ class cempresas_addopt extends cempresas {
 		$this->proprietario->setDbValue($row['proprietario']);
 		$this->telefone->setDbValue($row['telefone']);
 		$this->direcao->setDbValue($row['direcao']);
+		if (array_key_exists('EV__direcao', $rs->fields)) {
+			$this->direcao->VirtualValue = $rs->fields('EV__direcao'); // Set up virtual field value
+		} else {
+			$this->direcao->VirtualValue = ""; // Clear value
+		}
 		$this->_email->setDbValue($row['email']);
 		$this->id_endereco->setDbValue($row['id_endereco']);
+		if (array_key_exists('EV__id_endereco', $rs->fields)) {
+			$this->id_endereco->VirtualValue = $rs->fields('EV__id_endereco'); // Set up virtual field value
+		} else {
+			$this->id_endereco->VirtualValue = ""; // Clear value
+		}
 		$this->endereco_numero->setDbValue($row['endereco_numero']);
 		$this->nome_fantasia->setDbValue($row['nome_fantasia']);
 		$this->cnpj->setDbValue($row['cnpj']);
@@ -674,7 +684,31 @@ class cempresas_addopt extends cempresas {
 		$this->telefone->ViewCustomAttributes = "";
 
 		// direcao
-		$this->direcao->ViewValue = $this->direcao->CurrentValue;
+		if ($this->direcao->VirtualValue <> "") {
+			$this->direcao->ViewValue = $this->direcao->VirtualValue;
+		} else {
+			$this->direcao->ViewValue = $this->direcao->CurrentValue;
+		if (strval($this->direcao->CurrentValue) <> "") {
+			$sFilterWrk = "`nome_pessoa`" . ew_SearchString("=", $this->direcao->CurrentValue, EW_DATATYPE_STRING, "");
+		$sSqlWrk = "SELECT `nome_pessoa`, `nome_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `pessoa_fisica`";
+		$sWhereWrk = "";
+		$this->direcao->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->direcao, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->direcao->ViewValue = $this->direcao->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->direcao->ViewValue = $this->direcao->CurrentValue;
+			}
+		} else {
+			$this->direcao->ViewValue = NULL;
+		}
+		}
 		$this->direcao->ViewCustomAttributes = "";
 
 		// email
@@ -682,6 +716,9 @@ class cempresas_addopt extends cempresas {
 		$this->_email->ViewCustomAttributes = "";
 
 		// id_endereco
+		if ($this->id_endereco->VirtualValue <> "") {
+			$this->id_endereco->ViewValue = $this->id_endereco->VirtualValue;
+		} else {
 		if (strval($this->id_endereco->CurrentValue) <> "") {
 			$sFilterWrk = "`id_endereco`" . ew_SearchString("=", $this->id_endereco->CurrentValue, EW_DATATYPE_NUMBER, "");
 		$sSqlWrk = "SELECT `id_endereco`, `endereco` AS `DispFld`, `bairro` AS `Disp2Fld`, `estado` AS `Disp3Fld`, `cidade` AS `Disp4Fld` FROM `endereco`";
@@ -704,6 +741,7 @@ class cempresas_addopt extends cempresas {
 			}
 		} else {
 			$this->id_endereco->ViewValue = NULL;
+		}
 		}
 		$this->id_endereco->ViewCustomAttributes = "";
 
@@ -1087,6 +1125,18 @@ class cempresas_addopt extends cempresas {
 		global $gsLanguage;
 		$pageId = $pageId ?: $this->PageID;
 		switch ($fld->FldVar) {
+		case "x_direcao":
+			$sSqlWrk = "";
+			$sSqlWrk = "SELECT `nome_pessoa` AS `LinkFld`, `nome_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `pessoa_fisica`";
+			$sWhereWrk = "{filter}";
+			$fld->LookupFilters = array();
+			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`nome_pessoa` IN ({filter_value})', "t0" => "200", "fn0" => "");
+			$sSqlWrk = "";
+			$this->Lookup_Selecting($this->direcao, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			if ($sSqlWrk <> "")
+				$fld->LookupFilters["s"] .= $sSqlWrk;
+			break;
 		case "x_id_endereco":
 			$sSqlWrk = "";
 			$sSqlWrk = "SELECT `id_endereco` AS `LinkFld`, `endereco` AS `DispFld`, `bairro` AS `Disp2Fld`, `estado` AS `Disp3Fld`, `cidade` AS `Disp4Fld` FROM `endereco`";
@@ -1107,6 +1157,18 @@ class cempresas_addopt extends cempresas {
 		global $gsLanguage;
 		$pageId = $pageId ?: $this->PageID;
 		switch ($fld->FldVar) {
+		case "x_direcao":
+			$sSqlWrk = "";
+			$sSqlWrk = "SELECT `nome_pessoa`, `nome_pessoa` AS `DispFld` FROM `pessoa_fisica`";
+			$sWhereWrk = "`nome_pessoa` LIKE '{query_value}%'";
+			$fld->LookupFilters = array();
+			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "");
+			$sSqlWrk = "";
+			$this->Lookup_Selecting($this->direcao, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			if ($sSqlWrk <> "")
+				$fld->LookupFilters["s"] .= $sSqlWrk;
+			break;
 		}
 	}
 
@@ -1253,6 +1315,9 @@ fempresasaddopt.Form_CustomValidate =
 fempresasaddopt.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
+fempresasaddopt.Lists["x_direcao"] = {"LinkField":"x_nome_pessoa","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_pessoa","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"pessoa_fisica"};
+fempresasaddopt.Lists["x_direcao"].Data = "<?php echo $empresas_addopt->direcao->LookupFilterQuery(FALSE, "addopt") ?>";
+fempresasaddopt.AutoSuggests["x_direcao"] = <?php echo json_encode(array("data" => "ajax=autosuggest&" . $empresas_addopt->direcao->LookupFilterQuery(TRUE, "addopt"))) ?>;
 fempresasaddopt.Lists["x_id_endereco"] = {"LinkField":"x_id_endereco","Ajax":true,"AutoFill":false,"DisplayFields":["x_endereco","x_bairro","x_estado","x_cidade"],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"endereco"};
 fempresasaddopt.Lists["x_id_endereco"].Data = "<?php echo $empresas_addopt->id_endereco->LookupFilterQuery(FALSE, "addopt") ?>";
 
@@ -1297,9 +1362,20 @@ $empresas_addopt->ShowMessage();
 <?php } ?>
 <?php if ($empresas->direcao->Visible) { // direcao ?>
 	<div class="form-group">
-		<label class="col-sm-2 control-label ewLabel" for="x_direcao"><?php echo $empresas->direcao->FldCaption() ?></label>
+		<label class="col-sm-2 control-label ewLabel"><?php echo $empresas->direcao->FldCaption() ?></label>
 		<div class="col-sm-10">
-<input type="text" data-table="empresas" data-field="x_direcao" name="x_direcao" id="x_direcao" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($empresas->direcao->getPlaceHolder()) ?>" value="<?php echo $empresas->direcao->EditValue ?>"<?php echo $empresas->direcao->EditAttributes() ?>>
+<?php
+$wrkonchange = trim(" " . @$empresas->direcao->EditAttrs["onchange"]);
+if ($wrkonchange <> "") $wrkonchange = " onchange=\"" . ew_JsEncode2($wrkonchange) . "\"";
+$empresas->direcao->EditAttrs["onchange"] = "";
+?>
+<span id="as_x_direcao" style="white-space: nowrap; z-index: 8950">
+	<input type="text" name="sv_x_direcao" id="sv_x_direcao" value="<?php echo $empresas->direcao->EditValue ?>" size="30" placeholder="<?php echo ew_HtmlEncode($empresas->direcao->getPlaceHolder()) ?>" data-placeholder="<?php echo ew_HtmlEncode($empresas->direcao->getPlaceHolder()) ?>"<?php echo $empresas->direcao->EditAttributes() ?>>
+</span>
+<input type="hidden" data-table="empresas" data-field="x_direcao" data-value-separator="<?php echo $empresas->direcao->DisplayValueSeparatorAttribute() ?>" name="x_direcao" id="x_direcao" value="<?php echo ew_HtmlEncode($empresas->direcao->CurrentValue) ?>"<?php echo $wrkonchange ?>>
+<script type="text/javascript">
+fempresasaddopt.CreateAutoSuggest({"id":"x_direcao","forceSelect":false});
+</script>
 </div>
 	</div>
 <?php } ?>

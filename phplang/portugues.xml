@@ -619,9 +619,6 @@
     <menu id="21">
       <phrase id="menutext" value="Cadastro" />
     </menu>
-    <menu id="1">
-      <phrase id="menutext" value="Clientes" />
-    </menu>
     <menu id="7">
       <phrase id="menutext" value="Marcas" />
     </menu>
@@ -629,7 +626,10 @@
       <phrase id="menutext" value="Empresas" />
     </menu>
     <menu id="6">
-      <phrase id="menutext" value="Endereços" />
+      <phrase id="menutext" value="Pessoas Jurídicas" />
+    </menu>
+    <menu id="9">
+      <phrase id="menutext" value="Clientes Pessoa Física" />
     </menu>
     <menu id="2">
       <phrase id="menutext" value="Configurar" />
@@ -642,9 +642,6 @@
     </menu>
     <menu id="4">
       <phrase id="menutext" value="Detalhe Pedido" />
-    </menu>
-    <menu id="9">
-      <phrase id="menutext" value="Pessoa Fisica" />
     </menu>
     <table id="pedidos">
       <phrase id="tblcaption" value="Pedidos" />
@@ -713,28 +710,6 @@
         <phrase id="fldtagcaption3" value="Concluido" />
       </field>
     </table>
-    <table id="clientes">
-      <phrase id="tblcaption" value="Clientes" />
-      <field id="id_cliente">
-        <phrase id="fldcaption" value="id cliente" />
-      </field>
-      <field id="tipo">
-        <phrase id="fldcaption" value="Tipo de cliente" />
-        <phrase id="fldtagvalue1" value="J" />
-        <phrase id="fldtagcaption1" value="Pessoa Jurídica" />
-        <phrase id="fldtagvalue2" value="F" />
-        <phrase id="fldtagcaption2" value="Pessoa Física" />
-      </field>
-      <field id="id">
-        <phrase id="fldcaption" value="Cliente" />
-      </field>
-      <field id="data">
-        <phrase id="fldcaption" value="data" />
-      </field>
-      <field id="time">
-        <phrase id="fldcaption" value="time" />
-      </field>
-    </table>
     <table id="detalhe_pedido">
       <phrase id="tblcaption" value="Ítens do Pedido" />
       <field id="id_detalhe">
@@ -757,7 +732,7 @@
       </field>
     </table>
     <table id="pessoa_fisica">
-      <phrase id="tblcaption" value="Pessoa física" />
+      <phrase id="tblcaption" value="Clientes" />
       <field id="id_pessoa">
         <phrase id="fldcaption" value="id pessoa" />
       </field>
@@ -790,6 +765,9 @@
       </field>
       <field id="endereco_numero">
         <phrase id="fldcaption" value="Número do endereço" />
+      </field>
+      <field id="id_empresa">
+        <phrase id="fldcaption" value="id empresa" />
       </field>
     </table>
     <table id="endereco">
