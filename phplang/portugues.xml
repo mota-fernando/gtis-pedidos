@@ -607,20 +607,17 @@
     <menu id="8">
       <phrase id="menutext" value="Pedidos" />
     </menu>
-    <menu id="11">
-      <phrase id="menutext" value="Produtos" />
-    </menu>
-    <menu id="12">
-      <phrase id="menutext" value="Representantes" />
-    </menu>
-    <menu id="13">
-      <phrase id="menutext" value="Tranportadoras" />
-    </menu>
     <menu id="21">
-      <phrase id="menutext" value="Cadastro" />
+      <phrase id="menutext" value="Catálogo" />
+    </menu>
+    <menu id="22">
+      <phrase id="menutext" value="Categorias" />
     </menu>
     <menu id="7">
       <phrase id="menutext" value="Marcas" />
+    </menu>
+    <menu id="11">
+      <phrase id="menutext" value="Produtos" />
     </menu>
     <menu id="5">
       <phrase id="menutext" value="Empresas" />
@@ -630,6 +627,12 @@
     </menu>
     <menu id="9">
       <phrase id="menutext" value="Clientes Pessoa Física" />
+    </menu>
+    <menu id="12">
+      <phrase id="menutext" value="Representantes" />
+    </menu>
+    <menu id="13">
+      <phrase id="menutext" value="Tranportadoras" />
     </menu>
     <menu id="2">
       <phrase id="menutext" value="Configurar" />
@@ -767,7 +770,7 @@
         <phrase id="fldcaption" value="Número do endereço" />
       </field>
       <field id="id_empresa">
-        <phrase id="fldcaption" value="id empresa" />
+        <phrase id="fldcaption" value="Empresa" />
       </field>
     </table>
     <table id="endereco">
@@ -955,6 +958,18 @@
       </field>
       <field id="id_empresa">
         <phrase id="fldcaption" value="Sua empresa" />
+      </field>
+    </table>
+    <table id="categoria">
+      <phrase id="tblcaption" value="Categorias" />
+      <field id="id_categoria">
+        <phrase id="fldcaption" value="id categoria" />
+      </field>
+      <field id="nome_categoria">
+        <phrase id="fldcaption" value="nome categoria" />
+      </field>
+      <field id="id_pai">
+        <phrase id="fldcaption" value="id pai" />
       </field>
     </table>
   </project>

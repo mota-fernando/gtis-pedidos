@@ -25,7 +25,7 @@ define("EW_CONFIG_FILE_FOLDER", EW_PROJECT_NAME, TRUE); // Config file name
 define("EW_PROJECT_ID", "{A4E38B50-67B8-459F-992C-3B232135A6E3}", TRUE); // Project ID (GUID)
 $EW_RELATED_PROJECT_ID = "";
 $EW_RELATED_LANGUAGE_FOLDER = "";
-define("EW_RANDOM_KEY", 'aYnRq8laS8qXffq0', TRUE); // Random key for encryption
+define("EW_RANDOM_KEY", 'rRUVfeAgeSaRE8rB', TRUE); // Random key for encryption
 define("EW_PROJECT_STYLESHEET_FILENAME", "phpcss/pedidos.css", TRUE); // Project stylesheet file name
 define("EW_CHARSET", "utf-8", TRUE); // Project charset
 define("EW_EMAIL_CHARSET", EW_CHARSET, TRUE); // Email charset
@@ -84,7 +84,7 @@ $EW_CONN[0] = &$EW_CONN["DB"];
 $EW_ERROR_FN = 'ew_ErrorFn';
 
 // ADODB (Access/SQL Server)
-define("EW_CODEPAGE", 0, TRUE); // Code page
+define("EW_CODEPAGE", 65001, TRUE); // Code page
 /**
  * Character encoding
  * Note: If you use non English languages, you need to set character encoding

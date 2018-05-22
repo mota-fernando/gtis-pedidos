@@ -36,7 +36,7 @@ class cpedidos_db extends cDbHelper {
 	var $CharSet = "utf-8";
 
 	// ADODB (Access/SQL Server)
-	var $CodePage = 0; // Code page
+	var $CodePage = 65001; // Code page
 
 	// Database
 	var $StartQuote = "`";

@@ -687,6 +687,26 @@ class cpedidos_delete extends cpedidos {
 
 		// id_cliente
 		$this->id_cliente->ViewValue = $this->id_cliente->CurrentValue;
+		if (strval($this->id_cliente->CurrentValue) <> "") {
+			$sFilterWrk = "`id_perfil`" . ew_SearchString("=", $this->id_cliente->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_perfil`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `empresas`";
+		$sWhereWrk = "";
+		$this->id_cliente->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_cliente, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_cliente->ViewValue = $this->id_cliente->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_cliente->ViewValue = $this->id_cliente->CurrentValue;
+			}
+		} else {
+			$this->id_cliente->ViewValue = NULL;
+		}
 		$this->id_cliente->ViewCustomAttributes = "";
 
 		// status
@@ -980,6 +1000,9 @@ fpedidosdelete.Lists["x_id_representante"] = {"LinkField":"x_id_representantes",
 fpedidosdelete.Lists["x_id_representante"].Data = "<?php echo $pedidos_delete->id_representante->LookupFilterQuery(FALSE, "delete") ?>";
 fpedidosdelete.Lists["x_comissao_representante"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
 fpedidosdelete.Lists["x_comissao_representante"].Options = <?php echo json_encode($pedidos_delete->comissao_representante->Options()) ?>;
+fpedidosdelete.Lists["x_id_cliente"] = {"LinkField":"x_id_perfil","Ajax":true,"AutoFill":false,"DisplayFields":["x_razao_social","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"empresas"};
+fpedidosdelete.Lists["x_id_cliente"].Data = "<?php echo $pedidos_delete->id_cliente->LookupFilterQuery(FALSE, "delete") ?>";
+fpedidosdelete.AutoSuggests["x_id_cliente"] = <?php echo json_encode(array("data" => "ajax=autosuggest&" . $pedidos_delete->id_cliente->LookupFilterQuery(TRUE, "delete"))) ?>;
 fpedidosdelete.Lists["x_status"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
 fpedidosdelete.Lists["x_status"].Options = <?php echo json_encode($pedidos_delete->status->Options()) ?>;
 

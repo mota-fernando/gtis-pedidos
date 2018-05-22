@@ -921,6 +921,26 @@ class cpedidos extends cTable {
 
 		// id_cliente
 		$this->id_cliente->ViewValue = $this->id_cliente->CurrentValue;
+		if (strval($this->id_cliente->CurrentValue) <> "") {
+			$sFilterWrk = "`id_perfil`" . ew_SearchString("=", $this->id_cliente->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_perfil`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `empresas`";
+		$sWhereWrk = "";
+		$this->id_cliente->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_cliente, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_cliente->ViewValue = $this->id_cliente->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_cliente->ViewValue = $this->id_cliente->CurrentValue;
+			}
+		} else {
+			$this->id_cliente->ViewValue = NULL;
+		}
 		$this->id_cliente->ViewCustomAttributes = "";
 
 		// status
