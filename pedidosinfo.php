@@ -35,7 +35,7 @@ class cpedidos extends cTable {
 		// Update Table
 		$this->UpdateTable = "`pedidos`";
 		$this->DBID = 'DB';
-		$this->ExportAll = TRUE;
+		$this->ExportAll = FALSE;
 		$this->ExportPageBreakCount = 0; // Page break per every n record (PDF only)
 		$this->ExportPageOrientation = "portrait"; // Page orientation (PDF only)
 		$this->ExportPageSize = "a4"; // Page size (PDF only)
@@ -124,6 +124,7 @@ class cpedidos extends cTable {
 		$this->comissao_representante->Sortable = TRUE; // Allow sort
 		$this->comissao_representante->UsePleaseSelect = TRUE; // Use PleaseSelect by default
 		$this->comissao_representante->PleaseSelectText = $Language->Phrase("PleaseSelect"); // PleaseSelect text
+		$this->comissao_representante->OptionCount = 2;
 		$this->fields['comissao_representante'] = &$this->comissao_representante;
 
 		// id_cliente
@@ -453,6 +454,35 @@ class cpedidos extends cTable {
 	// Update
 	function Update(&$rs, $where = "", $rsold = NULL, $curfilter = TRUE) {
 		$conn = &$this->Connection();
+
+		// Cascade Update detail table 'detalhe_pedido'
+		$bCascadeUpdate = FALSE;
+		$rscascade = array();
+		if (!is_null($rsold) && (isset($rs['numero']) && $rsold['numero'] <> $rs['numero'])) { // Update detail field 'numero_pedido'
+			$bCascadeUpdate = TRUE;
+			$rscascade['numero_pedido'] = $rs['numero']; 
+		}
+		if ($bCascadeUpdate) {
+			if (!isset($GLOBALS["detalhe_pedido"])) $GLOBALS["detalhe_pedido"] = new cdetalhe_pedido();
+			$rswrk = $GLOBALS["detalhe_pedido"]->LoadRs("`numero_pedido` = " . ew_QuotedValue($rsold['numero'], EW_DATATYPE_NUMBER, 'DB')); 
+			while ($rswrk && !$rswrk->EOF) {
+				$rskey = array();
+				$fldname = 'id_detalhe';
+				$rskey[$fldname] = $rswrk->fields[$fldname];
+				$rsdtlold = &$rswrk->fields;
+				$rsdtlnew = array_merge($rsdtlold, $rscascade);
+
+				// Call Row_Updating event
+				$bUpdate = $GLOBALS["detalhe_pedido"]->Row_Updating($rsdtlold, $rsdtlnew);
+				if ($bUpdate)
+					$bUpdate = $GLOBALS["detalhe_pedido"]->Update($rscascade, $rskey, $rswrk->fields);
+				if (!$bUpdate) return FALSE;
+
+				// Call Row_Updated event
+				$GLOBALS["detalhe_pedido"]->Row_Updated($rsdtlold, $rsdtlnew);
+				$rswrk->MoveNext();
+			}
+		}
 		$bUpdate = $conn->Execute($this->UpdateSQL($rs, $where, $curfilter));
 		return $bUpdate;
 	}
@@ -479,6 +509,31 @@ class cpedidos extends cTable {
 	function Delete(&$rs, $where = "", $curfilter = TRUE) {
 		$bDelete = TRUE;
 		$conn = &$this->Connection();
+
+		// Cascade delete detail table 'detalhe_pedido'
+		if (!isset($GLOBALS["detalhe_pedido"])) $GLOBALS["detalhe_pedido"] = new cdetalhe_pedido();
+		$rscascade = $GLOBALS["detalhe_pedido"]->LoadRs("`numero_pedido` = " . ew_QuotedValue($rs['numero'], EW_DATATYPE_NUMBER, "DB")); 
+		$dtlrows = ($rscascade) ? $rscascade->GetRows() : array();
+
+		// Call Row Deleting event
+		foreach ($dtlrows as $dtlrow) {
+			$bDelete = $GLOBALS["detalhe_pedido"]->Row_Deleting($dtlrow);
+			if (!$bDelete) break;
+		}
+		if ($bDelete) {
+			foreach ($dtlrows as $dtlrow) {
+				$bDelete = $GLOBALS["detalhe_pedido"]->Delete($dtlrow); // Delete
+				if ($bDelete === FALSE)
+					break;
+			}
+		}
+
+		// Call Row Deleted event
+		if ($bDelete) {
+			foreach ($dtlrows as $dtlrow) {
+				$GLOBALS["detalhe_pedido"]->Row_Deleted($dtlrow);
+			}
+		}
 		if ($bDelete)
 			$bDelete = $conn->Execute($this->DeleteSQL($rs, $where, $curfilter));
 		return $bDelete;
@@ -847,6 +902,11 @@ class cpedidos extends cTable {
 		$this->id_representante->ViewCustomAttributes = "";
 
 		// comissao_representante
+		if (strval($this->comissao_representante->CurrentValue) <> "") {
+			$this->comissao_representante->ViewValue = $this->comissao_representante->OptionCaption($this->comissao_representante->CurrentValue);
+		} else {
+			$this->comissao_representante->ViewValue = NULL;
+		}
 		$this->comissao_representante->ViewCustomAttributes = "";
 
 		// id_cliente
@@ -945,18 +1005,9 @@ class cpedidos extends cTable {
 		$this->numero->PlaceHolder = ew_RemoveHtml($this->numero->FldCaption());
 
 		// fecha_data
-		$this->fecha_data->EditAttrs["class"] = "form-control";
-		$this->fecha_data->EditCustomAttributes = "";
-		$this->fecha_data->EditValue = ew_FormatDateTime($this->fecha_data->CurrentValue, 8);
-		$this->fecha_data->PlaceHolder = ew_RemoveHtml($this->fecha_data->FldCaption());
-
 		// fecha_hora
-		$this->fecha_hora->EditAttrs["class"] = "form-control";
-		$this->fecha_hora->EditCustomAttributes = "";
-		$this->fecha_hora->EditValue = $this->fecha_hora->CurrentValue;
-		$this->fecha_hora->PlaceHolder = ew_RemoveHtml($this->fecha_hora->FldCaption());
-
 		// id_fornecedor
+
 		$this->id_fornecedor->EditAttrs["class"] = "form-control";
 		$this->id_fornecedor->EditCustomAttributes = "";
 
@@ -981,6 +1032,7 @@ class cpedidos extends cTable {
 		// comissao_representante
 		$this->comissao_representante->EditAttrs["class"] = "form-control";
 		$this->comissao_representante->EditCustomAttributes = "";
+		$this->comissao_representante->EditValue = $this->comissao_representante->Options(TRUE);
 
 		// id_cliente
 		$this->id_cliente->EditAttrs["class"] = "form-control";
@@ -1017,8 +1069,6 @@ class cpedidos extends cTable {
 				if ($ExportPageType == "view") {
 					if ($this->tipo_pedido->Exportable) $Doc->ExportCaption($this->tipo_pedido);
 					if ($this->numero->Exportable) $Doc->ExportCaption($this->numero);
-					if ($this->fecha_data->Exportable) $Doc->ExportCaption($this->fecha_data);
-					if ($this->fecha_hora->Exportable) $Doc->ExportCaption($this->fecha_hora);
 					if ($this->id_fornecedor->Exportable) $Doc->ExportCaption($this->id_fornecedor);
 					if ($this->id_transportadora->Exportable) $Doc->ExportCaption($this->id_transportadora);
 					if ($this->id_prazos->Exportable) $Doc->ExportCaption($this->id_prazos);
@@ -1072,8 +1122,6 @@ class cpedidos extends cTable {
 					if ($ExportPageType == "view") {
 						if ($this->tipo_pedido->Exportable) $Doc->ExportField($this->tipo_pedido);
 						if ($this->numero->Exportable) $Doc->ExportField($this->numero);
-						if ($this->fecha_data->Exportable) $Doc->ExportField($this->fecha_data);
-						if ($this->fecha_hora->Exportable) $Doc->ExportField($this->fecha_hora);
 						if ($this->id_fornecedor->Exportable) $Doc->ExportField($this->id_fornecedor);
 						if ($this->id_transportadora->Exportable) $Doc->ExportField($this->id_transportadora);
 						if ($this->id_prazos->Exportable) $Doc->ExportField($this->id_prazos);

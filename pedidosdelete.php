@@ -673,6 +673,11 @@ class cpedidos_delete extends cpedidos {
 		$this->id_representante->ViewCustomAttributes = "";
 
 		// comissao_representante
+		if (strval($this->comissao_representante->CurrentValue) <> "") {
+			$this->comissao_representante->ViewValue = $this->comissao_representante->OptionCaption($this->comissao_representante->CurrentValue);
+		} else {
+			$this->comissao_representante->ViewValue = NULL;
+		}
 		$this->comissao_representante->ViewCustomAttributes = "";
 
 		// id_cliente
@@ -955,6 +960,8 @@ fpedidosdelete.Lists["x_id_prazos"] = {"LinkField":"x_id_prazos","Ajax":true,"Au
 fpedidosdelete.Lists["x_id_prazos"].Data = "<?php echo $pedidos_delete->id_prazos->LookupFilterQuery(FALSE, "delete") ?>";
 fpedidosdelete.Lists["x_id_representante"] = {"LinkField":"x_id_representantes","Ajax":true,"AutoFill":false,"DisplayFields":["x_id_pessoa","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"representantes"};
 fpedidosdelete.Lists["x_id_representante"].Data = "<?php echo $pedidos_delete->id_representante->LookupFilterQuery(FALSE, "delete") ?>";
+fpedidosdelete.Lists["x_comissao_representante"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
+fpedidosdelete.Lists["x_comissao_representante"].Options = <?php echo json_encode($pedidos_delete->comissao_representante->Options()) ?>;
 
 // Form object for search
 </script>

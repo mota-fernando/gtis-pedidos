@@ -340,6 +340,8 @@ class cclientes_view extends cclientes {
 		// Is modal
 		$this->IsModal = (@$_GET["modal"] == "1" || @$_POST["modal"] == "1");
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
+		$this->tipo->SetVisibility();
+		$this->id->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -441,6 +443,9 @@ class cclientes_view extends cclientes {
 		// Check modal
 		if ($this->IsModal)
 			$gbSkipHeaderFooter = TRUE;
+
+		// Load current record
+		$bLoadCurrentRecord = FALSE;
 		$sReturnUrl = "";
 		$bMatchRecord = FALSE;
 		if ($this->IsPageRequest()) { // Validate request
@@ -602,8 +607,8 @@ class cclientes_view extends cclientes {
 		if (!$rs || $rs->EOF)
 			return;
 		$this->id_cliente->setDbValue($row['id_cliente']);
-		$this->id->setDbValue($row['id']);
 		$this->tipo->setDbValue($row['tipo']);
+		$this->id->setDbValue($row['id']);
 		$this->data->setDbValue($row['data']);
 		$this->time->setDbValue($row['time']);
 	}
@@ -612,8 +617,8 @@ class cclientes_view extends cclientes {
 	function NewRow() {
 		$row = array();
 		$row['id_cliente'] = NULL;
-		$row['id'] = NULL;
 		$row['tipo'] = NULL;
+		$row['id'] = NULL;
 		$row['data'] = NULL;
 		$row['time'] = NULL;
 		return $row;
@@ -625,8 +630,8 @@ class cclientes_view extends cclientes {
 			return;
 		$row = is_array($rs) ? $rs : $rs->fields;
 		$this->id_cliente->DbValue = $row['id_cliente'];
-		$this->id->DbValue = $row['id'];
 		$this->tipo->DbValue = $row['tipo'];
+		$this->id->DbValue = $row['id'];
 		$this->data->DbValue = $row['data'];
 		$this->time->DbValue = $row['time'];
 	}
@@ -648,12 +653,34 @@ class cclientes_view extends cclientes {
 
 		// Common render codes for all row types
 		// id_cliente
-		// id
 		// tipo
+		// id
 		// data
 		// time
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
+
+		// tipo
+		if (strval($this->tipo->CurrentValue) <> "") {
+			$this->tipo->ViewValue = $this->tipo->OptionCaption($this->tipo->CurrentValue);
+		} else {
+			$this->tipo->ViewValue = NULL;
+		}
+		$this->tipo->ViewCustomAttributes = "";
+
+		// id
+		$this->id->ViewValue = $this->id->CurrentValue;
+		$this->id->ViewCustomAttributes = "";
+
+			// tipo
+			$this->tipo->LinkCustomAttributes = "";
+			$this->tipo->HrefValue = "";
+			$this->tipo->TooltipValue = "";
+
+			// id
+			$this->id->LinkCustomAttributes = "";
+			$this->id->HrefValue = "";
+			$this->id->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -811,8 +838,10 @@ fclientesview.Form_CustomValidate =
 fclientesview.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-// Form object for search
+fclientesview.Lists["x_tipo"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
+fclientesview.Lists["x_tipo"].Options = <?php echo json_encode($clientes_view->tipo->Options()) ?>;
 
+// Form object for search
 </script>
 <script type="text/javascript">
 
@@ -837,6 +866,28 @@ $clientes_view->ShowMessage();
 <input type="hidden" name="t" value="clientes">
 <input type="hidden" name="modal" value="<?php echo intval($clientes_view->IsModal) ?>">
 <table class="table table-striped table-bordered table-hover table-condensed ewViewTable">
+<?php if ($clientes->tipo->Visible) { // tipo ?>
+	<tr id="r_tipo">
+		<td class="col-sm-2"><span id="elh_clientes_tipo"><?php echo $clientes->tipo->FldCaption() ?></span></td>
+		<td data-name="tipo"<?php echo $clientes->tipo->CellAttributes() ?>>
+<span id="el_clientes_tipo">
+<span<?php echo $clientes->tipo->ViewAttributes() ?>>
+<?php echo $clientes->tipo->ViewValue ?></span>
+</span>
+</td>
+	</tr>
+<?php } ?>
+<?php if ($clientes->id->Visible) { // id ?>
+	<tr id="r_id">
+		<td class="col-sm-2"><span id="elh_clientes_id"><?php echo $clientes->id->FldCaption() ?></span></td>
+		<td data-name="id"<?php echo $clientes->id->CellAttributes() ?>>
+<span id="el_clientes_id">
+<span<?php echo $clientes->id->ViewAttributes() ?>>
+<?php echo $clientes->id->ViewValue ?></span>
+</span>
+</td>
+	</tr>
+<?php } ?>
 </table>
 </form>
 <script type="text/javascript">

@@ -29,7 +29,7 @@ class cendereco extends cTable {
 		// Update Table
 		$this->UpdateTable = "`endereco`";
 		$this->DBID = 'DB';
-		$this->ExportAll = TRUE;
+		$this->ExportAll = FALSE;
 		$this->ExportPageBreakCount = 0; // Page break per every n record (PDF only)
 		$this->ExportPageOrientation = "portrait"; // Page orientation (PDF only)
 		$this->ExportPageSize = "a4"; // Page size (PDF only)

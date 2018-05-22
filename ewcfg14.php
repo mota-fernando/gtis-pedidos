@@ -25,7 +25,7 @@ define("EW_CONFIG_FILE_FOLDER", EW_PROJECT_NAME, TRUE); // Config file name
 define("EW_PROJECT_ID", "{A4E38B50-67B8-459F-992C-3B232135A6E3}", TRUE); // Project ID (GUID)
 $EW_RELATED_PROJECT_ID = "";
 $EW_RELATED_LANGUAGE_FOLDER = "";
-define("EW_RANDOM_KEY", 'DlmTK84n5H3sHJo0', TRUE); // Random key for encryption
+define("EW_RANDOM_KEY", 'k27TogFayycfk9L0', TRUE); // Random key for encryption
 define("EW_PROJECT_STYLESHEET_FILENAME", "phpcss/pedidos.css", TRUE); // Project stylesheet file name
 define("EW_CHARSET", "utf-8", TRUE); // Project charset
 define("EW_EMAIL_CHARSET", EW_CHARSET, TRUE); // Email charset
@@ -39,7 +39,7 @@ define("EW_FONT_SIZE", 14, TRUE);
 define("EW_TMP_IMAGE_FONT", "DejaVuSans", TRUE); // Font for temp files
 $EW_LAZY_LOAD = TRUE; // Lazy loading of images
 $EW_RELATED_PROJECT_ID = "";
-$EW_BODY_CLASS = "hold-transition skin-red";
+$EW_BODY_CLASS = "hold-transition skin-blue";
 $EW_RESET_HEIGHT = TRUE; // Reset layout height
 
 // Set up font path
@@ -952,5 +952,7 @@ $LoginStatus = array();
 $EW_USE_SUBMENU_FOR_ROOT_HEADER = FALSE;
 ?>
 <?php
-define("EW_PDF_STYLESHEET_FILENAME", "", TRUE); // Export PDF CSS styles
+define("EW_PDF_STYLESHEET_FILENAME", "phpcss/ewpdf.css", TRUE); // export PDF CSS styles
+define("EW_PDF_MEMORY_LIMIT", "128M", TRUE); // Memory limit
+define("EW_PDF_TIME_LIMIT", 120, TRUE); // Time limit
 ?>

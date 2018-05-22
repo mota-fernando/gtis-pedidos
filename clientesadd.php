@@ -286,8 +286,8 @@ class cclientes_add extends cclientes {
 		// Create form object
 		$objForm = new cFormObj();
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
-		$this->id->SetVisibility();
 		$this->tipo->SetVisibility();
+		$this->id->SetVisibility();
 		$this->data->SetVisibility();
 		$this->time->SetVisibility();
 
@@ -493,9 +493,9 @@ class cclientes_add extends cclientes {
 	function LoadDefaultValues() {
 		$this->id_cliente->CurrentValue = NULL;
 		$this->id_cliente->OldValue = $this->id_cliente->CurrentValue;
+		$this->tipo->CurrentValue = "J";
 		$this->id->CurrentValue = NULL;
 		$this->id->OldValue = $this->id->CurrentValue;
-		$this->tipo->CurrentValue = "J";
 		$this->data->CurrentValue = NULL;
 		$this->data->OldValue = $this->data->CurrentValue;
 		$this->time->CurrentValue = NULL;
@@ -507,11 +507,11 @@ class cclientes_add extends cclientes {
 
 		// Load from form
 		global $objForm;
-		if (!$this->id->FldIsDetailKey) {
-			$this->id->setFormValue($objForm->GetValue("x_id"));
-		}
 		if (!$this->tipo->FldIsDetailKey) {
 			$this->tipo->setFormValue($objForm->GetValue("x_tipo"));
+		}
+		if (!$this->id->FldIsDetailKey) {
+			$this->id->setFormValue($objForm->GetValue("x_id"));
 		}
 		if (!$this->data->FldIsDetailKey) {
 			$this->data->setFormValue($objForm->GetValue("x_data"));
@@ -526,8 +526,8 @@ class cclientes_add extends cclientes {
 	// Restore form values
 	function RestoreFormValues() {
 		global $objForm;
-		$this->id->CurrentValue = $this->id->FormValue;
 		$this->tipo->CurrentValue = $this->tipo->FormValue;
+		$this->id->CurrentValue = $this->id->FormValue;
 		$this->data->CurrentValue = $this->data->FormValue;
 		$this->data->CurrentValue = ew_UnFormatDateTime($this->data->CurrentValue, 0);
 		$this->time->CurrentValue = $this->time->FormValue;
@@ -568,8 +568,8 @@ class cclientes_add extends cclientes {
 		if (!$rs || $rs->EOF)
 			return;
 		$this->id_cliente->setDbValue($row['id_cliente']);
-		$this->id->setDbValue($row['id']);
 		$this->tipo->setDbValue($row['tipo']);
+		$this->id->setDbValue($row['id']);
 		$this->data->setDbValue($row['data']);
 		$this->time->setDbValue($row['time']);
 	}
@@ -579,8 +579,8 @@ class cclientes_add extends cclientes {
 		$this->LoadDefaultValues();
 		$row = array();
 		$row['id_cliente'] = $this->id_cliente->CurrentValue;
-		$row['id'] = $this->id->CurrentValue;
 		$row['tipo'] = $this->tipo->CurrentValue;
+		$row['id'] = $this->id->CurrentValue;
 		$row['data'] = $this->data->CurrentValue;
 		$row['time'] = $this->time->CurrentValue;
 		return $row;
@@ -592,8 +592,8 @@ class cclientes_add extends cclientes {
 			return;
 		$row = is_array($rs) ? $rs : $rs->fields;
 		$this->id_cliente->DbValue = $row['id_cliente'];
-		$this->id->DbValue = $row['id'];
 		$this->tipo->DbValue = $row['tipo'];
+		$this->id->DbValue = $row['id'];
 		$this->data->DbValue = $row['data'];
 		$this->time->DbValue = $row['time'];
 	}
@@ -631,16 +631,12 @@ class cclientes_add extends cclientes {
 
 		// Common render codes for all row types
 		// id_cliente
-		// id
 		// tipo
+		// id
 		// data
 		// time
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
-
-		// id
-		$this->id->ViewValue = $this->id->CurrentValue;
-		$this->id->ViewCustomAttributes = "";
 
 		// tipo
 		if (strval($this->tipo->CurrentValue) <> "") {
@@ -649,6 +645,10 @@ class cclientes_add extends cclientes {
 			$this->tipo->ViewValue = NULL;
 		}
 		$this->tipo->ViewCustomAttributes = "";
+
+		// id
+		$this->id->ViewValue = $this->id->CurrentValue;
+		$this->id->ViewCustomAttributes = "";
 
 		// data
 		$this->data->ViewValue = $this->data->CurrentValue;
@@ -660,15 +660,15 @@ class cclientes_add extends cclientes {
 		$this->time->ViewValue = ew_FormatDateTime($this->time->ViewValue, 4);
 		$this->time->ViewCustomAttributes = "";
 
-			// id
-			$this->id->LinkCustomAttributes = "";
-			$this->id->HrefValue = "";
-			$this->id->TooltipValue = "";
-
 			// tipo
 			$this->tipo->LinkCustomAttributes = "";
 			$this->tipo->HrefValue = "";
 			$this->tipo->TooltipValue = "";
+
+			// id
+			$this->id->LinkCustomAttributes = "";
+			$this->id->HrefValue = "";
+			$this->id->TooltipValue = "";
 
 			// data
 			$this->data->LinkCustomAttributes = "";
@@ -681,38 +681,28 @@ class cclientes_add extends cclientes {
 			$this->time->TooltipValue = "";
 		} elseif ($this->RowType == EW_ROWTYPE_ADD) { // Add row
 
+			// tipo
+			$this->tipo->EditAttrs["class"] = "form-control";
+			$this->tipo->EditCustomAttributes = "";
+			$this->tipo->EditValue = $this->tipo->Options(TRUE);
+
 			// id
 			$this->id->EditAttrs["class"] = "form-control";
 			$this->id->EditCustomAttributes = "";
 			$this->id->EditValue = ew_HtmlEncode($this->id->CurrentValue);
 			$this->id->PlaceHolder = ew_RemoveHtml($this->id->FldCaption());
 
-			// tipo
-			$this->tipo->EditAttrs["class"] = "form-control";
-			$this->tipo->EditCustomAttributes = "";
-			$this->tipo->EditValue = $this->tipo->Options(TRUE);
-
 			// data
-			$this->data->EditAttrs["class"] = "form-control";
-			$this->data->EditCustomAttributes = "";
-			$this->data->EditValue = ew_HtmlEncode(ew_FormatDateTime($this->data->CurrentValue, 8));
-			$this->data->PlaceHolder = ew_RemoveHtml($this->data->FldCaption());
-
 			// time
-			$this->time->EditAttrs["class"] = "form-control";
-			$this->time->EditCustomAttributes = "";
-			$this->time->EditValue = ew_HtmlEncode($this->time->CurrentValue);
-			$this->time->PlaceHolder = ew_RemoveHtml($this->time->FldCaption());
-
 			// Add refer script
-			// id
-
-			$this->id->LinkCustomAttributes = "";
-			$this->id->HrefValue = "";
-
 			// tipo
+
 			$this->tipo->LinkCustomAttributes = "";
 			$this->tipo->HrefValue = "";
+
+			// id
+			$this->id->LinkCustomAttributes = "";
+			$this->id->HrefValue = "";
 
 			// data
 			$this->data->LinkCustomAttributes = "";
@@ -746,12 +736,6 @@ class cclientes_add extends cclientes {
 		if (!ew_CheckInteger($this->id->FormValue)) {
 			ew_AddMessage($gsFormError, $this->id->FldErrMsg());
 		}
-		if (!ew_CheckDateDef($this->data->FormValue)) {
-			ew_AddMessage($gsFormError, $this->data->FldErrMsg());
-		}
-		if (!ew_CheckTime($this->time->FormValue)) {
-			ew_AddMessage($gsFormError, $this->time->FldErrMsg());
-		}
 
 		// Return validate result
 		$ValidateForm = ($gsFormError == "");
@@ -776,17 +760,19 @@ class cclientes_add extends cclientes {
 		}
 		$rsnew = array();
 
-		// id
-		$this->id->SetDbValueDef($rsnew, $this->id->CurrentValue, 0, FALSE);
-
 		// tipo
 		$this->tipo->SetDbValueDef($rsnew, $this->tipo->CurrentValue, NULL, strval($this->tipo->CurrentValue) == "");
 
+		// id
+		$this->id->SetDbValueDef($rsnew, $this->id->CurrentValue, 0, FALSE);
+
 		// data
-		$this->data->SetDbValueDef($rsnew, ew_UnFormatDateTime($this->data->CurrentValue, 0), NULL, FALSE);
+		$this->data->SetDbValueDef($rsnew, ew_CurrentDate(), NULL);
+		$rsnew['data'] = &$this->data->DbValue;
 
 		// time
-		$this->time->SetDbValueDef($rsnew, $this->time->CurrentValue, NULL, FALSE);
+		$this->time->SetDbValueDef($rsnew, ew_CurrentTime(), NULL);
+		$rsnew['time'] = &$this->time->DbValue;
 
 		// Call Row Inserting event
 		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
@@ -958,12 +944,6 @@ fclientesadd.Validate = function() {
 			elm = this.GetElements("x" + infix + "_id");
 			if (elm && !ew_CheckInteger(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($clientes->id->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_data");
-			if (elm && !ew_CheckDateDef(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($clientes->data->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_time");
-			if (elm && !ew_CheckTime(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($clientes->time->FldErrMsg()) ?>");
 
 			// Fire Form_CustomValidate event
 			if (!this.Form_CustomValidate(fobj))
@@ -1014,16 +994,6 @@ $clientes_add->ShowMessage();
 <input type="hidden" name="a_add" id="a_add" value="A">
 <input type="hidden" name="modal" value="<?php echo intval($clientes_add->IsModal) ?>">
 <div class="ewAddDiv"><!-- page* -->
-<?php if ($clientes->id->Visible) { // id ?>
-	<div id="r_id" class="form-group">
-		<label id="elh_clientes_id" for="x_id" class="<?php echo $clientes_add->LeftColumnClass ?>"><?php echo $clientes->id->FldCaption() ?><?php echo $Language->Phrase("FieldRequiredIndicator") ?></label>
-		<div class="<?php echo $clientes_add->RightColumnClass ?>"><div<?php echo $clientes->id->CellAttributes() ?>>
-<span id="el_clientes_id">
-<input type="text" data-table="clientes" data-field="x_id" name="x_id" id="x_id" size="30" placeholder="<?php echo ew_HtmlEncode($clientes->id->getPlaceHolder()) ?>" value="<?php echo $clientes->id->EditValue ?>"<?php echo $clientes->id->EditAttributes() ?>>
-</span>
-<?php echo $clientes->id->CustomMsg ?></div></div>
-	</div>
-<?php } ?>
 <?php if ($clientes->tipo->Visible) { // tipo ?>
 	<div id="r_tipo" class="form-group">
 		<label id="elh_clientes_tipo" for="x_tipo" class="<?php echo $clientes_add->LeftColumnClass ?>"><?php echo $clientes->tipo->FldCaption() ?></label>
@@ -1036,24 +1006,14 @@ $clientes_add->ShowMessage();
 <?php echo $clientes->tipo->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
-<?php if ($clientes->data->Visible) { // data ?>
-	<div id="r_data" class="form-group">
-		<label id="elh_clientes_data" for="x_data" class="<?php echo $clientes_add->LeftColumnClass ?>"><?php echo $clientes->data->FldCaption() ?></label>
-		<div class="<?php echo $clientes_add->RightColumnClass ?>"><div<?php echo $clientes->data->CellAttributes() ?>>
-<span id="el_clientes_data">
-<input type="text" data-table="clientes" data-field="x_data" name="x_data" id="x_data" placeholder="<?php echo ew_HtmlEncode($clientes->data->getPlaceHolder()) ?>" value="<?php echo $clientes->data->EditValue ?>"<?php echo $clientes->data->EditAttributes() ?>>
+<?php if ($clientes->id->Visible) { // id ?>
+	<div id="r_id" class="form-group">
+		<label id="elh_clientes_id" for="x_id" class="<?php echo $clientes_add->LeftColumnClass ?>"><?php echo $clientes->id->FldCaption() ?><?php echo $Language->Phrase("FieldRequiredIndicator") ?></label>
+		<div class="<?php echo $clientes_add->RightColumnClass ?>"><div<?php echo $clientes->id->CellAttributes() ?>>
+<span id="el_clientes_id">
+<input type="text" data-table="clientes" data-field="x_id" name="x_id" id="x_id" size="30" placeholder="<?php echo ew_HtmlEncode($clientes->id->getPlaceHolder()) ?>" value="<?php echo $clientes->id->EditValue ?>"<?php echo $clientes->id->EditAttributes() ?>>
 </span>
-<?php echo $clientes->data->CustomMsg ?></div></div>
-	</div>
-<?php } ?>
-<?php if ($clientes->time->Visible) { // time ?>
-	<div id="r_time" class="form-group">
-		<label id="elh_clientes_time" for="x_time" class="<?php echo $clientes_add->LeftColumnClass ?>"><?php echo $clientes->time->FldCaption() ?></label>
-		<div class="<?php echo $clientes_add->RightColumnClass ?>"><div<?php echo $clientes->time->CellAttributes() ?>>
-<span id="el_clientes_time">
-<input type="text" data-table="clientes" data-field="x_time" name="x_time" id="x_time" placeholder="<?php echo ew_HtmlEncode($clientes->time->getPlaceHolder()) ?>" value="<?php echo $clientes->time->EditValue ?>"<?php echo $clientes->time->EditAttributes() ?>>
-</span>
-<?php echo $clientes->time->CustomMsg ?></div></div>
+<?php echo $clientes->id->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
 </div><!-- /page* -->

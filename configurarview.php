@@ -444,6 +444,9 @@ class cconfigurar_view extends cconfigurar {
 		// Check modal
 		if ($this->IsModal)
 			$gbSkipHeaderFooter = TRUE;
+
+		// Load current record
+		$bLoadCurrentRecord = FALSE;
 		$sReturnUrl = "";
 		$bMatchRecord = FALSE;
 		if ($this->IsPageRequest()) { // Validate request

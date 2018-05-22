@@ -489,10 +489,7 @@ class cpedidos_add extends cpedidos {
 				if ($this->AddRow($this->OldRecordset)) { // Add successful
 					if ($this->getSuccessMessage() == "")
 						$this->setSuccessMessage($Language->Phrase("AddSuccess")); // Set up success message
-					if ($this->getCurrentDetailTable() <> "") // Master/detail add
-						$sReturnUrl = $this->GetDetailUrl();
-					else
-						$sReturnUrl = $this->getReturnUrl();
+					$sReturnUrl = "pedidoslist.php";
 					if (ew_GetPageName($sReturnUrl) == "pedidoslist.php")
 						$sReturnUrl = $this->AddMasterUrl($sReturnUrl); // List page, return to List page with correct master key if necessary
 					elseif (ew_GetPageName($sReturnUrl) == "pedidosview.php")
@@ -866,6 +863,11 @@ class cpedidos_add extends cpedidos {
 		$this->id_representante->ViewCustomAttributes = "";
 
 		// comissao_representante
+		if (strval($this->comissao_representante->CurrentValue) <> "") {
+			$this->comissao_representante->ViewValue = $this->comissao_representante->OptionCaption($this->comissao_representante->CurrentValue);
+		} else {
+			$this->comissao_representante->ViewValue = NULL;
+		}
 		$this->comissao_representante->ViewCustomAttributes = "";
 
 		// id_cliente
@@ -940,18 +942,9 @@ class cpedidos_add extends cpedidos {
 			$this->numero->PlaceHolder = ew_RemoveHtml($this->numero->FldCaption());
 
 			// fecha_data
-			$this->fecha_data->EditAttrs["class"] = "form-control";
-			$this->fecha_data->EditCustomAttributes = "";
-			$this->fecha_data->EditValue = ew_HtmlEncode(ew_FormatDateTime($this->fecha_data->CurrentValue, 8));
-			$this->fecha_data->PlaceHolder = ew_RemoveHtml($this->fecha_data->FldCaption());
-
 			// fecha_hora
-			$this->fecha_hora->EditAttrs["class"] = "form-control";
-			$this->fecha_hora->EditCustomAttributes = "";
-			$this->fecha_hora->EditValue = ew_HtmlEncode($this->fecha_hora->CurrentValue);
-			$this->fecha_hora->PlaceHolder = ew_RemoveHtml($this->fecha_hora->FldCaption());
-
 			// id_fornecedor
+
 			$this->id_fornecedor->EditAttrs["class"] = "form-control";
 			$this->id_fornecedor->EditCustomAttributes = "";
 			if (trim(strval($this->id_fornecedor->CurrentValue)) == "") {
@@ -1036,6 +1029,7 @@ class cpedidos_add extends cpedidos {
 			// comissao_representante
 			$this->comissao_representante->EditAttrs["class"] = "form-control";
 			$this->comissao_representante->EditCustomAttributes = "";
+			$this->comissao_representante->EditValue = $this->comissao_representante->Options(TRUE);
 
 			// id_cliente
 			$this->id_cliente->EditAttrs["class"] = "form-control";
@@ -1113,12 +1107,6 @@ class cpedidos_add extends cpedidos {
 		if (!ew_CheckInteger($this->numero->FormValue)) {
 			ew_AddMessage($gsFormError, $this->numero->FldErrMsg());
 		}
-		if (!ew_CheckDateDef($this->fecha_data->FormValue)) {
-			ew_AddMessage($gsFormError, $this->fecha_data->FldErrMsg());
-		}
-		if (!ew_CheckTime($this->fecha_hora->FormValue)) {
-			ew_AddMessage($gsFormError, $this->fecha_hora->FldErrMsg());
-		}
 		if (!ew_CheckInteger($this->id_cliente->FormValue)) {
 			ew_AddMessage($gsFormError, $this->id_cliente->FldErrMsg());
 		}
@@ -1164,10 +1152,12 @@ class cpedidos_add extends cpedidos {
 		$this->numero->SetDbValueDef($rsnew, $this->numero->CurrentValue, NULL, FALSE);
 
 		// fecha_data
-		$this->fecha_data->SetDbValueDef($rsnew, ew_UnFormatDateTime($this->fecha_data->CurrentValue, 0), NULL, FALSE);
+		$this->fecha_data->SetDbValueDef($rsnew, ew_CurrentDate(), NULL);
+		$rsnew['fecha_data'] = &$this->fecha_data->DbValue;
 
 		// fecha_hora
-		$this->fecha_hora->SetDbValueDef($rsnew, $this->fecha_hora->CurrentValue, NULL, FALSE);
+		$this->fecha_hora->SetDbValueDef($rsnew, ew_CurrentTime(), NULL);
+		$rsnew['fecha_hora'] = &$this->fecha_hora->DbValue;
 
 		// id_fornecedor
 		$this->id_fornecedor->SetDbValueDef($rsnew, $this->id_fornecedor->CurrentValue, NULL, FALSE);
@@ -1462,12 +1452,6 @@ fpedidosadd.Validate = function() {
 			elm = this.GetElements("x" + infix + "_numero");
 			if (elm && !ew_CheckInteger(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($pedidos->numero->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_fecha_data");
-			if (elm && !ew_CheckDateDef(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($pedidos->fecha_data->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_fecha_hora");
-			if (elm && !ew_CheckTime(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($pedidos->fecha_hora->FldErrMsg()) ?>");
 			elm = this.GetElements("x" + infix + "_id_cliente");
 			if (elm && !ew_CheckInteger(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($pedidos->id_cliente->FldErrMsg()) ?>");
@@ -1510,6 +1494,8 @@ fpedidosadd.Lists["x_id_prazos"] = {"LinkField":"x_id_prazos","Ajax":true,"AutoF
 fpedidosadd.Lists["x_id_prazos"].Data = "<?php echo $pedidos_add->id_prazos->LookupFilterQuery(FALSE, "add") ?>";
 fpedidosadd.Lists["x_id_representante"] = {"LinkField":"x_id_representantes","Ajax":true,"AutoFill":false,"DisplayFields":["x_id_pessoa","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"representantes"};
 fpedidosadd.Lists["x_id_representante"].Data = "<?php echo $pedidos_add->id_representante->LookupFilterQuery(FALSE, "add") ?>";
+fpedidosadd.Lists["x_comissao_representante"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
+fpedidosadd.Lists["x_comissao_representante"].Options = <?php echo json_encode($pedidos_add->comissao_representante->Options()) ?>;
 
 // Form object for search
 </script>
@@ -1549,26 +1535,6 @@ $pedidos_add->ShowMessage();
 <input type="text" data-table="pedidos" data-field="x_numero" name="x_numero" id="x_numero" size="30" placeholder="<?php echo ew_HtmlEncode($pedidos->numero->getPlaceHolder()) ?>" value="<?php echo $pedidos->numero->EditValue ?>"<?php echo $pedidos->numero->EditAttributes() ?>>
 </span>
 <?php echo $pedidos->numero->CustomMsg ?></div></div>
-	</div>
-<?php } ?>
-<?php if ($pedidos->fecha_data->Visible) { // fecha_data ?>
-	<div id="r_fecha_data" class="form-group">
-		<label id="elh_pedidos_fecha_data" for="x_fecha_data" class="<?php echo $pedidos_add->LeftColumnClass ?>"><?php echo $pedidos->fecha_data->FldCaption() ?></label>
-		<div class="<?php echo $pedidos_add->RightColumnClass ?>"><div<?php echo $pedidos->fecha_data->CellAttributes() ?>>
-<span id="el_pedidos_fecha_data">
-<input type="text" data-table="pedidos" data-field="x_fecha_data" name="x_fecha_data" id="x_fecha_data" placeholder="<?php echo ew_HtmlEncode($pedidos->fecha_data->getPlaceHolder()) ?>" value="<?php echo $pedidos->fecha_data->EditValue ?>"<?php echo $pedidos->fecha_data->EditAttributes() ?>>
-</span>
-<?php echo $pedidos->fecha_data->CustomMsg ?></div></div>
-	</div>
-<?php } ?>
-<?php if ($pedidos->fecha_hora->Visible) { // fecha_hora ?>
-	<div id="r_fecha_hora" class="form-group">
-		<label id="elh_pedidos_fecha_hora" for="x_fecha_hora" class="<?php echo $pedidos_add->LeftColumnClass ?>"><?php echo $pedidos->fecha_hora->FldCaption() ?></label>
-		<div class="<?php echo $pedidos_add->RightColumnClass ?>"><div<?php echo $pedidos->fecha_hora->CellAttributes() ?>>
-<span id="el_pedidos_fecha_hora">
-<input type="text" data-table="pedidos" data-field="x_fecha_hora" name="x_fecha_hora" id="x_fecha_hora" placeholder="<?php echo ew_HtmlEncode($pedidos->fecha_hora->getPlaceHolder()) ?>" value="<?php echo $pedidos->fecha_hora->EditValue ?>"<?php echo $pedidos->fecha_hora->EditAttributes() ?>>
-</span>
-<?php echo $pedidos->fecha_hora->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
 <?php if ($pedidos->id_fornecedor->Visible) { // id_fornecedor ?>

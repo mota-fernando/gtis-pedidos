@@ -927,18 +927,9 @@ class cprodutos_add extends cprodutos {
 			$this->peso_produto->PlaceHolder = ew_RemoveHtml($this->peso_produto->FldCaption());
 
 			// data_adicionado
-			$this->data_adicionado->EditAttrs["class"] = "form-control";
-			$this->data_adicionado->EditCustomAttributes = "";
-			$this->data_adicionado->EditValue = ew_HtmlEncode(ew_FormatDateTime($this->data_adicionado->CurrentValue, 8));
-			$this->data_adicionado->PlaceHolder = ew_RemoveHtml($this->data_adicionado->FldCaption());
-
 			// hora_adicionado
-			$this->hora_adicionado->EditAttrs["class"] = "form-control";
-			$this->hora_adicionado->EditCustomAttributes = "";
-			$this->hora_adicionado->EditValue = ew_HtmlEncode($this->hora_adicionado->CurrentValue);
-			$this->hora_adicionado->PlaceHolder = ew_RemoveHtml($this->hora_adicionado->FldCaption());
-
 			// preco_produto
+
 			$this->preco_produto->EditAttrs["class"] = "form-control";
 			$this->preco_produto->EditCustomAttributes = "";
 			$this->preco_produto->EditValue = ew_HtmlEncode($this->preco_produto->CurrentValue);
@@ -1031,12 +1022,6 @@ class cprodutos_add extends cprodutos {
 		if (!ew_CheckInteger($this->status_produto->FormValue)) {
 			ew_AddMessage($gsFormError, $this->status_produto->FldErrMsg());
 		}
-		if (!ew_CheckDateDef($this->data_adicionado->FormValue)) {
-			ew_AddMessage($gsFormError, $this->data_adicionado->FldErrMsg());
-		}
-		if (!ew_CheckTime($this->hora_adicionado->FormValue)) {
-			ew_AddMessage($gsFormError, $this->hora_adicionado->FldErrMsg());
-		}
 		if (!ew_CheckNumber($this->preco_produto->FormValue)) {
 			ew_AddMessage($gsFormError, $this->preco_produto->FldErrMsg());
 		}
@@ -1089,10 +1074,12 @@ class cprodutos_add extends cprodutos {
 		$this->peso_produto->SetDbValueDef($rsnew, $this->peso_produto->CurrentValue, NULL, FALSE);
 
 		// data_adicionado
-		$this->data_adicionado->SetDbValueDef($rsnew, ew_UnFormatDateTime($this->data_adicionado->CurrentValue, 0), NULL, FALSE);
+		$this->data_adicionado->SetDbValueDef($rsnew, ew_CurrentDate(), NULL);
+		$rsnew['data_adicionado'] = &$this->data_adicionado->DbValue;
 
 		// hora_adicionado
-		$this->hora_adicionado->SetDbValueDef($rsnew, $this->hora_adicionado->CurrentValue, NULL, FALSE);
+		$this->hora_adicionado->SetDbValueDef($rsnew, ew_CurrentTime(), NULL);
+		$rsnew['hora_adicionado'] = &$this->hora_adicionado->DbValue;
 
 		// preco_produto
 		$this->preco_produto->SetDbValueDef($rsnew, $this->preco_produto->CurrentValue, NULL, FALSE);
@@ -1285,12 +1272,6 @@ fprodutosadd.Validate = function() {
 			elm = this.GetElements("x" + infix + "_status_produto");
 			if (elm && !ew_CheckInteger(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($produtos->status_produto->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_data_adicionado");
-			if (elm && !ew_CheckDateDef(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($produtos->data_adicionado->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_hora_adicionado");
-			if (elm && !ew_CheckTime(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($produtos->hora_adicionado->FldErrMsg()) ?>");
 			elm = this.GetElements("x" + infix + "_preco_produto");
 			if (elm && !ew_CheckNumber(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($produtos->preco_produto->FldErrMsg()) ?>");
@@ -1418,26 +1399,6 @@ $produtos_add->ShowMessage();
 <input type="text" data-table="produtos" data-field="x_peso_produto" name="x_peso_produto" id="x_peso_produto" size="30" maxlength="20" placeholder="<?php echo ew_HtmlEncode($produtos->peso_produto->getPlaceHolder()) ?>" value="<?php echo $produtos->peso_produto->EditValue ?>"<?php echo $produtos->peso_produto->EditAttributes() ?>>
 </span>
 <?php echo $produtos->peso_produto->CustomMsg ?></div></div>
-	</div>
-<?php } ?>
-<?php if ($produtos->data_adicionado->Visible) { // data_adicionado ?>
-	<div id="r_data_adicionado" class="form-group">
-		<label id="elh_produtos_data_adicionado" for="x_data_adicionado" class="<?php echo $produtos_add->LeftColumnClass ?>"><?php echo $produtos->data_adicionado->FldCaption() ?></label>
-		<div class="<?php echo $produtos_add->RightColumnClass ?>"><div<?php echo $produtos->data_adicionado->CellAttributes() ?>>
-<span id="el_produtos_data_adicionado">
-<input type="text" data-table="produtos" data-field="x_data_adicionado" name="x_data_adicionado" id="x_data_adicionado" placeholder="<?php echo ew_HtmlEncode($produtos->data_adicionado->getPlaceHolder()) ?>" value="<?php echo $produtos->data_adicionado->EditValue ?>"<?php echo $produtos->data_adicionado->EditAttributes() ?>>
-</span>
-<?php echo $produtos->data_adicionado->CustomMsg ?></div></div>
-	</div>
-<?php } ?>
-<?php if ($produtos->hora_adicionado->Visible) { // hora_adicionado ?>
-	<div id="r_hora_adicionado" class="form-group">
-		<label id="elh_produtos_hora_adicionado" for="x_hora_adicionado" class="<?php echo $produtos_add->LeftColumnClass ?>"><?php echo $produtos->hora_adicionado->FldCaption() ?></label>
-		<div class="<?php echo $produtos_add->RightColumnClass ?>"><div<?php echo $produtos->hora_adicionado->CellAttributes() ?>>
-<span id="el_produtos_hora_adicionado">
-<input type="text" data-table="produtos" data-field="x_hora_adicionado" name="x_hora_adicionado" id="x_hora_adicionado" placeholder="<?php echo ew_HtmlEncode($produtos->hora_adicionado->getPlaceHolder()) ?>" value="<?php echo $produtos->hora_adicionado->EditValue ?>"<?php echo $produtos->hora_adicionado->EditAttributes() ?>>
-</span>
-<?php echo $produtos->hora_adicionado->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
 <?php if ($produtos->preco_produto->Visible) { // preco_produto ?>

@@ -14,13 +14,13 @@ class cempresas extends cTable {
 	var $direcao;
 	var $_email;
 	var $id_endereco;
+	var $endereco_numero;
 	var $nome_fantasia;
 	var $cnpj;
 	var $ie;
 	var $fonecedor;
 	var $celular;
 	var $whatsapp;
-	var $endereco_numero;
 
 	//
 	// Table class constructor
@@ -37,7 +37,7 @@ class cempresas extends cTable {
 		// Update Table
 		$this->UpdateTable = "`empresas`";
 		$this->DBID = 'DB';
-		$this->ExportAll = TRUE;
+		$this->ExportAll = FALSE;
 		$this->ExportPageBreakCount = 0; // Page break per every n record (PDF only)
 		$this->ExportPageOrientation = "portrait"; // Page orientation (PDF only)
 		$this->ExportPageSize = "a4"; // Page size (PDF only)
@@ -93,6 +93,11 @@ class cempresas extends cTable {
 		$this->id_endereco->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['id_endereco'] = &$this->id_endereco;
 
+		// endereco_numero
+		$this->endereco_numero = new cField('empresas', 'empresas', 'x_endereco_numero', 'endereco_numero', '`endereco_numero`', '`endereco_numero`', 200, -1, FALSE, '`endereco_numero`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->endereco_numero->Sortable = TRUE; // Allow sort
+		$this->fields['endereco_numero'] = &$this->endereco_numero;
+
 		// nome_fantasia
 		$this->nome_fantasia = new cField('empresas', 'empresas', 'x_nome_fantasia', 'nome_fantasia', '`nome_fantasia`', '`nome_fantasia`', 200, -1, FALSE, '`nome_fantasia`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
 		$this->nome_fantasia->Sortable = TRUE; // Allow sort
@@ -127,11 +132,6 @@ class cempresas extends cTable {
 		$this->whatsapp->Sortable = TRUE; // Allow sort
 		$this->whatsapp->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['whatsapp'] = &$this->whatsapp;
-
-		// endereco_numero
-		$this->endereco_numero = new cField('empresas', 'empresas', 'x_endereco_numero', 'endereco_numero', '`endereco_numero`', '`endereco_numero`', 200, -1, FALSE, '`endereco_numero`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
-		$this->endereco_numero->Sortable = TRUE; // Allow sort
-		$this->fields['endereco_numero'] = &$this->endereco_numero;
 	}
 
 	// Field Visibility
@@ -666,13 +666,13 @@ class cempresas extends cTable {
 		$this->direcao->setDbValue($rs->fields('direcao'));
 		$this->_email->setDbValue($rs->fields('email'));
 		$this->id_endereco->setDbValue($rs->fields('id_endereco'));
+		$this->endereco_numero->setDbValue($rs->fields('endereco_numero'));
 		$this->nome_fantasia->setDbValue($rs->fields('nome_fantasia'));
 		$this->cnpj->setDbValue($rs->fields('cnpj'));
 		$this->ie->setDbValue($rs->fields('ie'));
 		$this->fonecedor->setDbValue($rs->fields('fonecedor'));
 		$this->celular->setDbValue($rs->fields('celular'));
 		$this->whatsapp->setDbValue($rs->fields('whatsapp'));
-		$this->endereco_numero->setDbValue($rs->fields('endereco_numero'));
 	}
 
 	// Render list row values
@@ -690,13 +690,13 @@ class cempresas extends cTable {
 		// direcao
 		// email
 		// id_endereco
+		// endereco_numero
 		// nome_fantasia
 		// cnpj
 		// ie
 		// fonecedor
 		// celular
 		// whatsapp
-		// endereco_numero
 		// id_perfil
 
 		$this->id_perfil->ViewValue = $this->id_perfil->CurrentValue;
@@ -748,6 +748,10 @@ class cempresas extends cTable {
 		}
 		$this->id_endereco->ViewCustomAttributes = "";
 
+		// endereco_numero
+		$this->endereco_numero->ViewValue = $this->endereco_numero->CurrentValue;
+		$this->endereco_numero->ViewCustomAttributes = "";
+
 		// nome_fantasia
 		$this->nome_fantasia->ViewValue = $this->nome_fantasia->CurrentValue;
 		$this->nome_fantasia->ViewCustomAttributes = "";
@@ -771,10 +775,6 @@ class cempresas extends cTable {
 		// whatsapp
 		$this->whatsapp->ViewValue = $this->whatsapp->CurrentValue;
 		$this->whatsapp->ViewCustomAttributes = "";
-
-		// endereco_numero
-		$this->endereco_numero->ViewValue = $this->endereco_numero->CurrentValue;
-		$this->endereco_numero->ViewCustomAttributes = "";
 
 		// id_perfil
 		$this->id_perfil->LinkCustomAttributes = "";
@@ -811,6 +811,11 @@ class cempresas extends cTable {
 		$this->id_endereco->HrefValue = "";
 		$this->id_endereco->TooltipValue = "";
 
+		// endereco_numero
+		$this->endereco_numero->LinkCustomAttributes = "";
+		$this->endereco_numero->HrefValue = "";
+		$this->endereco_numero->TooltipValue = "";
+
 		// nome_fantasia
 		$this->nome_fantasia->LinkCustomAttributes = "";
 		$this->nome_fantasia->HrefValue = "";
@@ -840,11 +845,6 @@ class cempresas extends cTable {
 		$this->whatsapp->LinkCustomAttributes = "";
 		$this->whatsapp->HrefValue = "";
 		$this->whatsapp->TooltipValue = "";
-
-		// endereco_numero
-		$this->endereco_numero->LinkCustomAttributes = "";
-		$this->endereco_numero->HrefValue = "";
-		$this->endereco_numero->TooltipValue = "";
 
 		// Call Row Rendered event
 		$this->Row_Rendered();
@@ -900,6 +900,12 @@ class cempresas extends cTable {
 		$this->id_endereco->EditAttrs["class"] = "form-control";
 		$this->id_endereco->EditCustomAttributes = "";
 
+		// endereco_numero
+		$this->endereco_numero->EditAttrs["class"] = "form-control";
+		$this->endereco_numero->EditCustomAttributes = "";
+		$this->endereco_numero->EditValue = $this->endereco_numero->CurrentValue;
+		$this->endereco_numero->PlaceHolder = ew_RemoveHtml($this->endereco_numero->FldCaption());
+
 		// nome_fantasia
 		$this->nome_fantasia->EditAttrs["class"] = "form-control";
 		$this->nome_fantasia->EditCustomAttributes = "";
@@ -936,12 +942,6 @@ class cempresas extends cTable {
 		$this->whatsapp->EditValue = $this->whatsapp->CurrentValue;
 		$this->whatsapp->PlaceHolder = ew_RemoveHtml($this->whatsapp->FldCaption());
 
-		// endereco_numero
-		$this->endereco_numero->EditAttrs["class"] = "form-control";
-		$this->endereco_numero->EditCustomAttributes = "";
-		$this->endereco_numero->EditValue = $this->endereco_numero->CurrentValue;
-		$this->endereco_numero->PlaceHolder = ew_RemoveHtml($this->endereco_numero->FldCaption());
-
 		// Call Row Rendered event
 		$this->Row_Rendered();
 	}
@@ -975,13 +975,13 @@ class cempresas extends cTable {
 					if ($this->direcao->Exportable) $Doc->ExportCaption($this->direcao);
 					if ($this->_email->Exportable) $Doc->ExportCaption($this->_email);
 					if ($this->id_endereco->Exportable) $Doc->ExportCaption($this->id_endereco);
+					if ($this->endereco_numero->Exportable) $Doc->ExportCaption($this->endereco_numero);
 					if ($this->nome_fantasia->Exportable) $Doc->ExportCaption($this->nome_fantasia);
 					if ($this->cnpj->Exportable) $Doc->ExportCaption($this->cnpj);
 					if ($this->ie->Exportable) $Doc->ExportCaption($this->ie);
 					if ($this->fonecedor->Exportable) $Doc->ExportCaption($this->fonecedor);
 					if ($this->celular->Exportable) $Doc->ExportCaption($this->celular);
 					if ($this->whatsapp->Exportable) $Doc->ExportCaption($this->whatsapp);
-					if ($this->endereco_numero->Exportable) $Doc->ExportCaption($this->endereco_numero);
 				} else {
 					if ($this->id_perfil->Exportable) $Doc->ExportCaption($this->id_perfil);
 					if ($this->razao_social->Exportable) $Doc->ExportCaption($this->razao_social);
@@ -990,13 +990,13 @@ class cempresas extends cTable {
 					if ($this->direcao->Exportable) $Doc->ExportCaption($this->direcao);
 					if ($this->_email->Exportable) $Doc->ExportCaption($this->_email);
 					if ($this->id_endereco->Exportable) $Doc->ExportCaption($this->id_endereco);
+					if ($this->endereco_numero->Exportable) $Doc->ExportCaption($this->endereco_numero);
 					if ($this->nome_fantasia->Exportable) $Doc->ExportCaption($this->nome_fantasia);
 					if ($this->cnpj->Exportable) $Doc->ExportCaption($this->cnpj);
 					if ($this->ie->Exportable) $Doc->ExportCaption($this->ie);
 					if ($this->fonecedor->Exportable) $Doc->ExportCaption($this->fonecedor);
 					if ($this->celular->Exportable) $Doc->ExportCaption($this->celular);
 					if ($this->whatsapp->Exportable) $Doc->ExportCaption($this->whatsapp);
-					if ($this->endereco_numero->Exportable) $Doc->ExportCaption($this->endereco_numero);
 				}
 				$Doc->EndExportRow();
 			}
@@ -1034,13 +1034,13 @@ class cempresas extends cTable {
 						if ($this->direcao->Exportable) $Doc->ExportField($this->direcao);
 						if ($this->_email->Exportable) $Doc->ExportField($this->_email);
 						if ($this->id_endereco->Exportable) $Doc->ExportField($this->id_endereco);
+						if ($this->endereco_numero->Exportable) $Doc->ExportField($this->endereco_numero);
 						if ($this->nome_fantasia->Exportable) $Doc->ExportField($this->nome_fantasia);
 						if ($this->cnpj->Exportable) $Doc->ExportField($this->cnpj);
 						if ($this->ie->Exportable) $Doc->ExportField($this->ie);
 						if ($this->fonecedor->Exportable) $Doc->ExportField($this->fonecedor);
 						if ($this->celular->Exportable) $Doc->ExportField($this->celular);
 						if ($this->whatsapp->Exportable) $Doc->ExportField($this->whatsapp);
-						if ($this->endereco_numero->Exportable) $Doc->ExportField($this->endereco_numero);
 					} else {
 						if ($this->id_perfil->Exportable) $Doc->ExportField($this->id_perfil);
 						if ($this->razao_social->Exportable) $Doc->ExportField($this->razao_social);
@@ -1049,13 +1049,13 @@ class cempresas extends cTable {
 						if ($this->direcao->Exportable) $Doc->ExportField($this->direcao);
 						if ($this->_email->Exportable) $Doc->ExportField($this->_email);
 						if ($this->id_endereco->Exportable) $Doc->ExportField($this->id_endereco);
+						if ($this->endereco_numero->Exportable) $Doc->ExportField($this->endereco_numero);
 						if ($this->nome_fantasia->Exportable) $Doc->ExportField($this->nome_fantasia);
 						if ($this->cnpj->Exportable) $Doc->ExportField($this->cnpj);
 						if ($this->ie->Exportable) $Doc->ExportField($this->ie);
 						if ($this->fonecedor->Exportable) $Doc->ExportField($this->fonecedor);
 						if ($this->celular->Exportable) $Doc->ExportField($this->celular);
 						if ($this->whatsapp->Exportable) $Doc->ExportField($this->whatsapp);
-						if ($this->endereco_numero->Exportable) $Doc->ExportField($this->endereco_numero);
 					}
 					$Doc->EndExportRow($RowCnt);
 				}

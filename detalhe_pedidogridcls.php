@@ -1058,10 +1058,7 @@ class cdetalhe_pedido_grid extends cdetalhe_pedido {
 			$item = &$option->Add("add");
 			$addcaption = ew_HtmlTitle($Language->Phrase("AddLink"));
 			$this->AddUrl = $this->GetAddUrl();
-			if (ew_IsMobile())
-				$item->Body = "<a class=\"ewAddEdit ewAdd\" title=\"" . $addcaption . "\" data-caption=\"" . $addcaption . "\" href=\"" . ew_HtmlEncode($this->AddUrl) . "\">" . $Language->Phrase("AddLink") . "</a>";
-			else
-				$item->Body = "<a class=\"ewAddEdit ewAdd\" title=\"" . $addcaption . "\" data-table=\"detalhe_pedido\" data-caption=\"" . $addcaption . "\" href=\"javascript:void(0);\" onclick=\"ew_ModalDialogShow({lnk:this,btn:'AddBtn',url:'" . ew_HtmlEncode($this->AddUrl) . "'});\">" . $Language->Phrase("AddLink") . "</a>";
+			$item->Body = "<a class=\"ewAddEdit ewAdd\" title=\"" . $addcaption . "\" data-caption=\"" . $addcaption . "\" href=\"" . ew_HtmlEncode($this->AddUrl) . "\">" . $Language->Phrase("AddLink") . "</a>";
 			$item->Visible = ($this->AddUrl <> "");
 		}
 	}

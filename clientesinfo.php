@@ -8,8 +8,8 @@ $clientes = NULL;
 //
 class cclientes extends cTable {
 	var $id_cliente;
-	var $id;
 	var $tipo;
+	var $id;
 	var $data;
 	var $time;
 
@@ -28,7 +28,7 @@ class cclientes extends cTable {
 		// Update Table
 		$this->UpdateTable = "`clientes`";
 		$this->DBID = 'DB';
-		$this->ExportAll = TRUE;
+		$this->ExportAll = FALSE;
 		$this->ExportPageBreakCount = 0; // Page break per every n record (PDF only)
 		$this->ExportPageOrientation = "portrait"; // Page orientation (PDF only)
 		$this->ExportPageSize = "a4"; // Page size (PDF only)
@@ -51,19 +51,19 @@ class cclientes extends cTable {
 		$this->id_cliente->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['id_cliente'] = &$this->id_cliente;
 
-		// id
-		$this->id = new cField('clientes', 'clientes', 'x_id', 'id', '`id`', '`id`', 3, -1, FALSE, '`id`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
-		$this->id->Sortable = FALSE; // Allow sort
-		$this->id->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
-		$this->fields['id'] = &$this->id;
-
 		// tipo
 		$this->tipo = new cField('clientes', 'clientes', 'x_tipo', 'tipo', '`tipo`', '`tipo`', 200, -1, FALSE, '`tipo`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'SELECT');
-		$this->tipo->Sortable = FALSE; // Allow sort
+		$this->tipo->Sortable = TRUE; // Allow sort
 		$this->tipo->UsePleaseSelect = TRUE; // Use PleaseSelect by default
 		$this->tipo->PleaseSelectText = $Language->Phrase("PleaseSelect"); // PleaseSelect text
 		$this->tipo->OptionCount = 2;
 		$this->fields['tipo'] = &$this->tipo;
+
+		// id
+		$this->id = new cField('clientes', 'clientes', 'x_id', 'id', '`id`', '`id`', 3, -1, FALSE, '`id`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->id->Sortable = TRUE; // Allow sort
+		$this->id->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
+		$this->fields['id'] = &$this->id;
 
 		// data
 		$this->data = new cField('clientes', 'clientes', 'x_data', 'data', '`data`', ew_CastDateFieldForLike('`data`', 0, "DB"), 133, 0, FALSE, '`data`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
@@ -604,8 +604,8 @@ class cclientes extends cTable {
 	// Load row values from recordset
 	function LoadListRowValues(&$rs) {
 		$this->id_cliente->setDbValue($rs->fields('id_cliente'));
-		$this->id->setDbValue($rs->fields('id'));
 		$this->tipo->setDbValue($rs->fields('tipo'));
+		$this->id->setDbValue($rs->fields('id'));
 		$this->data->setDbValue($rs->fields('data'));
 		$this->time->setDbValue($rs->fields('time'));
 	}
@@ -622,12 +622,12 @@ class cclientes extends cTable {
 
 		$this->id_cliente->CellCssStyle = "white-space: nowrap;";
 
+		// tipo
 		// id
+
 		$this->id->CellCssStyle = "white-space: nowrap;";
 
-		// tipo
 		// data
-
 		$this->data->CellCssStyle = "white-space: nowrap;";
 
 		// time
@@ -637,10 +637,6 @@ class cclientes extends cTable {
 		$this->id_cliente->ViewValue = $this->id_cliente->CurrentValue;
 		$this->id_cliente->ViewCustomAttributes = "";
 
-		// id
-		$this->id->ViewValue = $this->id->CurrentValue;
-		$this->id->ViewCustomAttributes = "";
-
 		// tipo
 		if (strval($this->tipo->CurrentValue) <> "") {
 			$this->tipo->ViewValue = $this->tipo->OptionCaption($this->tipo->CurrentValue);
@@ -648,6 +644,10 @@ class cclientes extends cTable {
 			$this->tipo->ViewValue = NULL;
 		}
 		$this->tipo->ViewCustomAttributes = "";
+
+		// id
+		$this->id->ViewValue = $this->id->CurrentValue;
+		$this->id->ViewCustomAttributes = "";
 
 		// data
 		$this->data->ViewValue = $this->data->CurrentValue;
@@ -664,15 +664,15 @@ class cclientes extends cTable {
 		$this->id_cliente->HrefValue = "";
 		$this->id_cliente->TooltipValue = "";
 
-		// id
-		$this->id->LinkCustomAttributes = "";
-		$this->id->HrefValue = "";
-		$this->id->TooltipValue = "";
-
 		// tipo
 		$this->tipo->LinkCustomAttributes = "";
 		$this->tipo->HrefValue = "";
 		$this->tipo->TooltipValue = "";
+
+		// id
+		$this->id->LinkCustomAttributes = "";
+		$this->id->HrefValue = "";
+		$this->id->TooltipValue = "";
 
 		// data
 		$this->data->LinkCustomAttributes = "";
@@ -704,30 +704,21 @@ class cclientes extends cTable {
 		$this->id_cliente->EditValue = $this->id_cliente->CurrentValue;
 		$this->id_cliente->ViewCustomAttributes = "";
 
+		// tipo
+		$this->tipo->EditAttrs["class"] = "form-control";
+		$this->tipo->EditCustomAttributes = "";
+		$this->tipo->EditValue = $this->tipo->Options(TRUE);
+
 		// id
 		$this->id->EditAttrs["class"] = "form-control";
 		$this->id->EditCustomAttributes = "";
 		$this->id->EditValue = $this->id->CurrentValue;
 		$this->id->PlaceHolder = ew_RemoveHtml($this->id->FldCaption());
 
-		// tipo
-		$this->tipo->EditAttrs["class"] = "form-control";
-		$this->tipo->EditCustomAttributes = "";
-		$this->tipo->EditValue = $this->tipo->Options(TRUE);
-
 		// data
-		$this->data->EditAttrs["class"] = "form-control";
-		$this->data->EditCustomAttributes = "";
-		$this->data->EditValue = ew_FormatDateTime($this->data->CurrentValue, 8);
-		$this->data->PlaceHolder = ew_RemoveHtml($this->data->FldCaption());
-
 		// time
-		$this->time->EditAttrs["class"] = "form-control";
-		$this->time->EditCustomAttributes = "";
-		$this->time->EditValue = $this->time->CurrentValue;
-		$this->time->PlaceHolder = ew_RemoveHtml($this->time->FldCaption());
-
 		// Call Row Rendered event
+
 		$this->Row_Rendered();
 	}
 
@@ -754,7 +745,11 @@ class cclientes extends cTable {
 			if ($Doc->Horizontal) { // Horizontal format, write header
 				$Doc->BeginExportRow();
 				if ($ExportPageType == "view") {
+					if ($this->tipo->Exportable) $Doc->ExportCaption($this->tipo);
+					if ($this->id->Exportable) $Doc->ExportCaption($this->id);
 				} else {
+					if ($this->tipo->Exportable) $Doc->ExportCaption($this->tipo);
+					if ($this->id->Exportable) $Doc->ExportCaption($this->id);
 				}
 				$Doc->EndExportRow();
 			}
@@ -786,7 +781,11 @@ class cclientes extends cTable {
 				if (!$Doc->ExportCustom) {
 					$Doc->BeginExportRow($RowCnt); // Allow CSS styles if enabled
 					if ($ExportPageType == "view") {
+						if ($this->tipo->Exportable) $Doc->ExportField($this->tipo);
+						if ($this->id->Exportable) $Doc->ExportField($this->id);
 					} else {
+						if ($this->tipo->Exportable) $Doc->ExportField($this->tipo);
+						if ($this->id->Exportable) $Doc->ExportField($this->id);
 					}
 					$Doc->EndExportRow($RowCnt);
 				}

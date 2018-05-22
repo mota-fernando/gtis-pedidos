@@ -37,7 +37,7 @@ class cprodutos extends cTable {
 		// Update Table
 		$this->UpdateTable = "`produtos`";
 		$this->DBID = 'DB';
-		$this->ExportAll = TRUE;
+		$this->ExportAll = FALSE;
 		$this->ExportPageBreakCount = 0; // Page break per every n record (PDF only)
 		$this->ExportPageOrientation = "portrait"; // Page orientation (PDF only)
 		$this->ExportPageSize = "a4"; // Page size (PDF only)
@@ -917,18 +917,9 @@ class cprodutos extends cTable {
 		$this->peso_produto->PlaceHolder = ew_RemoveHtml($this->peso_produto->FldCaption());
 
 		// data_adicionado
-		$this->data_adicionado->EditAttrs["class"] = "form-control";
-		$this->data_adicionado->EditCustomAttributes = "";
-		$this->data_adicionado->EditValue = ew_FormatDateTime($this->data_adicionado->CurrentValue, 8);
-		$this->data_adicionado->PlaceHolder = ew_RemoveHtml($this->data_adicionado->FldCaption());
-
 		// hora_adicionado
-		$this->hora_adicionado->EditAttrs["class"] = "form-control";
-		$this->hora_adicionado->EditCustomAttributes = "";
-		$this->hora_adicionado->EditValue = $this->hora_adicionado->CurrentValue;
-		$this->hora_adicionado->PlaceHolder = ew_RemoveHtml($this->hora_adicionado->FldCaption());
-
 		// preco_produto
+
 		$this->preco_produto->EditAttrs["class"] = "form-control";
 		$this->preco_produto->EditCustomAttributes = "";
 		$this->preco_produto->EditValue = $this->preco_produto->CurrentValue;
@@ -981,8 +972,6 @@ class cprodutos extends cTable {
 					if ($this->status_produto->Exportable) $Doc->ExportCaption($this->status_produto);
 					if ($this->unidade_medida_produto->Exportable) $Doc->ExportCaption($this->unidade_medida_produto);
 					if ($this->peso_produto->Exportable) $Doc->ExportCaption($this->peso_produto);
-					if ($this->data_adicionado->Exportable) $Doc->ExportCaption($this->data_adicionado);
-					if ($this->hora_adicionado->Exportable) $Doc->ExportCaption($this->hora_adicionado);
 					if ($this->preco_produto->Exportable) $Doc->ExportCaption($this->preco_produto);
 					if ($this->descricao->Exportable) $Doc->ExportCaption($this->descricao);
 					if ($this->ipi->Exportable) $Doc->ExportCaption($this->ipi);
@@ -1038,8 +1027,6 @@ class cprodutos extends cTable {
 						if ($this->status_produto->Exportable) $Doc->ExportField($this->status_produto);
 						if ($this->unidade_medida_produto->Exportable) $Doc->ExportField($this->unidade_medida_produto);
 						if ($this->peso_produto->Exportable) $Doc->ExportField($this->peso_produto);
-						if ($this->data_adicionado->Exportable) $Doc->ExportField($this->data_adicionado);
-						if ($this->hora_adicionado->Exportable) $Doc->ExportField($this->hora_adicionado);
 						if ($this->preco_produto->Exportable) $Doc->ExportField($this->preco_produto);
 						if ($this->descricao->Exportable) $Doc->ExportField($this->descricao);
 						if ($this->ipi->Exportable) $Doc->ExportField($this->ipi);

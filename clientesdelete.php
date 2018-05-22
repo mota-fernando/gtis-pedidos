@@ -280,6 +280,8 @@ class cclientes_delete extends cclientes {
 	function Page_Init() {
 		global $gsExport, $gsCustomExport, $gsExportFile, $UserProfile, $Language, $Security, $objForm;
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
+		$this->tipo->SetVisibility();
+		$this->id->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -460,8 +462,8 @@ class cclientes_delete extends cclientes {
 		if (!$rs || $rs->EOF)
 			return;
 		$this->id_cliente->setDbValue($row['id_cliente']);
-		$this->id->setDbValue($row['id']);
 		$this->tipo->setDbValue($row['tipo']);
+		$this->id->setDbValue($row['id']);
 		$this->data->setDbValue($row['data']);
 		$this->time->setDbValue($row['time']);
 	}
@@ -470,8 +472,8 @@ class cclientes_delete extends cclientes {
 	function NewRow() {
 		$row = array();
 		$row['id_cliente'] = NULL;
-		$row['id'] = NULL;
 		$row['tipo'] = NULL;
+		$row['id'] = NULL;
 		$row['data'] = NULL;
 		$row['time'] = NULL;
 		return $row;
@@ -483,8 +485,8 @@ class cclientes_delete extends cclientes {
 			return;
 		$row = is_array($rs) ? $rs : $rs->fields;
 		$this->id_cliente->DbValue = $row['id_cliente'];
-		$this->id->DbValue = $row['id'];
 		$this->tipo->DbValue = $row['tipo'];
+		$this->id->DbValue = $row['id'];
 		$this->data->DbValue = $row['data'];
 		$this->time->DbValue = $row['time'];
 	}
@@ -503,17 +505,39 @@ class cclientes_delete extends cclientes {
 
 		$this->id_cliente->CellCssStyle = "white-space: nowrap;";
 
+		// tipo
 		// id
+
 		$this->id->CellCssStyle = "white-space: nowrap;";
 
-		// tipo
 		// data
-
 		$this->data->CellCssStyle = "white-space: nowrap;";
 
 		// time
 		$this->time->CellCssStyle = "white-space: nowrap;";
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
+
+		// tipo
+		if (strval($this->tipo->CurrentValue) <> "") {
+			$this->tipo->ViewValue = $this->tipo->OptionCaption($this->tipo->CurrentValue);
+		} else {
+			$this->tipo->ViewValue = NULL;
+		}
+		$this->tipo->ViewCustomAttributes = "";
+
+		// id
+		$this->id->ViewValue = $this->id->CurrentValue;
+		$this->id->ViewCustomAttributes = "";
+
+			// tipo
+			$this->tipo->LinkCustomAttributes = "";
+			$this->tipo->HrefValue = "";
+			$this->tipo->TooltipValue = "";
+
+			// id
+			$this->id->LinkCustomAttributes = "";
+			$this->id->HrefValue = "";
+			$this->id->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -721,8 +745,10 @@ fclientesdelete.Form_CustomValidate =
 fclientesdelete.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-// Form object for search
+fclientesdelete.Lists["x_tipo"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
+fclientesdelete.Lists["x_tipo"].Options = <?php echo json_encode($clientes_delete->tipo->Options()) ?>;
 
+// Form object for search
 </script>
 <script type="text/javascript">
 
@@ -747,6 +773,12 @@ $clientes_delete->ShowMessage();
 <table class="table ewTable">
 	<thead>
 	<tr class="ewTableHeader">
+<?php if ($clientes->tipo->Visible) { // tipo ?>
+		<th class="<?php echo $clientes->tipo->HeaderCellClass() ?>"><span id="elh_clientes_tipo" class="clientes_tipo"><?php echo $clientes->tipo->FldCaption() ?></span></th>
+<?php } ?>
+<?php if ($clientes->id->Visible) { // id ?>
+		<th class="<?php echo $clientes->id->HeaderCellClass() ?>"><span id="elh_clientes_id" class="clientes_id"><?php echo $clientes->id->FldCaption() ?></span></th>
+<?php } ?>
 	</tr>
 	</thead>
 	<tbody>
@@ -768,6 +800,22 @@ while (!$clientes_delete->Recordset->EOF) {
 	$clientes_delete->RenderRow();
 ?>
 	<tr<?php echo $clientes->RowAttributes() ?>>
+<?php if ($clientes->tipo->Visible) { // tipo ?>
+		<td<?php echo $clientes->tipo->CellAttributes() ?>>
+<span id="el<?php echo $clientes_delete->RowCnt ?>_clientes_tipo" class="clientes_tipo">
+<span<?php echo $clientes->tipo->ViewAttributes() ?>>
+<?php echo $clientes->tipo->ListViewValue() ?></span>
+</span>
+</td>
+<?php } ?>
+<?php if ($clientes->id->Visible) { // id ?>
+		<td<?php echo $clientes->id->CellAttributes() ?>>
+<span id="el<?php echo $clientes_delete->RowCnt ?>_clientes_id" class="clientes_id">
+<span<?php echo $clientes->id->ViewAttributes() ?>>
+<?php echo $clientes->id->ListViewValue() ?></span>
+</span>
+</td>
+<?php } ?>
 	</tr>
 <?php
 	$clientes_delete->Recordset->MoveNext();

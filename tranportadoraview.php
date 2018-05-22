@@ -340,7 +340,6 @@ class ctranportadora_view extends ctranportadora {
 		// Is modal
 		$this->IsModal = (@$_GET["modal"] == "1" || @$_POST["modal"] == "1");
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
-		$this->transportadora->SetVisibility();
 		$this->id_empresa_transportadora->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
@@ -443,6 +442,9 @@ class ctranportadora_view extends ctranportadora {
 		// Check modal
 		if ($this->IsModal)
 			$gbSkipHeaderFooter = TRUE;
+
+		// Load current record
+		$bLoadCurrentRecord = FALSE;
 		$sReturnUrl = "";
 		$bMatchRecord = FALSE;
 		if ($this->IsPageRequest()) { // Validate request
@@ -680,11 +682,6 @@ class ctranportadora_view extends ctranportadora {
 		}
 		$this->id_empresa_transportadora->ViewCustomAttributes = "";
 
-			// transportadora
-			$this->transportadora->LinkCustomAttributes = "";
-			$this->transportadora->HrefValue = "";
-			$this->transportadora->TooltipValue = "";
-
 			// id_empresa_transportadora
 			$this->id_empresa_transportadora->LinkCustomAttributes = "";
 			$this->id_empresa_transportadora->HrefValue = "";
@@ -874,17 +871,6 @@ $tranportadora_view->ShowMessage();
 <input type="hidden" name="t" value="tranportadora">
 <input type="hidden" name="modal" value="<?php echo intval($tranportadora_view->IsModal) ?>">
 <table class="table table-striped table-bordered table-hover table-condensed ewViewTable">
-<?php if ($tranportadora->transportadora->Visible) { // transportadora ?>
-	<tr id="r_transportadora">
-		<td class="col-sm-2"><span id="elh_tranportadora_transportadora"><?php echo $tranportadora->transportadora->FldCaption() ?></span></td>
-		<td data-name="transportadora"<?php echo $tranportadora->transportadora->CellAttributes() ?>>
-<span id="el_tranportadora_transportadora">
-<span<?php echo $tranportadora->transportadora->ViewAttributes() ?>>
-<?php echo $tranportadora->transportadora->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
 <?php if ($tranportadora->id_empresa_transportadora->Visible) { // id_empresa_transportadora ?>
 	<tr id="r_id_empresa_transportadora">
 		<td class="col-sm-2"><span id="elh_tranportadora_id_empresa_transportadora"><?php echo $tranportadora->id_empresa_transportadora->FldCaption() ?></span></td>

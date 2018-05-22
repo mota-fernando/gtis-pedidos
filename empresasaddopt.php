@@ -289,13 +289,13 @@ class cempresas_addopt extends cempresas {
 		$this->direcao->SetVisibility();
 		$this->_email->SetVisibility();
 		$this->id_endereco->SetVisibility();
+		$this->endereco_numero->SetVisibility();
 		$this->nome_fantasia->SetVisibility();
 		$this->cnpj->SetVisibility();
 		$this->ie->SetVisibility();
 		$this->fonecedor->SetVisibility();
 		$this->celular->SetVisibility();
 		$this->whatsapp->SetVisibility();
-		$this->endereco_numero->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -413,13 +413,13 @@ class cempresas_addopt extends cempresas {
 					$row["x_direcao"] = ew_ConvertToUtf8($this->direcao->DbValue);
 					$row["x__email"] = ew_ConvertToUtf8($this->_email->DbValue);
 					$row["x_id_endereco"] = $this->id_endereco->DbValue;
+					$row["x_endereco_numero"] = ew_ConvertToUtf8($this->endereco_numero->DbValue);
 					$row["x_nome_fantasia"] = ew_ConvertToUtf8($this->nome_fantasia->DbValue);
 					$row["x_cnpj"] = $this->cnpj->DbValue;
 					$row["x_ie"] = $this->ie->DbValue;
 					$row["x_fonecedor"] = $this->fonecedor->DbValue;
 					$row["x_celular"] = $this->celular->DbValue;
 					$row["x_whatsapp"] = $this->whatsapp->DbValue;
-					$row["x_endereco_numero"] = ew_ConvertToUtf8($this->endereco_numero->DbValue);
 					if (!EW_DEBUG_ENABLED && ob_get_length())
 						ob_end_clean();
 					ew_Header(FALSE, "utf-8", TRUE);
@@ -460,6 +460,8 @@ class cempresas_addopt extends cempresas {
 		$this->_email->OldValue = $this->_email->CurrentValue;
 		$this->id_endereco->CurrentValue = NULL;
 		$this->id_endereco->OldValue = $this->id_endereco->CurrentValue;
+		$this->endereco_numero->CurrentValue = NULL;
+		$this->endereco_numero->OldValue = $this->endereco_numero->CurrentValue;
 		$this->nome_fantasia->CurrentValue = NULL;
 		$this->nome_fantasia->OldValue = $this->nome_fantasia->CurrentValue;
 		$this->cnpj->CurrentValue = NULL;
@@ -471,8 +473,6 @@ class cempresas_addopt extends cempresas {
 		$this->celular->OldValue = $this->celular->CurrentValue;
 		$this->whatsapp->CurrentValue = NULL;
 		$this->whatsapp->OldValue = $this->whatsapp->CurrentValue;
-		$this->endereco_numero->CurrentValue = NULL;
-		$this->endereco_numero->OldValue = $this->endereco_numero->CurrentValue;
 	}
 
 	// Load form values
@@ -498,6 +498,9 @@ class cempresas_addopt extends cempresas {
 		if (!$this->id_endereco->FldIsDetailKey) {
 			$this->id_endereco->setFormValue(ew_ConvertFromUtf8($objForm->GetValue("x_id_endereco")));
 		}
+		if (!$this->endereco_numero->FldIsDetailKey) {
+			$this->endereco_numero->setFormValue(ew_ConvertFromUtf8($objForm->GetValue("x_endereco_numero")));
+		}
 		if (!$this->nome_fantasia->FldIsDetailKey) {
 			$this->nome_fantasia->setFormValue(ew_ConvertFromUtf8($objForm->GetValue("x_nome_fantasia")));
 		}
@@ -516,9 +519,6 @@ class cempresas_addopt extends cempresas {
 		if (!$this->whatsapp->FldIsDetailKey) {
 			$this->whatsapp->setFormValue(ew_ConvertFromUtf8($objForm->GetValue("x_whatsapp")));
 		}
-		if (!$this->endereco_numero->FldIsDetailKey) {
-			$this->endereco_numero->setFormValue(ew_ConvertFromUtf8($objForm->GetValue("x_endereco_numero")));
-		}
 	}
 
 	// Restore form values
@@ -530,13 +530,13 @@ class cempresas_addopt extends cempresas {
 		$this->direcao->CurrentValue = ew_ConvertToUtf8($this->direcao->FormValue);
 		$this->_email->CurrentValue = ew_ConvertToUtf8($this->_email->FormValue);
 		$this->id_endereco->CurrentValue = ew_ConvertToUtf8($this->id_endereco->FormValue);
+		$this->endereco_numero->CurrentValue = ew_ConvertToUtf8($this->endereco_numero->FormValue);
 		$this->nome_fantasia->CurrentValue = ew_ConvertToUtf8($this->nome_fantasia->FormValue);
 		$this->cnpj->CurrentValue = ew_ConvertToUtf8($this->cnpj->FormValue);
 		$this->ie->CurrentValue = ew_ConvertToUtf8($this->ie->FormValue);
 		$this->fonecedor->CurrentValue = ew_ConvertToUtf8($this->fonecedor->FormValue);
 		$this->celular->CurrentValue = ew_ConvertToUtf8($this->celular->FormValue);
 		$this->whatsapp->CurrentValue = ew_ConvertToUtf8($this->whatsapp->FormValue);
-		$this->endereco_numero->CurrentValue = ew_ConvertToUtf8($this->endereco_numero->FormValue);
 	}
 
 	// Load row based on key values
@@ -579,13 +579,13 @@ class cempresas_addopt extends cempresas {
 		$this->direcao->setDbValue($row['direcao']);
 		$this->_email->setDbValue($row['email']);
 		$this->id_endereco->setDbValue($row['id_endereco']);
+		$this->endereco_numero->setDbValue($row['endereco_numero']);
 		$this->nome_fantasia->setDbValue($row['nome_fantasia']);
 		$this->cnpj->setDbValue($row['cnpj']);
 		$this->ie->setDbValue($row['ie']);
 		$this->fonecedor->setDbValue($row['fonecedor']);
 		$this->celular->setDbValue($row['celular']);
 		$this->whatsapp->setDbValue($row['whatsapp']);
-		$this->endereco_numero->setDbValue($row['endereco_numero']);
 	}
 
 	// Return a row with default values
@@ -599,13 +599,13 @@ class cempresas_addopt extends cempresas {
 		$row['direcao'] = $this->direcao->CurrentValue;
 		$row['email'] = $this->_email->CurrentValue;
 		$row['id_endereco'] = $this->id_endereco->CurrentValue;
+		$row['endereco_numero'] = $this->endereco_numero->CurrentValue;
 		$row['nome_fantasia'] = $this->nome_fantasia->CurrentValue;
 		$row['cnpj'] = $this->cnpj->CurrentValue;
 		$row['ie'] = $this->ie->CurrentValue;
 		$row['fonecedor'] = $this->fonecedor->CurrentValue;
 		$row['celular'] = $this->celular->CurrentValue;
 		$row['whatsapp'] = $this->whatsapp->CurrentValue;
-		$row['endereco_numero'] = $this->endereco_numero->CurrentValue;
 		return $row;
 	}
 
@@ -621,13 +621,13 @@ class cempresas_addopt extends cempresas {
 		$this->direcao->DbValue = $row['direcao'];
 		$this->_email->DbValue = $row['email'];
 		$this->id_endereco->DbValue = $row['id_endereco'];
+		$this->endereco_numero->DbValue = $row['endereco_numero'];
 		$this->nome_fantasia->DbValue = $row['nome_fantasia'];
 		$this->cnpj->DbValue = $row['cnpj'];
 		$this->ie->DbValue = $row['ie'];
 		$this->fonecedor->DbValue = $row['fonecedor'];
 		$this->celular->DbValue = $row['celular'];
 		$this->whatsapp->DbValue = $row['whatsapp'];
-		$this->endereco_numero->DbValue = $row['endereco_numero'];
 	}
 
 	// Render row values based on field settings
@@ -647,13 +647,13 @@ class cempresas_addopt extends cempresas {
 		// direcao
 		// email
 		// id_endereco
+		// endereco_numero
 		// nome_fantasia
 		// cnpj
 		// ie
 		// fonecedor
 		// celular
 		// whatsapp
-		// endereco_numero
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -707,6 +707,10 @@ class cempresas_addopt extends cempresas {
 		}
 		$this->id_endereco->ViewCustomAttributes = "";
 
+		// endereco_numero
+		$this->endereco_numero->ViewValue = $this->endereco_numero->CurrentValue;
+		$this->endereco_numero->ViewCustomAttributes = "";
+
 		// nome_fantasia
 		$this->nome_fantasia->ViewValue = $this->nome_fantasia->CurrentValue;
 		$this->nome_fantasia->ViewCustomAttributes = "";
@@ -730,10 +734,6 @@ class cempresas_addopt extends cempresas {
 		// whatsapp
 		$this->whatsapp->ViewValue = $this->whatsapp->CurrentValue;
 		$this->whatsapp->ViewCustomAttributes = "";
-
-		// endereco_numero
-		$this->endereco_numero->ViewValue = $this->endereco_numero->CurrentValue;
-		$this->endereco_numero->ViewCustomAttributes = "";
 
 			// razao_social
 			$this->razao_social->LinkCustomAttributes = "";
@@ -765,6 +765,11 @@ class cempresas_addopt extends cempresas {
 			$this->id_endereco->HrefValue = "";
 			$this->id_endereco->TooltipValue = "";
 
+			// endereco_numero
+			$this->endereco_numero->LinkCustomAttributes = "";
+			$this->endereco_numero->HrefValue = "";
+			$this->endereco_numero->TooltipValue = "";
+
 			// nome_fantasia
 			$this->nome_fantasia->LinkCustomAttributes = "";
 			$this->nome_fantasia->HrefValue = "";
@@ -794,11 +799,6 @@ class cempresas_addopt extends cempresas {
 			$this->whatsapp->LinkCustomAttributes = "";
 			$this->whatsapp->HrefValue = "";
 			$this->whatsapp->TooltipValue = "";
-
-			// endereco_numero
-			$this->endereco_numero->LinkCustomAttributes = "";
-			$this->endereco_numero->HrefValue = "";
-			$this->endereco_numero->TooltipValue = "";
 		} elseif ($this->RowType == EW_ROWTYPE_ADD) { // Add row
 
 			// razao_social
@@ -850,6 +850,12 @@ class cempresas_addopt extends cempresas {
 			if ($rswrk) $rswrk->Close();
 			$this->id_endereco->EditValue = $arwrk;
 
+			// endereco_numero
+			$this->endereco_numero->EditAttrs["class"] = "form-control";
+			$this->endereco_numero->EditCustomAttributes = "";
+			$this->endereco_numero->EditValue = ew_HtmlEncode($this->endereco_numero->CurrentValue);
+			$this->endereco_numero->PlaceHolder = ew_RemoveHtml($this->endereco_numero->FldCaption());
+
 			// nome_fantasia
 			$this->nome_fantasia->EditAttrs["class"] = "form-control";
 			$this->nome_fantasia->EditCustomAttributes = "";
@@ -886,12 +892,6 @@ class cempresas_addopt extends cempresas {
 			$this->whatsapp->EditValue = ew_HtmlEncode($this->whatsapp->CurrentValue);
 			$this->whatsapp->PlaceHolder = ew_RemoveHtml($this->whatsapp->FldCaption());
 
-			// endereco_numero
-			$this->endereco_numero->EditAttrs["class"] = "form-control";
-			$this->endereco_numero->EditCustomAttributes = "";
-			$this->endereco_numero->EditValue = ew_HtmlEncode($this->endereco_numero->CurrentValue);
-			$this->endereco_numero->PlaceHolder = ew_RemoveHtml($this->endereco_numero->FldCaption());
-
 			// Add refer script
 			// razao_social
 
@@ -918,6 +918,10 @@ class cempresas_addopt extends cempresas {
 			$this->id_endereco->LinkCustomAttributes = "";
 			$this->id_endereco->HrefValue = "";
 
+			// endereco_numero
+			$this->endereco_numero->LinkCustomAttributes = "";
+			$this->endereco_numero->HrefValue = "";
+
 			// nome_fantasia
 			$this->nome_fantasia->LinkCustomAttributes = "";
 			$this->nome_fantasia->HrefValue = "";
@@ -941,10 +945,6 @@ class cempresas_addopt extends cempresas {
 			// whatsapp
 			$this->whatsapp->LinkCustomAttributes = "";
 			$this->whatsapp->HrefValue = "";
-
-			// endereco_numero
-			$this->endereco_numero->LinkCustomAttributes = "";
-			$this->endereco_numero->HrefValue = "";
 		}
 		if ($this->RowType == EW_ROWTYPE_ADD || $this->RowType == EW_ROWTYPE_EDIT || $this->RowType == EW_ROWTYPE_SEARCH) // Add/Edit/Search row
 			$this->SetupFieldTitles();
@@ -1021,6 +1021,9 @@ class cempresas_addopt extends cempresas {
 		// id_endereco
 		$this->id_endereco->SetDbValueDef($rsnew, $this->id_endereco->CurrentValue, NULL, FALSE);
 
+		// endereco_numero
+		$this->endereco_numero->SetDbValueDef($rsnew, $this->endereco_numero->CurrentValue, NULL, FALSE);
+
 		// nome_fantasia
 		$this->nome_fantasia->SetDbValueDef($rsnew, $this->nome_fantasia->CurrentValue, NULL, FALSE);
 
@@ -1038,9 +1041,6 @@ class cempresas_addopt extends cempresas {
 
 		// whatsapp
 		$this->whatsapp->SetDbValueDef($rsnew, $this->whatsapp->CurrentValue, NULL, FALSE);
-
-		// endereco_numero
-		$this->endereco_numero->SetDbValueDef($rsnew, $this->endereco_numero->CurrentValue, NULL, FALSE);
 
 		// Call Row Inserting event
 		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
@@ -1321,6 +1321,14 @@ $empresas_addopt->ShowMessage();
 </div>
 	</div>
 <?php } ?>
+<?php if ($empresas->endereco_numero->Visible) { // endereco_numero ?>
+	<div class="form-group">
+		<label class="col-sm-2 control-label ewLabel" for="x_endereco_numero"><?php echo $empresas->endereco_numero->FldCaption() ?></label>
+		<div class="col-sm-10">
+<input type="text" data-table="empresas" data-field="x_endereco_numero" name="x_endereco_numero" id="x_endereco_numero" size="30" maxlength="11" placeholder="<?php echo ew_HtmlEncode($empresas->endereco_numero->getPlaceHolder()) ?>" value="<?php echo $empresas->endereco_numero->EditValue ?>"<?php echo $empresas->endereco_numero->EditAttributes() ?>>
+</div>
+	</div>
+<?php } ?>
 <?php if ($empresas->nome_fantasia->Visible) { // nome_fantasia ?>
 	<div class="form-group">
 		<label class="col-sm-2 control-label ewLabel" for="x_nome_fantasia"><?php echo $empresas->nome_fantasia->FldCaption() ?></label>
@@ -1366,14 +1374,6 @@ $empresas_addopt->ShowMessage();
 		<label class="col-sm-2 control-label ewLabel" for="x_whatsapp"><?php echo $empresas->whatsapp->FldCaption() ?></label>
 		<div class="col-sm-10">
 <input type="text" data-table="empresas" data-field="x_whatsapp" name="x_whatsapp" id="x_whatsapp" size="30" placeholder="<?php echo ew_HtmlEncode($empresas->whatsapp->getPlaceHolder()) ?>" value="<?php echo $empresas->whatsapp->EditValue ?>"<?php echo $empresas->whatsapp->EditAttributes() ?>>
-</div>
-	</div>
-<?php } ?>
-<?php if ($empresas->endereco_numero->Visible) { // endereco_numero ?>
-	<div class="form-group">
-		<label class="col-sm-2 control-label ewLabel" for="x_endereco_numero"><?php echo $empresas->endereco_numero->FldCaption() ?></label>
-		<div class="col-sm-10">
-<input type="text" data-table="empresas" data-field="x_endereco_numero" name="x_endereco_numero" id="x_endereco_numero" size="30" maxlength="11" placeholder="<?php echo ew_HtmlEncode($empresas->endereco_numero->getPlaceHolder()) ?>" value="<?php echo $empresas->endereco_numero->EditValue ?>"<?php echo $empresas->endereco_numero->EditAttributes() ?>>
 </div>
 	</div>
 <?php } ?>

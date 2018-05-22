@@ -26,7 +26,7 @@ class ctranportadora extends cTable {
 		// Update Table
 		$this->UpdateTable = "`tranportadora`";
 		$this->DBID = 'DB';
-		$this->ExportAll = TRUE;
+		$this->ExportAll = FALSE;
 		$this->ExportPageBreakCount = 0; // Page break per every n record (PDF only)
 		$this->ExportPageOrientation = "portrait"; // Page orientation (PDF only)
 		$this->ExportPageSize = "a4"; // Page size (PDF only)
@@ -708,7 +708,6 @@ class ctranportadora extends cTable {
 			if ($Doc->Horizontal) { // Horizontal format, write header
 				$Doc->BeginExportRow();
 				if ($ExportPageType == "view") {
-					if ($this->transportadora->Exportable) $Doc->ExportCaption($this->transportadora);
 					if ($this->id_empresa_transportadora->Exportable) $Doc->ExportCaption($this->id_empresa_transportadora);
 				} else {
 					if ($this->id_transportadora->Exportable) $Doc->ExportCaption($this->id_transportadora);
@@ -745,7 +744,6 @@ class ctranportadora extends cTable {
 				if (!$Doc->ExportCustom) {
 					$Doc->BeginExportRow($RowCnt); // Allow CSS styles if enabled
 					if ($ExportPageType == "view") {
-						if ($this->transportadora->Exportable) $Doc->ExportField($this->transportadora);
 						if ($this->id_empresa_transportadora->Exportable) $Doc->ExportField($this->id_empresa_transportadora);
 					} else {
 						if ($this->id_transportadora->Exportable) $Doc->ExportField($this->id_transportadora);

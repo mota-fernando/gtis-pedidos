@@ -428,13 +428,13 @@ $detalhe_pedido_grid->ListOptions->Render("body", "left", $detalhe_pedido_grid->
 		<td data-name="quantidade"<?php echo $detalhe_pedido->quantidade->CellAttributes() ?>>
 <?php if ($detalhe_pedido->RowType == EW_ROWTYPE_ADD) { // Add record ?>
 <span id="el<?php echo $detalhe_pedido_grid->RowCnt ?>_detalhe_pedido_quantidade" class="form-group detalhe_pedido_quantidade">
-<input type="text" data-table="detalhe_pedido" data-field="x_quantidade" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" size="30" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->quantidade->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->quantidade->EditValue ?>"<?php echo $detalhe_pedido->quantidade->EditAttributes() ?>>
+<input type="text" data-table="detalhe_pedido" data-field="x_quantidade" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" size="6" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->quantidade->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->quantidade->EditValue ?>"<?php echo $detalhe_pedido->quantidade->EditAttributes() ?>>
 </span>
 <input type="hidden" data-table="detalhe_pedido" data-field="x_quantidade" name="o<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" id="o<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" value="<?php echo ew_HtmlEncode($detalhe_pedido->quantidade->OldValue) ?>">
 <?php } ?>
 <?php if ($detalhe_pedido->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
 <span id="el<?php echo $detalhe_pedido_grid->RowCnt ?>_detalhe_pedido_quantidade" class="form-group detalhe_pedido_quantidade">
-<input type="text" data-table="detalhe_pedido" data-field="x_quantidade" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" size="30" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->quantidade->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->quantidade->EditValue ?>"<?php echo $detalhe_pedido->quantidade->EditAttributes() ?>>
+<input type="text" data-table="detalhe_pedido" data-field="x_quantidade" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" size="6" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->quantidade->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->quantidade->EditValue ?>"<?php echo $detalhe_pedido->quantidade->EditAttributes() ?>>
 </span>
 <?php } ?>
 <?php if ($detalhe_pedido->RowType == EW_ROWTYPE_VIEW) { // View record ?>
@@ -456,13 +456,13 @@ $detalhe_pedido_grid->ListOptions->Render("body", "left", $detalhe_pedido_grid->
 		<td data-name="custo"<?php echo $detalhe_pedido->custo->CellAttributes() ?>>
 <?php if ($detalhe_pedido->RowType == EW_ROWTYPE_ADD) { // Add record ?>
 <span id="el<?php echo $detalhe_pedido_grid->RowCnt ?>_detalhe_pedido_custo" class="form-group detalhe_pedido_custo">
-<input type="text" data-table="detalhe_pedido" data-field="x_custo" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" size="30" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->custo->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->custo->EditValue ?>"<?php echo $detalhe_pedido->custo->EditAttributes() ?>>
+<input type="text" data-table="detalhe_pedido" data-field="x_custo" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" size="6" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->custo->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->custo->EditValue ?>"<?php echo $detalhe_pedido->custo->EditAttributes() ?>>
 </span>
 <input type="hidden" data-table="detalhe_pedido" data-field="x_custo" name="o<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" id="o<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" value="<?php echo ew_HtmlEncode($detalhe_pedido->custo->OldValue) ?>">
 <?php } ?>
 <?php if ($detalhe_pedido->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
 <span id="el<?php echo $detalhe_pedido_grid->RowCnt ?>_detalhe_pedido_custo" class="form-group detalhe_pedido_custo">
-<input type="text" data-table="detalhe_pedido" data-field="x_custo" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" size="30" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->custo->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->custo->EditValue ?>"<?php echo $detalhe_pedido->custo->EditAttributes() ?>>
+<input type="text" data-table="detalhe_pedido" data-field="x_custo" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" size="6" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->custo->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->custo->EditValue ?>"<?php echo $detalhe_pedido->custo->EditAttributes() ?>>
 </span>
 <?php } ?>
 <?php if ($detalhe_pedido->RowType == EW_ROWTYPE_VIEW) { // View record ?>
@@ -616,7 +616,7 @@ $detalhe_pedido_grid->ListOptions->Render("body", "left", $detalhe_pedido_grid->
 		<td data-name="quantidade">
 <?php if ($detalhe_pedido->CurrentAction <> "F") { ?>
 <span id="el$rowindex$_detalhe_pedido_quantidade" class="form-group detalhe_pedido_quantidade">
-<input type="text" data-table="detalhe_pedido" data-field="x_quantidade" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" size="30" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->quantidade->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->quantidade->EditValue ?>"<?php echo $detalhe_pedido->quantidade->EditAttributes() ?>>
+<input type="text" data-table="detalhe_pedido" data-field="x_quantidade" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" size="6" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->quantidade->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->quantidade->EditValue ?>"<?php echo $detalhe_pedido->quantidade->EditAttributes() ?>>
 </span>
 <?php } else { ?>
 <span id="el$rowindex$_detalhe_pedido_quantidade" class="form-group detalhe_pedido_quantidade">
@@ -632,7 +632,7 @@ $detalhe_pedido_grid->ListOptions->Render("body", "left", $detalhe_pedido_grid->
 		<td data-name="custo">
 <?php if ($detalhe_pedido->CurrentAction <> "F") { ?>
 <span id="el$rowindex$_detalhe_pedido_custo" class="form-group detalhe_pedido_custo">
-<input type="text" data-table="detalhe_pedido" data-field="x_custo" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" size="30" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->custo->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->custo->EditValue ?>"<?php echo $detalhe_pedido->custo->EditAttributes() ?>>
+<input type="text" data-table="detalhe_pedido" data-field="x_custo" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" size="6" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->custo->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->custo->EditValue ?>"<?php echo $detalhe_pedido->custo->EditAttributes() ?>>
 </span>
 <?php } else { ?>
 <span id="el$rowindex$_detalhe_pedido_custo" class="form-group detalhe_pedido_custo">

@@ -362,6 +362,45 @@ class cclientes_list extends cclientes {
 	//
 	function Page_Init() {
 		global $gsExport, $gsCustomExport, $gsExportFile, $UserProfile, $Language, $Security, $objForm;
+
+		// Get export parameters
+		$custom = "";
+		if (@$_GET["export"] <> "") {
+			$this->Export = $_GET["export"];
+			$custom = @$_GET["custom"];
+		} elseif (@$_POST["export"] <> "") {
+			$this->Export = $_POST["export"];
+			$custom = @$_POST["custom"];
+		} elseif (ew_IsPost()) {
+			if (@$_POST["exporttype"] <> "")
+				$this->Export = $_POST["exporttype"];
+			$custom = @$_POST["custom"];
+		} elseif (@$_GET["cmd"] == "json") {
+			$this->Export = $_GET["cmd"];
+		} else {
+			$this->setExportReturnUrl(ew_CurrentUrl());
+		}
+		$gsExportFile = $this->TableVar; // Get export file, used in header
+
+		// Get custom export parameters
+		if ($this->Export <> "" && $custom <> "") {
+			$this->CustomExport = $this->Export;
+			$this->Export = "print";
+		}
+		$gsCustomExport = $this->CustomExport;
+		$gsExport = $this->Export; // Get export parameter, used in header
+
+		// Update Export URLs
+		if (defined("EW_USE_PHPEXCEL"))
+			$this->ExportExcelCustom = FALSE;
+		if ($this->ExportExcelCustom)
+			$this->ExportExcelUrl .= "&amp;custom=1";
+		if (defined("EW_USE_PHPWORD"))
+			$this->ExportWordCustom = FALSE;
+		if ($this->ExportWordCustom)
+			$this->ExportWordUrl .= "&amp;custom=1";
+		if ($this->ExportPdfCustom)
+			$this->ExportPdfUrl .= "&amp;custom=1";
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
 
 		// Get grid add count
@@ -371,6 +410,11 @@ class cclientes_list extends cclientes {
 
 		// Set up list options
 		$this->SetupListOptions();
+
+		// Setup export options
+		$this->SetupExportOptions();
+		$this->tipo->SetVisibility();
+		$this->id->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -585,6 +629,17 @@ class cclientes_list extends cclientes {
 			$this->CurrentFilter = "";
 		}
 
+		// Export selected records
+		if ($this->Export <> "")
+			$this->CurrentFilter = $this->BuildExportSelectedFilter();
+
+		// Export data only
+		if ($this->CustomExport == "" && in_array($this->Export, array_keys($EW_EXPORT))) {
+			$this->ExportData();
+			$this->Page_Terminate(); // Terminate response
+			exit();
+		}
+
 		// Load record count first
 		if (!$this->IsAddOrEdit()) {
 			$bSelectLimit = $this->UseSelectLimit;
@@ -645,6 +700,8 @@ class cclientes_list extends cclientes {
 		if (@$_GET["order"] <> "") {
 			$this->CurrentOrder = @$_GET["order"];
 			$this->CurrentOrderType = @$_GET["ordertype"];
+			$this->UpdateSort($this->tipo); // tipo
+			$this->UpdateSort($this->id); // id
 			$this->setStartRecordNumber(1); // Reset start position
 		}
 	}
@@ -673,6 +730,8 @@ class cclientes_list extends cclientes {
 			if ($this->Command == "resetsort") {
 				$sOrderBy = "";
 				$this->setSessionOrderBy($sOrderBy);
+				$this->tipo->setSort("");
+				$this->id->setSort("");
 			}
 
 			// Reset start position
@@ -725,7 +784,7 @@ class cclientes_list extends cclientes {
 
 		// "checkbox"
 		$item = &$this->ListOptions->Add("checkbox");
-		$item->Visible = FALSE;
+		$item->Visible = TRUE;
 		$item->OnLeft = FALSE;
 		$item->Header = "<input type=\"checkbox\" name=\"key\" id=\"key\" onclick=\"ew_SelectAllKey(this);\">";
 		$item->ShowInDropDown = FALSE;
@@ -1104,8 +1163,8 @@ class cclientes_list extends cclientes {
 		if (!$rs || $rs->EOF)
 			return;
 		$this->id_cliente->setDbValue($row['id_cliente']);
-		$this->id->setDbValue($row['id']);
 		$this->tipo->setDbValue($row['tipo']);
+		$this->id->setDbValue($row['id']);
 		$this->data->setDbValue($row['data']);
 		$this->time->setDbValue($row['time']);
 	}
@@ -1114,8 +1173,8 @@ class cclientes_list extends cclientes {
 	function NewRow() {
 		$row = array();
 		$row['id_cliente'] = NULL;
-		$row['id'] = NULL;
 		$row['tipo'] = NULL;
+		$row['id'] = NULL;
 		$row['data'] = NULL;
 		$row['time'] = NULL;
 		return $row;
@@ -1127,8 +1186,8 @@ class cclientes_list extends cclientes {
 			return;
 		$row = is_array($rs) ? $rs : $rs->fields;
 		$this->id_cliente->DbValue = $row['id_cliente'];
-		$this->id->DbValue = $row['id'];
 		$this->tipo->DbValue = $row['tipo'];
+		$this->id->DbValue = $row['id'];
 		$this->data->DbValue = $row['data'];
 		$this->time->DbValue = $row['time'];
 	}
@@ -1175,22 +1234,197 @@ class cclientes_list extends cclientes {
 
 		$this->id_cliente->CellCssStyle = "white-space: nowrap;";
 
+		// tipo
 		// id
+
 		$this->id->CellCssStyle = "white-space: nowrap;";
 
-		// tipo
 		// data
-
 		$this->data->CellCssStyle = "white-space: nowrap;";
 
 		// time
 		$this->time->CellCssStyle = "white-space: nowrap;";
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
+
+		// tipo
+		if (strval($this->tipo->CurrentValue) <> "") {
+			$this->tipo->ViewValue = $this->tipo->OptionCaption($this->tipo->CurrentValue);
+		} else {
+			$this->tipo->ViewValue = NULL;
+		}
+		$this->tipo->ViewCustomAttributes = "";
+
+		// id
+		$this->id->ViewValue = $this->id->CurrentValue;
+		$this->id->ViewCustomAttributes = "";
+
+			// tipo
+			$this->tipo->LinkCustomAttributes = "";
+			$this->tipo->HrefValue = "";
+			$this->tipo->TooltipValue = "";
+
+			// id
+			$this->id->LinkCustomAttributes = "";
+			$this->id->HrefValue = "";
+			$this->id->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
 		if ($this->RowType <> EW_ROWTYPE_AGGREGATEINIT)
 			$this->Row_Rendered();
+	}
+
+	// Build export filter for selected records
+	function BuildExportSelectedFilter() {
+		global $Language;
+		$sWrkFilter = "";
+		if ($this->Export <> "") {
+			$sWrkFilter = $this->GetKeyFilter();
+		}
+		return $sWrkFilter;
+	}
+
+	// Set up export options
+	function SetupExportOptions() {
+		global $Language;
+
+		// Printer friendly
+		$item = &$this->ExportOptions->Add("print");
+		$item->Body = "<a class=\"ewExportLink ewPrint\" title=\"" . ew_HtmlEncode($Language->Phrase("PrinterFriendlyText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("PrinterFriendlyText")) . "\" onclick=\"ew_Export(document.fclienteslist,'" . ew_CurrentPage() . "','print',false,true);\">" . $Language->Phrase("PrinterFriendly") . "</a>";
+		$item->Visible = TRUE;
+
+		// Export to Excel
+		$item = &$this->ExportOptions->Add("excel");
+		$item->Body = "<a class=\"ewExportLink ewExcel\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToExcelText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToExcelText")) . "\" onclick=\"ew_Export(document.fclienteslist,'" . ew_CurrentPage() . "','excel',false,true);\">" . $Language->Phrase("ExportToExcel") . "</a>";
+		$item->Visible = TRUE;
+
+		// Export to Word
+		$item = &$this->ExportOptions->Add("word");
+		$item->Body = "<a class=\"ewExportLink ewWord\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToWordText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToWordText")) . "\" onclick=\"ew_Export(document.fclienteslist,'" . ew_CurrentPage() . "','word',false,true);\">" . $Language->Phrase("ExportToWord") . "</a>";
+		$item->Visible = FALSE;
+
+		// Export to Html
+		$item = &$this->ExportOptions->Add("html");
+		$item->Body = "<a class=\"ewExportLink ewHtml\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToHtmlText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToHtmlText")) . "\" onclick=\"ew_Export(document.fclienteslist,'" . ew_CurrentPage() . "','html',false,true);\">" . $Language->Phrase("ExportToHtml") . "</a>";
+		$item->Visible = FALSE;
+
+		// Export to Xml
+		$item = &$this->ExportOptions->Add("xml");
+		$item->Body = "<a class=\"ewExportLink ewXml\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToXmlText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToXmlText")) . "\" onclick=\"ew_Export(document.fclienteslist,'" . ew_CurrentPage() . "','xml',false,true);\">" . $Language->Phrase("ExportToXml") . "</a>";
+		$item->Visible = FALSE;
+
+		// Export to Csv
+		$item = &$this->ExportOptions->Add("csv");
+		$item->Body = "<a class=\"ewExportLink ewCsv\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToCsvText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToCsvText")) . "\" onclick=\"ew_Export(document.fclienteslist,'" . ew_CurrentPage() . "','csv',false,true);\">" . $Language->Phrase("ExportToCsv") . "</a>";
+		$item->Visible = FALSE;
+
+		// Export to Pdf
+		$item = &$this->ExportOptions->Add("pdf");
+		$item->Body = "<a class=\"ewExportLink ewPdf\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToPDFText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToPDFText")) . "\" onclick=\"ew_Export(document.fclienteslist,'" . ew_CurrentPage() . "','pdf',false,true);\">" . $Language->Phrase("ExportToPDF") . "</a>";
+		$item->Visible = FALSE;
+
+		// Export to Email
+		$item = &$this->ExportOptions->Add("email");
+		$url = "";
+		$item->Body = "<button id=\"emf_clientes\" class=\"ewExportLink ewEmail\" title=\"" . $Language->Phrase("ExportToEmailText") . "\" data-caption=\"" . $Language->Phrase("ExportToEmailText") . "\" onclick=\"ew_EmailDialogShow({lnk:'emf_clientes',hdr:ewLanguage.Phrase('ExportToEmailText'),f:document.fclienteslist,sel:true" . $url . "});\">" . $Language->Phrase("ExportToEmail") . "</button>";
+		$item->Visible = FALSE;
+
+		// Drop down button for export
+		$this->ExportOptions->UseButtonGroup = TRUE;
+		$this->ExportOptions->UseImageAndText = TRUE;
+		$this->ExportOptions->UseDropDownButton = FALSE;
+		if ($this->ExportOptions->UseButtonGroup && ew_IsMobile())
+			$this->ExportOptions->UseDropDownButton = TRUE;
+		$this->ExportOptions->DropDownButtonPhrase = $Language->Phrase("ButtonExport");
+
+		// Add group option item
+		$item = &$this->ExportOptions->Add($this->ExportOptions->GroupOptionName);
+		$item->Body = "";
+		$item->Visible = FALSE;
+	}
+
+	// Export data in HTML/CSV/Word/Excel/XML/Email/PDF format
+	function ExportData() {
+		$utf8 = (strtolower(EW_CHARSET) == "utf-8");
+		$bSelectLimit = $this->UseSelectLimit;
+
+		// Load recordset
+		if ($bSelectLimit) {
+			$this->TotalRecs = $this->ListRecordCount();
+		} else {
+			if (!$this->Recordset)
+				$this->Recordset = $this->LoadRecordset();
+			$rs = &$this->Recordset;
+			if ($rs)
+				$this->TotalRecs = $rs->RecordCount();
+		}
+		$this->StartRec = 1;
+
+		// Export all
+		if ($this->ExportAll) {
+			set_time_limit(EW_EXPORT_ALL_TIME_LIMIT);
+			$this->DisplayRecs = $this->TotalRecs;
+			$this->StopRec = $this->TotalRecs;
+		} else { // Export one page only
+			$this->SetupStartRec(); // Set up start record position
+
+			// Set the last record to display
+			if ($this->DisplayRecs <= 0) {
+				$this->StopRec = $this->TotalRecs;
+			} else {
+				$this->StopRec = $this->StartRec + $this->DisplayRecs - 1;
+			}
+		}
+		if ($bSelectLimit)
+			$rs = $this->LoadRecordset($this->StartRec-1, $this->DisplayRecs <= 0 ? $this->TotalRecs : $this->DisplayRecs);
+		if (!$rs) {
+			header("Content-Type:"); // Remove header
+			header("Content-Disposition:");
+			$this->ShowMessage();
+			return;
+		}
+		$this->ExportDoc = ew_ExportDocument($this, "h");
+		$Doc = &$this->ExportDoc;
+		if ($bSelectLimit) {
+			$this->StartRec = 1;
+			$this->StopRec = $this->DisplayRecs <= 0 ? $this->TotalRecs : $this->DisplayRecs;
+		} else {
+
+			//$this->StartRec = $this->StartRec;
+			//$this->StopRec = $this->StopRec;
+
+		}
+
+		// Call Page Exporting server event
+		$this->ExportDoc->ExportCustom = !$this->Page_Exporting();
+		$ParentTable = "";
+		$sHeader = $this->PageHeader;
+		$this->Page_DataRendering($sHeader);
+		$Doc->Text .= $sHeader;
+		$this->ExportDocument($Doc, $rs, $this->StartRec, $this->StopRec, "");
+		$sFooter = $this->PageFooter;
+		$this->Page_DataRendered($sFooter);
+		$Doc->Text .= $sFooter;
+
+		// Close recordset
+		$rs->Close();
+
+		// Call Page Exported server event
+		$this->Page_Exported();
+
+		// Export header and footer
+		$Doc->ExportHeaderAndFooter();
+
+		// Clean output buffer
+		if (!EW_DEBUG_ENABLED && ob_get_length())
+			ob_end_clean();
+
+		// Write debug message if enabled
+		if (EW_DEBUG_ENABLED && $this->Export <> "pdf")
+			echo ew_DebugMsg();
+
+		// Output data
+		$Doc->Export();
 	}
 
 	// Set up Breadcrumb
@@ -1366,6 +1600,7 @@ Page_Rendering();
 $clientes_list->Page_Render();
 ?>
 <?php include_once "header.php" ?>
+<?php if ($clientes->Export == "") { ?>
 <script type="text/javascript">
 
 // Form object
@@ -1385,19 +1620,24 @@ fclienteslist.Form_CustomValidate =
 fclienteslist.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-// Form object for search
+fclienteslist.Lists["x_tipo"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
+fclienteslist.Lists["x_tipo"].Options = <?php echo json_encode($clientes_list->tipo->Options()) ?>;
 
+// Form object for search
 </script>
 <script type="text/javascript">
 
 // Write your client script here, no need to add script tags.
 </script>
+<?php } ?>
+<?php if ($clientes->Export == "") { ?>
 <div class="ewToolbar">
 <?php if ($clientes_list->TotalRecs > 0 && $clientes_list->ExportOptions->Visible()) { ?>
 <?php $clientes_list->ExportOptions->Render("body") ?>
 <?php } ?>
 <div class="clearfix"></div>
 </div>
+<?php } ?>
 <?php
 	$bSelectLimit = $clientes_list->UseSelectLimit;
 	if ($bSelectLimit) {
@@ -1435,6 +1675,7 @@ $clientes_list->ShowMessage();
 <input type="hidden" name="<?php echo EW_TOKEN_NAME ?>" value="<?php echo $clientes_list->Token ?>">
 <?php } ?>
 <input type="hidden" name="t" value="clientes">
+<input type="hidden" name="exporttype" id="exporttype" value="">
 <div id="gmp_clientes" class="<?php if (ew_IsResponsiveLayout()) { ?>table-responsive <?php } ?>ewGridMiddlePanel">
 <?php if ($clientes_list->TotalRecs > 0 || $clientes->CurrentAction == "gridedit") { ?>
 <table id="tbl_clienteslist" class="table ewTable">
@@ -1451,6 +1692,24 @@ $clientes_list->RenderListOptions();
 // Render list options (header, left)
 $clientes_list->ListOptions->Render("header", "left");
 ?>
+<?php if ($clientes->tipo->Visible) { // tipo ?>
+	<?php if ($clientes->SortUrl($clientes->tipo) == "") { ?>
+		<th data-name="tipo" class="<?php echo $clientes->tipo->HeaderCellClass() ?>"><div id="elh_clientes_tipo" class="clientes_tipo"><div class="ewTableHeaderCaption"><?php echo $clientes->tipo->FldCaption() ?></div></div></th>
+	<?php } else { ?>
+		<th data-name="tipo" class="<?php echo $clientes->tipo->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $clientes->SortUrl($clientes->tipo) ?>',1);"><div id="elh_clientes_tipo" class="clientes_tipo">
+			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $clientes->tipo->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($clientes->tipo->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($clientes->tipo->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
+		</div></div></th>
+	<?php } ?>
+<?php } ?>
+<?php if ($clientes->id->Visible) { // id ?>
+	<?php if ($clientes->SortUrl($clientes->id) == "") { ?>
+		<th data-name="id" class="<?php echo $clientes->id->HeaderCellClass() ?>"><div id="elh_clientes_id" class="clientes_id"><div class="ewTableHeaderCaption" style="white-space: nowrap;"><?php echo $clientes->id->FldCaption() ?></div></div></th>
+	<?php } else { ?>
+		<th data-name="id" class="<?php echo $clientes->id->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $clientes->SortUrl($clientes->id) ?>',1);"><div id="elh_clientes_id" class="clientes_id">
+			<div class="ewTableHeaderBtn" style="white-space: nowrap;"><span class="ewTableHeaderCaption"><?php echo $clientes->id->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($clientes->id->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($clientes->id->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
+		</div></div></th>
+	<?php } ?>
+<?php } ?>
 <?php
 
 // Render list options (header, right)
@@ -1516,6 +1775,22 @@ while ($clientes_list->RecCnt < $clientes_list->StopRec) {
 // Render list options (body, left)
 $clientes_list->ListOptions->Render("body", "left", $clientes_list->RowCnt);
 ?>
+	<?php if ($clientes->tipo->Visible) { // tipo ?>
+		<td data-name="tipo"<?php echo $clientes->tipo->CellAttributes() ?>>
+<span id="el<?php echo $clientes_list->RowCnt ?>_clientes_tipo" class="clientes_tipo">
+<span<?php echo $clientes->tipo->ViewAttributes() ?>>
+<?php echo $clientes->tipo->ListViewValue() ?></span>
+</span>
+</td>
+	<?php } ?>
+	<?php if ($clientes->id->Visible) { // id ?>
+		<td data-name="id"<?php echo $clientes->id->CellAttributes() ?>>
+<span id="el<?php echo $clientes_list->RowCnt ?>_clientes_id" class="clientes_id">
+<span<?php echo $clientes->id->ViewAttributes() ?>>
+<?php echo $clientes->id->ListViewValue() ?></span>
+</span>
+</td>
+	<?php } ?>
 <?php
 
 // Render list options (body, right)
@@ -1542,6 +1817,7 @@ $clientes_list->ListOptions->Render("body", "right", $clientes_list->RowCnt);
 if ($clientes_list->Recordset)
 	$clientes_list->Recordset->Close();
 ?>
+<?php if ($clientes->Export == "") { ?>
 <div class="box-footer ewGridLowerPanel">
 <?php if ($clientes->CurrentAction <> "gridadd" && $clientes->CurrentAction <> "gridedit") { ?>
 <form name="ewPagerForm" class="ewForm form-inline ewPagerForm" action="<?php echo ew_CurrentPage() ?>">
@@ -1600,6 +1876,7 @@ if ($clientes_list->Recordset)
 </div>
 <div class="clearfix"></div>
 </div>
+<?php } ?>
 </div>
 <?php } ?>
 <?php if ($clientes_list->TotalRecs == 0 && $clientes->CurrentAction == "") { // Show other options ?>
@@ -1613,20 +1890,24 @@ if ($clientes_list->Recordset)
 </div>
 <div class="clearfix"></div>
 <?php } ?>
+<?php if ($clientes->Export == "") { ?>
 <script type="text/javascript">
 fclienteslist.Init();
 </script>
+<?php } ?>
 <?php
 $clientes_list->ShowPageFooter();
 if (EW_DEBUG_ENABLED)
 	echo ew_DebugMsg();
 ?>
+<?php if ($clientes->Export == "") { ?>
 <script type="text/javascript">
 
 // Write your table-specific startup script here
 // document.write("page loaded");
 
 </script>
+<?php } ?>
 <?php include_once "footer.php" ?>
 <?php
 $clientes_list->Page_Terminate();

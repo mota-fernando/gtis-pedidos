@@ -346,13 +346,13 @@ class cempresas_view extends cempresas {
 		$this->direcao->SetVisibility();
 		$this->_email->SetVisibility();
 		$this->id_endereco->SetVisibility();
+		$this->endereco_numero->SetVisibility();
 		$this->nome_fantasia->SetVisibility();
 		$this->cnpj->SetVisibility();
 		$this->ie->SetVisibility();
 		$this->fonecedor->SetVisibility();
 		$this->celular->SetVisibility();
 		$this->whatsapp->SetVisibility();
-		$this->endereco_numero->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -454,6 +454,9 @@ class cempresas_view extends cempresas {
 		// Check modal
 		if ($this->IsModal)
 			$gbSkipHeaderFooter = TRUE;
+
+		// Load current record
+		$bLoadCurrentRecord = FALSE;
 		$sReturnUrl = "";
 		$bMatchRecord = FALSE;
 		if ($this->IsPageRequest()) { // Validate request
@@ -621,13 +624,13 @@ class cempresas_view extends cempresas {
 		$this->direcao->setDbValue($row['direcao']);
 		$this->_email->setDbValue($row['email']);
 		$this->id_endereco->setDbValue($row['id_endereco']);
+		$this->endereco_numero->setDbValue($row['endereco_numero']);
 		$this->nome_fantasia->setDbValue($row['nome_fantasia']);
 		$this->cnpj->setDbValue($row['cnpj']);
 		$this->ie->setDbValue($row['ie']);
 		$this->fonecedor->setDbValue($row['fonecedor']);
 		$this->celular->setDbValue($row['celular']);
 		$this->whatsapp->setDbValue($row['whatsapp']);
-		$this->endereco_numero->setDbValue($row['endereco_numero']);
 	}
 
 	// Return a row with default values
@@ -640,13 +643,13 @@ class cempresas_view extends cempresas {
 		$row['direcao'] = NULL;
 		$row['email'] = NULL;
 		$row['id_endereco'] = NULL;
+		$row['endereco_numero'] = NULL;
 		$row['nome_fantasia'] = NULL;
 		$row['cnpj'] = NULL;
 		$row['ie'] = NULL;
 		$row['fonecedor'] = NULL;
 		$row['celular'] = NULL;
 		$row['whatsapp'] = NULL;
-		$row['endereco_numero'] = NULL;
 		return $row;
 	}
 
@@ -662,13 +665,13 @@ class cempresas_view extends cempresas {
 		$this->direcao->DbValue = $row['direcao'];
 		$this->_email->DbValue = $row['email'];
 		$this->id_endereco->DbValue = $row['id_endereco'];
+		$this->endereco_numero->DbValue = $row['endereco_numero'];
 		$this->nome_fantasia->DbValue = $row['nome_fantasia'];
 		$this->cnpj->DbValue = $row['cnpj'];
 		$this->ie->DbValue = $row['ie'];
 		$this->fonecedor->DbValue = $row['fonecedor'];
 		$this->celular->DbValue = $row['celular'];
 		$this->whatsapp->DbValue = $row['whatsapp'];
-		$this->endereco_numero->DbValue = $row['endereco_numero'];
 	}
 
 	// Render row values based on field settings
@@ -694,13 +697,13 @@ class cempresas_view extends cempresas {
 		// direcao
 		// email
 		// id_endereco
+		// endereco_numero
 		// nome_fantasia
 		// cnpj
 		// ie
 		// fonecedor
 		// celular
 		// whatsapp
-		// endereco_numero
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -754,6 +757,10 @@ class cempresas_view extends cempresas {
 		}
 		$this->id_endereco->ViewCustomAttributes = "";
 
+		// endereco_numero
+		$this->endereco_numero->ViewValue = $this->endereco_numero->CurrentValue;
+		$this->endereco_numero->ViewCustomAttributes = "";
+
 		// nome_fantasia
 		$this->nome_fantasia->ViewValue = $this->nome_fantasia->CurrentValue;
 		$this->nome_fantasia->ViewCustomAttributes = "";
@@ -777,10 +784,6 @@ class cempresas_view extends cempresas {
 		// whatsapp
 		$this->whatsapp->ViewValue = $this->whatsapp->CurrentValue;
 		$this->whatsapp->ViewCustomAttributes = "";
-
-		// endereco_numero
-		$this->endereco_numero->ViewValue = $this->endereco_numero->CurrentValue;
-		$this->endereco_numero->ViewCustomAttributes = "";
 
 			// razao_social
 			$this->razao_social->LinkCustomAttributes = "";
@@ -812,6 +815,11 @@ class cempresas_view extends cempresas {
 			$this->id_endereco->HrefValue = "";
 			$this->id_endereco->TooltipValue = "";
 
+			// endereco_numero
+			$this->endereco_numero->LinkCustomAttributes = "";
+			$this->endereco_numero->HrefValue = "";
+			$this->endereco_numero->TooltipValue = "";
+
 			// nome_fantasia
 			$this->nome_fantasia->LinkCustomAttributes = "";
 			$this->nome_fantasia->HrefValue = "";
@@ -841,11 +849,6 @@ class cempresas_view extends cempresas {
 			$this->whatsapp->LinkCustomAttributes = "";
 			$this->whatsapp->HrefValue = "";
 			$this->whatsapp->TooltipValue = "";
-
-			// endereco_numero
-			$this->endereco_numero->LinkCustomAttributes = "";
-			$this->endereco_numero->HrefValue = "";
-			$this->endereco_numero->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -1097,6 +1100,17 @@ $empresas_view->ShowMessage();
 </td>
 	</tr>
 <?php } ?>
+<?php if ($empresas->endereco_numero->Visible) { // endereco_numero ?>
+	<tr id="r_endereco_numero">
+		<td class="col-sm-2"><span id="elh_empresas_endereco_numero"><?php echo $empresas->endereco_numero->FldCaption() ?></span></td>
+		<td data-name="endereco_numero"<?php echo $empresas->endereco_numero->CellAttributes() ?>>
+<span id="el_empresas_endereco_numero">
+<span<?php echo $empresas->endereco_numero->ViewAttributes() ?>>
+<?php echo $empresas->endereco_numero->ViewValue ?></span>
+</span>
+</td>
+	</tr>
+<?php } ?>
 <?php if ($empresas->nome_fantasia->Visible) { // nome_fantasia ?>
 	<tr id="r_nome_fantasia">
 		<td class="col-sm-2"><span id="elh_empresas_nome_fantasia"><?php echo $empresas->nome_fantasia->FldCaption() ?></span></td>
@@ -1159,17 +1173,6 @@ $empresas_view->ShowMessage();
 <span id="el_empresas_whatsapp">
 <span<?php echo $empresas->whatsapp->ViewAttributes() ?>>
 <?php echo $empresas->whatsapp->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
-<?php if ($empresas->endereco_numero->Visible) { // endereco_numero ?>
-	<tr id="r_endereco_numero">
-		<td class="col-sm-2"><span id="elh_empresas_endereco_numero"><?php echo $empresas->endereco_numero->FldCaption() ?></span></td>
-		<td data-name="endereco_numero"<?php echo $empresas->endereco_numero->CellAttributes() ?>>
-<span id="el_empresas_endereco_numero">
-<span<?php echo $empresas->endereco_numero->ViewAttributes() ?>>
-<?php echo $empresas->endereco_numero->ViewValue ?></span>
 </span>
 </td>
 	</tr>

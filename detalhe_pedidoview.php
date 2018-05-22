@@ -450,6 +450,9 @@ class cdetalhe_pedido_view extends cdetalhe_pedido {
 		// Check modal
 		if ($this->IsModal)
 			$gbSkipHeaderFooter = TRUE;
+
+		// Load current record
+		$bLoadCurrentRecord = FALSE;
 		$sReturnUrl = "";
 		$bMatchRecord = FALSE;
 

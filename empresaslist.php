@@ -362,6 +362,45 @@ class cempresas_list extends cempresas {
 	//
 	function Page_Init() {
 		global $gsExport, $gsCustomExport, $gsExportFile, $UserProfile, $Language, $Security, $objForm;
+
+		// Get export parameters
+		$custom = "";
+		if (@$_GET["export"] <> "") {
+			$this->Export = $_GET["export"];
+			$custom = @$_GET["custom"];
+		} elseif (@$_POST["export"] <> "") {
+			$this->Export = $_POST["export"];
+			$custom = @$_POST["custom"];
+		} elseif (ew_IsPost()) {
+			if (@$_POST["exporttype"] <> "")
+				$this->Export = $_POST["exporttype"];
+			$custom = @$_POST["custom"];
+		} elseif (@$_GET["cmd"] == "json") {
+			$this->Export = $_GET["cmd"];
+		} else {
+			$this->setExportReturnUrl(ew_CurrentUrl());
+		}
+		$gsExportFile = $this->TableVar; // Get export file, used in header
+
+		// Get custom export parameters
+		if ($this->Export <> "" && $custom <> "") {
+			$this->CustomExport = $this->Export;
+			$this->Export = "print";
+		}
+		$gsCustomExport = $this->CustomExport;
+		$gsExport = $this->Export; // Get export parameter, used in header
+
+		// Update Export URLs
+		if (defined("EW_USE_PHPEXCEL"))
+			$this->ExportExcelCustom = FALSE;
+		if ($this->ExportExcelCustom)
+			$this->ExportExcelUrl .= "&amp;custom=1";
+		if (defined("EW_USE_PHPWORD"))
+			$this->ExportWordCustom = FALSE;
+		if ($this->ExportWordCustom)
+			$this->ExportWordUrl .= "&amp;custom=1";
+		if ($this->ExportPdfCustom)
+			$this->ExportPdfUrl .= "&amp;custom=1";
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
 
 		// Get grid add count
@@ -371,6 +410,9 @@ class cempresas_list extends cempresas {
 
 		// Set up list options
 		$this->SetupListOptions();
+
+		// Setup export options
+		$this->SetupExportOptions();
 		$this->id_perfil->SetVisibility();
 		if ($this->IsAdd() || $this->IsCopy() || $this->IsGridAdd())
 			$this->id_perfil->Visible = FALSE;
@@ -380,13 +422,13 @@ class cempresas_list extends cempresas {
 		$this->direcao->SetVisibility();
 		$this->_email->SetVisibility();
 		$this->id_endereco->SetVisibility();
+		$this->endereco_numero->SetVisibility();
 		$this->nome_fantasia->SetVisibility();
 		$this->cnpj->SetVisibility();
 		$this->ie->SetVisibility();
 		$this->fonecedor->SetVisibility();
 		$this->celular->SetVisibility();
 		$this->whatsapp->SetVisibility();
-		$this->endereco_numero->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -646,6 +688,17 @@ class cempresas_list extends cempresas {
 			$this->CurrentFilter = "";
 		}
 
+		// Export selected records
+		if ($this->Export <> "")
+			$this->CurrentFilter = $this->BuildExportSelectedFilter();
+
+		// Export data only
+		if ($this->CustomExport == "" && in_array($this->Export, array_keys($EW_EXPORT))) {
+			$this->ExportData();
+			$this->Page_Terminate(); // Terminate response
+			exit();
+		}
+
 		// Load record count first
 		if (!$this->IsAddOrEdit()) {
 			$bSelectLimit = $this->UseSelectLimit;
@@ -717,13 +770,13 @@ class cempresas_list extends cempresas {
 		$sFilterList = ew_Concat($sFilterList, $this->direcao->AdvancedSearch->ToJson(), ","); // Field direcao
 		$sFilterList = ew_Concat($sFilterList, $this->_email->AdvancedSearch->ToJson(), ","); // Field email
 		$sFilterList = ew_Concat($sFilterList, $this->id_endereco->AdvancedSearch->ToJson(), ","); // Field id_endereco
+		$sFilterList = ew_Concat($sFilterList, $this->endereco_numero->AdvancedSearch->ToJson(), ","); // Field endereco_numero
 		$sFilterList = ew_Concat($sFilterList, $this->nome_fantasia->AdvancedSearch->ToJson(), ","); // Field nome_fantasia
 		$sFilterList = ew_Concat($sFilterList, $this->cnpj->AdvancedSearch->ToJson(), ","); // Field cnpj
 		$sFilterList = ew_Concat($sFilterList, $this->ie->AdvancedSearch->ToJson(), ","); // Field ie
 		$sFilterList = ew_Concat($sFilterList, $this->fonecedor->AdvancedSearch->ToJson(), ","); // Field fonecedor
 		$sFilterList = ew_Concat($sFilterList, $this->celular->AdvancedSearch->ToJson(), ","); // Field celular
 		$sFilterList = ew_Concat($sFilterList, $this->whatsapp->AdvancedSearch->ToJson(), ","); // Field whatsapp
-		$sFilterList = ew_Concat($sFilterList, $this->endereco_numero->AdvancedSearch->ToJson(), ","); // Field endereco_numero
 		if ($this->BasicSearch->Keyword <> "") {
 			$sWrk = "\"" . EW_TABLE_BASIC_SEARCH . "\":\"" . ew_JsEncode2($this->BasicSearch->Keyword) . "\",\"" . EW_TABLE_BASIC_SEARCH_TYPE . "\":\"" . ew_JsEncode2($this->BasicSearch->Type) . "\"";
 			$sFilterList = ew_Concat($sFilterList, $sWrk, ",");
@@ -824,6 +877,14 @@ class cempresas_list extends cempresas {
 		$this->id_endereco->AdvancedSearch->SearchOperator2 = @$filter["w_id_endereco"];
 		$this->id_endereco->AdvancedSearch->Save();
 
+		// Field endereco_numero
+		$this->endereco_numero->AdvancedSearch->SearchValue = @$filter["x_endereco_numero"];
+		$this->endereco_numero->AdvancedSearch->SearchOperator = @$filter["z_endereco_numero"];
+		$this->endereco_numero->AdvancedSearch->SearchCondition = @$filter["v_endereco_numero"];
+		$this->endereco_numero->AdvancedSearch->SearchValue2 = @$filter["y_endereco_numero"];
+		$this->endereco_numero->AdvancedSearch->SearchOperator2 = @$filter["w_endereco_numero"];
+		$this->endereco_numero->AdvancedSearch->Save();
+
 		// Field nome_fantasia
 		$this->nome_fantasia->AdvancedSearch->SearchValue = @$filter["x_nome_fantasia"];
 		$this->nome_fantasia->AdvancedSearch->SearchOperator = @$filter["z_nome_fantasia"];
@@ -871,14 +932,6 @@ class cempresas_list extends cempresas {
 		$this->whatsapp->AdvancedSearch->SearchValue2 = @$filter["y_whatsapp"];
 		$this->whatsapp->AdvancedSearch->SearchOperator2 = @$filter["w_whatsapp"];
 		$this->whatsapp->AdvancedSearch->Save();
-
-		// Field endereco_numero
-		$this->endereco_numero->AdvancedSearch->SearchValue = @$filter["x_endereco_numero"];
-		$this->endereco_numero->AdvancedSearch->SearchOperator = @$filter["z_endereco_numero"];
-		$this->endereco_numero->AdvancedSearch->SearchCondition = @$filter["v_endereco_numero"];
-		$this->endereco_numero->AdvancedSearch->SearchValue2 = @$filter["y_endereco_numero"];
-		$this->endereco_numero->AdvancedSearch->SearchOperator2 = @$filter["w_endereco_numero"];
-		$this->endereco_numero->AdvancedSearch->Save();
 		$this->BasicSearch->setKeyword(@$filter[EW_TABLE_BASIC_SEARCH]);
 		$this->BasicSearch->setType(@$filter[EW_TABLE_BASIC_SEARCH_TYPE]);
 	}
@@ -891,8 +944,8 @@ class cempresas_list extends cempresas {
 		$this->BuildBasicSearchSQL($sWhere, $this->telefone, $arKeywords, $type);
 		$this->BuildBasicSearchSQL($sWhere, $this->direcao, $arKeywords, $type);
 		$this->BuildBasicSearchSQL($sWhere, $this->_email, $arKeywords, $type);
-		$this->BuildBasicSearchSQL($sWhere, $this->nome_fantasia, $arKeywords, $type);
 		$this->BuildBasicSearchSQL($sWhere, $this->endereco_numero, $arKeywords, $type);
+		$this->BuildBasicSearchSQL($sWhere, $this->nome_fantasia, $arKeywords, $type);
 		return $sWhere;
 	}
 
@@ -1045,13 +1098,13 @@ class cempresas_list extends cempresas {
 			$this->UpdateSort($this->direcao); // direcao
 			$this->UpdateSort($this->_email); // email
 			$this->UpdateSort($this->id_endereco); // id_endereco
+			$this->UpdateSort($this->endereco_numero); // endereco_numero
 			$this->UpdateSort($this->nome_fantasia); // nome_fantasia
 			$this->UpdateSort($this->cnpj); // cnpj
 			$this->UpdateSort($this->ie); // ie
 			$this->UpdateSort($this->fonecedor); // fonecedor
 			$this->UpdateSort($this->celular); // celular
 			$this->UpdateSort($this->whatsapp); // whatsapp
-			$this->UpdateSort($this->endereco_numero); // endereco_numero
 			$this->setStartRecordNumber(1); // Reset start position
 		}
 	}
@@ -1091,13 +1144,13 @@ class cempresas_list extends cempresas {
 				$this->direcao->setSort("");
 				$this->_email->setSort("");
 				$this->id_endereco->setSort("");
+				$this->endereco_numero->setSort("");
 				$this->nome_fantasia->setSort("");
 				$this->cnpj->setSort("");
 				$this->ie->setSort("");
 				$this->fonecedor->setSort("");
 				$this->celular->setSort("");
 				$this->whatsapp->setSort("");
-				$this->endereco_numero->setSort("");
 			}
 
 			// Reset start position
@@ -1150,7 +1203,7 @@ class cempresas_list extends cempresas {
 
 		// "checkbox"
 		$item = &$this->ListOptions->Add("checkbox");
-		$item->Visible = FALSE;
+		$item->Visible = TRUE;
 		$item->OnLeft = FALSE;
 		$item->Header = "<input type=\"checkbox\" name=\"key\" id=\"key\" onclick=\"ew_SelectAllKey(this);\">";
 		$item->ShowInDropDown = FALSE;
@@ -1553,13 +1606,13 @@ class cempresas_list extends cempresas {
 		$this->direcao->setDbValue($row['direcao']);
 		$this->_email->setDbValue($row['email']);
 		$this->id_endereco->setDbValue($row['id_endereco']);
+		$this->endereco_numero->setDbValue($row['endereco_numero']);
 		$this->nome_fantasia->setDbValue($row['nome_fantasia']);
 		$this->cnpj->setDbValue($row['cnpj']);
 		$this->ie->setDbValue($row['ie']);
 		$this->fonecedor->setDbValue($row['fonecedor']);
 		$this->celular->setDbValue($row['celular']);
 		$this->whatsapp->setDbValue($row['whatsapp']);
-		$this->endereco_numero->setDbValue($row['endereco_numero']);
 	}
 
 	// Return a row with default values
@@ -1572,13 +1625,13 @@ class cempresas_list extends cempresas {
 		$row['direcao'] = NULL;
 		$row['email'] = NULL;
 		$row['id_endereco'] = NULL;
+		$row['endereco_numero'] = NULL;
 		$row['nome_fantasia'] = NULL;
 		$row['cnpj'] = NULL;
 		$row['ie'] = NULL;
 		$row['fonecedor'] = NULL;
 		$row['celular'] = NULL;
 		$row['whatsapp'] = NULL;
-		$row['endereco_numero'] = NULL;
 		return $row;
 	}
 
@@ -1594,13 +1647,13 @@ class cempresas_list extends cempresas {
 		$this->direcao->DbValue = $row['direcao'];
 		$this->_email->DbValue = $row['email'];
 		$this->id_endereco->DbValue = $row['id_endereco'];
+		$this->endereco_numero->DbValue = $row['endereco_numero'];
 		$this->nome_fantasia->DbValue = $row['nome_fantasia'];
 		$this->cnpj->DbValue = $row['cnpj'];
 		$this->ie->DbValue = $row['ie'];
 		$this->fonecedor->DbValue = $row['fonecedor'];
 		$this->celular->DbValue = $row['celular'];
 		$this->whatsapp->DbValue = $row['whatsapp'];
-		$this->endereco_numero->DbValue = $row['endereco_numero'];
 	}
 
 	// Load old record
@@ -1648,13 +1701,13 @@ class cempresas_list extends cempresas {
 		// direcao
 		// email
 		// id_endereco
+		// endereco_numero
 		// nome_fantasia
 		// cnpj
 		// ie
 		// fonecedor
 		// celular
 		// whatsapp
-		// endereco_numero
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -1708,6 +1761,10 @@ class cempresas_list extends cempresas {
 		}
 		$this->id_endereco->ViewCustomAttributes = "";
 
+		// endereco_numero
+		$this->endereco_numero->ViewValue = $this->endereco_numero->CurrentValue;
+		$this->endereco_numero->ViewCustomAttributes = "";
+
 		// nome_fantasia
 		$this->nome_fantasia->ViewValue = $this->nome_fantasia->CurrentValue;
 		$this->nome_fantasia->ViewCustomAttributes = "";
@@ -1731,10 +1788,6 @@ class cempresas_list extends cempresas {
 		// whatsapp
 		$this->whatsapp->ViewValue = $this->whatsapp->CurrentValue;
 		$this->whatsapp->ViewCustomAttributes = "";
-
-		// endereco_numero
-		$this->endereco_numero->ViewValue = $this->endereco_numero->CurrentValue;
-		$this->endereco_numero->ViewCustomAttributes = "";
 
 			// id_perfil
 			$this->id_perfil->LinkCustomAttributes = "";
@@ -1771,6 +1824,11 @@ class cempresas_list extends cempresas {
 			$this->id_endereco->HrefValue = "";
 			$this->id_endereco->TooltipValue = "";
 
+			// endereco_numero
+			$this->endereco_numero->LinkCustomAttributes = "";
+			$this->endereco_numero->HrefValue = "";
+			$this->endereco_numero->TooltipValue = "";
+
 			// nome_fantasia
 			$this->nome_fantasia->LinkCustomAttributes = "";
 			$this->nome_fantasia->HrefValue = "";
@@ -1800,16 +1858,164 @@ class cempresas_list extends cempresas {
 			$this->whatsapp->LinkCustomAttributes = "";
 			$this->whatsapp->HrefValue = "";
 			$this->whatsapp->TooltipValue = "";
-
-			// endereco_numero
-			$this->endereco_numero->LinkCustomAttributes = "";
-			$this->endereco_numero->HrefValue = "";
-			$this->endereco_numero->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
 		if ($this->RowType <> EW_ROWTYPE_AGGREGATEINIT)
 			$this->Row_Rendered();
+	}
+
+	// Build export filter for selected records
+	function BuildExportSelectedFilter() {
+		global $Language;
+		$sWrkFilter = "";
+		if ($this->Export <> "") {
+			$sWrkFilter = $this->GetKeyFilter();
+		}
+		return $sWrkFilter;
+	}
+
+	// Set up export options
+	function SetupExportOptions() {
+		global $Language;
+
+		// Printer friendly
+		$item = &$this->ExportOptions->Add("print");
+		$item->Body = "<a class=\"ewExportLink ewPrint\" title=\"" . ew_HtmlEncode($Language->Phrase("PrinterFriendlyText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("PrinterFriendlyText")) . "\" onclick=\"ew_Export(document.fempresaslist,'" . ew_CurrentPage() . "','print',false,true);\">" . $Language->Phrase("PrinterFriendly") . "</a>";
+		$item->Visible = TRUE;
+
+		// Export to Excel
+		$item = &$this->ExportOptions->Add("excel");
+		$item->Body = "<a class=\"ewExportLink ewExcel\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToExcelText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToExcelText")) . "\" onclick=\"ew_Export(document.fempresaslist,'" . ew_CurrentPage() . "','excel',false,true);\">" . $Language->Phrase("ExportToExcel") . "</a>";
+		$item->Visible = TRUE;
+
+		// Export to Word
+		$item = &$this->ExportOptions->Add("word");
+		$item->Body = "<a class=\"ewExportLink ewWord\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToWordText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToWordText")) . "\" onclick=\"ew_Export(document.fempresaslist,'" . ew_CurrentPage() . "','word',false,true);\">" . $Language->Phrase("ExportToWord") . "</a>";
+		$item->Visible = FALSE;
+
+		// Export to Html
+		$item = &$this->ExportOptions->Add("html");
+		$item->Body = "<a class=\"ewExportLink ewHtml\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToHtmlText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToHtmlText")) . "\" onclick=\"ew_Export(document.fempresaslist,'" . ew_CurrentPage() . "','html',false,true);\">" . $Language->Phrase("ExportToHtml") . "</a>";
+		$item->Visible = FALSE;
+
+		// Export to Xml
+		$item = &$this->ExportOptions->Add("xml");
+		$item->Body = "<a class=\"ewExportLink ewXml\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToXmlText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToXmlText")) . "\" onclick=\"ew_Export(document.fempresaslist,'" . ew_CurrentPage() . "','xml',false,true);\">" . $Language->Phrase("ExportToXml") . "</a>";
+		$item->Visible = FALSE;
+
+		// Export to Csv
+		$item = &$this->ExportOptions->Add("csv");
+		$item->Body = "<a class=\"ewExportLink ewCsv\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToCsvText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToCsvText")) . "\" onclick=\"ew_Export(document.fempresaslist,'" . ew_CurrentPage() . "','csv',false,true);\">" . $Language->Phrase("ExportToCsv") . "</a>";
+		$item->Visible = FALSE;
+
+		// Export to Pdf
+		$item = &$this->ExportOptions->Add("pdf");
+		$item->Body = "<a class=\"ewExportLink ewPdf\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToPDFText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToPDFText")) . "\" onclick=\"ew_Export(document.fempresaslist,'" . ew_CurrentPage() . "','pdf',false,true);\">" . $Language->Phrase("ExportToPDF") . "</a>";
+		$item->Visible = FALSE;
+
+		// Export to Email
+		$item = &$this->ExportOptions->Add("email");
+		$url = "";
+		$item->Body = "<button id=\"emf_empresas\" class=\"ewExportLink ewEmail\" title=\"" . $Language->Phrase("ExportToEmailText") . "\" data-caption=\"" . $Language->Phrase("ExportToEmailText") . "\" onclick=\"ew_EmailDialogShow({lnk:'emf_empresas',hdr:ewLanguage.Phrase('ExportToEmailText'),f:document.fempresaslist,sel:true" . $url . "});\">" . $Language->Phrase("ExportToEmail") . "</button>";
+		$item->Visible = FALSE;
+
+		// Drop down button for export
+		$this->ExportOptions->UseButtonGroup = TRUE;
+		$this->ExportOptions->UseImageAndText = TRUE;
+		$this->ExportOptions->UseDropDownButton = FALSE;
+		if ($this->ExportOptions->UseButtonGroup && ew_IsMobile())
+			$this->ExportOptions->UseDropDownButton = TRUE;
+		$this->ExportOptions->DropDownButtonPhrase = $Language->Phrase("ButtonExport");
+
+		// Add group option item
+		$item = &$this->ExportOptions->Add($this->ExportOptions->GroupOptionName);
+		$item->Body = "";
+		$item->Visible = FALSE;
+	}
+
+	// Export data in HTML/CSV/Word/Excel/XML/Email/PDF format
+	function ExportData() {
+		$utf8 = (strtolower(EW_CHARSET) == "utf-8");
+		$bSelectLimit = $this->UseSelectLimit;
+
+		// Load recordset
+		if ($bSelectLimit) {
+			$this->TotalRecs = $this->ListRecordCount();
+		} else {
+			if (!$this->Recordset)
+				$this->Recordset = $this->LoadRecordset();
+			$rs = &$this->Recordset;
+			if ($rs)
+				$this->TotalRecs = $rs->RecordCount();
+		}
+		$this->StartRec = 1;
+
+		// Export all
+		if ($this->ExportAll) {
+			set_time_limit(EW_EXPORT_ALL_TIME_LIMIT);
+			$this->DisplayRecs = $this->TotalRecs;
+			$this->StopRec = $this->TotalRecs;
+		} else { // Export one page only
+			$this->SetupStartRec(); // Set up start record position
+
+			// Set the last record to display
+			if ($this->DisplayRecs <= 0) {
+				$this->StopRec = $this->TotalRecs;
+			} else {
+				$this->StopRec = $this->StartRec + $this->DisplayRecs - 1;
+			}
+		}
+		if ($bSelectLimit)
+			$rs = $this->LoadRecordset($this->StartRec-1, $this->DisplayRecs <= 0 ? $this->TotalRecs : $this->DisplayRecs);
+		if (!$rs) {
+			header("Content-Type:"); // Remove header
+			header("Content-Disposition:");
+			$this->ShowMessage();
+			return;
+		}
+		$this->ExportDoc = ew_ExportDocument($this, "h");
+		$Doc = &$this->ExportDoc;
+		if ($bSelectLimit) {
+			$this->StartRec = 1;
+			$this->StopRec = $this->DisplayRecs <= 0 ? $this->TotalRecs : $this->DisplayRecs;
+		} else {
+
+			//$this->StartRec = $this->StartRec;
+			//$this->StopRec = $this->StopRec;
+
+		}
+
+		// Call Page Exporting server event
+		$this->ExportDoc->ExportCustom = !$this->Page_Exporting();
+		$ParentTable = "";
+		$sHeader = $this->PageHeader;
+		$this->Page_DataRendering($sHeader);
+		$Doc->Text .= $sHeader;
+		$this->ExportDocument($Doc, $rs, $this->StartRec, $this->StopRec, "");
+		$sFooter = $this->PageFooter;
+		$this->Page_DataRendered($sFooter);
+		$Doc->Text .= $sFooter;
+
+		// Close recordset
+		$rs->Close();
+
+		// Call Page Exported server event
+		$this->Page_Exported();
+
+		// Export header and footer
+		$Doc->ExportHeaderAndFooter();
+
+		// Clean output buffer
+		if (!EW_DEBUG_ENABLED && ob_get_length())
+			ob_end_clean();
+
+		// Write debug message if enabled
+		if (EW_DEBUG_ENABLED && $this->Export <> "pdf")
+			echo ew_DebugMsg();
+
+		// Output data
+		$Doc->Export();
 	}
 
 	// Set up Breadcrumb
@@ -1985,6 +2191,7 @@ Page_Rendering();
 $empresas_list->Page_Render();
 ?>
 <?php include_once "header.php" ?>
+<?php if ($empresas->Export == "") { ?>
 <script type="text/javascript">
 
 // Form object
@@ -2014,6 +2221,8 @@ var CurrentSearchForm = fempresaslistsrch = new ew_Form("fempresaslistsrch");
 
 // Write your client script here, no need to add script tags.
 </script>
+<?php } ?>
+<?php if ($empresas->Export == "") { ?>
 <div class="ewToolbar">
 <?php if ($empresas_list->TotalRecs > 0 && $empresas_list->ExportOptions->Visible()) { ?>
 <?php $empresas_list->ExportOptions->Render("body") ?>
@@ -2026,6 +2235,7 @@ var CurrentSearchForm = fempresaslistsrch = new ew_Form("fempresaslistsrch");
 <?php } ?>
 <div class="clearfix"></div>
 </div>
+<?php } ?>
 <?php
 	$bSelectLimit = $empresas_list->UseSelectLimit;
 	if ($bSelectLimit) {
@@ -2090,6 +2300,7 @@ $empresas_list->ShowMessage();
 <input type="hidden" name="<?php echo EW_TOKEN_NAME ?>" value="<?php echo $empresas_list->Token ?>">
 <?php } ?>
 <input type="hidden" name="t" value="empresas">
+<input type="hidden" name="exporttype" id="exporttype" value="">
 <div id="gmp_empresas" class="<?php if (ew_IsResponsiveLayout()) { ?>table-responsive <?php } ?>ewGridMiddlePanel">
 <?php if ($empresas_list->TotalRecs > 0 || $empresas->CurrentAction == "gridedit") { ?>
 <table id="tbl_empresaslist" class="table ewTable">
@@ -2169,6 +2380,15 @@ $empresas_list->ListOptions->Render("header", "left");
 		</div></div></th>
 	<?php } ?>
 <?php } ?>
+<?php if ($empresas->endereco_numero->Visible) { // endereco_numero ?>
+	<?php if ($empresas->SortUrl($empresas->endereco_numero) == "") { ?>
+		<th data-name="endereco_numero" class="<?php echo $empresas->endereco_numero->HeaderCellClass() ?>"><div id="elh_empresas_endereco_numero" class="empresas_endereco_numero"><div class="ewTableHeaderCaption"><?php echo $empresas->endereco_numero->FldCaption() ?></div></div></th>
+	<?php } else { ?>
+		<th data-name="endereco_numero" class="<?php echo $empresas->endereco_numero->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $empresas->SortUrl($empresas->endereco_numero) ?>',1);"><div id="elh_empresas_endereco_numero" class="empresas_endereco_numero">
+			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $empresas->endereco_numero->FldCaption() ?><?php echo $Language->Phrase("SrchLegend") ?></span><span class="ewTableHeaderSort"><?php if ($empresas->endereco_numero->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($empresas->endereco_numero->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
+		</div></div></th>
+	<?php } ?>
+<?php } ?>
 <?php if ($empresas->nome_fantasia->Visible) { // nome_fantasia ?>
 	<?php if ($empresas->SortUrl($empresas->nome_fantasia) == "") { ?>
 		<th data-name="nome_fantasia" class="<?php echo $empresas->nome_fantasia->HeaderCellClass() ?>"><div id="elh_empresas_nome_fantasia" class="empresas_nome_fantasia"><div class="ewTableHeaderCaption"><?php echo $empresas->nome_fantasia->FldCaption() ?></div></div></th>
@@ -2220,15 +2440,6 @@ $empresas_list->ListOptions->Render("header", "left");
 	<?php } else { ?>
 		<th data-name="whatsapp" class="<?php echo $empresas->whatsapp->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $empresas->SortUrl($empresas->whatsapp) ?>',1);"><div id="elh_empresas_whatsapp" class="empresas_whatsapp">
 			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $empresas->whatsapp->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($empresas->whatsapp->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($empresas->whatsapp->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($empresas->endereco_numero->Visible) { // endereco_numero ?>
-	<?php if ($empresas->SortUrl($empresas->endereco_numero) == "") { ?>
-		<th data-name="endereco_numero" class="<?php echo $empresas->endereco_numero->HeaderCellClass() ?>"><div id="elh_empresas_endereco_numero" class="empresas_endereco_numero"><div class="ewTableHeaderCaption"><?php echo $empresas->endereco_numero->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="endereco_numero" class="<?php echo $empresas->endereco_numero->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $empresas->SortUrl($empresas->endereco_numero) ?>',1);"><div id="elh_empresas_endereco_numero" class="empresas_endereco_numero">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $empresas->endereco_numero->FldCaption() ?><?php echo $Language->Phrase("SrchLegend") ?></span><span class="ewTableHeaderSort"><?php if ($empresas->endereco_numero->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($empresas->endereco_numero->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
 		</div></div></th>
 	<?php } ?>
 <?php } ?>
@@ -2353,6 +2564,14 @@ $empresas_list->ListOptions->Render("body", "left", $empresas_list->RowCnt);
 </span>
 </td>
 	<?php } ?>
+	<?php if ($empresas->endereco_numero->Visible) { // endereco_numero ?>
+		<td data-name="endereco_numero"<?php echo $empresas->endereco_numero->CellAttributes() ?>>
+<span id="el<?php echo $empresas_list->RowCnt ?>_empresas_endereco_numero" class="empresas_endereco_numero">
+<span<?php echo $empresas->endereco_numero->ViewAttributes() ?>>
+<?php echo $empresas->endereco_numero->ListViewValue() ?></span>
+</span>
+</td>
+	<?php } ?>
 	<?php if ($empresas->nome_fantasia->Visible) { // nome_fantasia ?>
 		<td data-name="nome_fantasia"<?php echo $empresas->nome_fantasia->CellAttributes() ?>>
 <span id="el<?php echo $empresas_list->RowCnt ?>_empresas_nome_fantasia" class="empresas_nome_fantasia">
@@ -2401,14 +2620,6 @@ $empresas_list->ListOptions->Render("body", "left", $empresas_list->RowCnt);
 </span>
 </td>
 	<?php } ?>
-	<?php if ($empresas->endereco_numero->Visible) { // endereco_numero ?>
-		<td data-name="endereco_numero"<?php echo $empresas->endereco_numero->CellAttributes() ?>>
-<span id="el<?php echo $empresas_list->RowCnt ?>_empresas_endereco_numero" class="empresas_endereco_numero">
-<span<?php echo $empresas->endereco_numero->ViewAttributes() ?>>
-<?php echo $empresas->endereco_numero->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
 <?php
 
 // Render list options (body, right)
@@ -2435,6 +2646,7 @@ $empresas_list->ListOptions->Render("body", "right", $empresas_list->RowCnt);
 if ($empresas_list->Recordset)
 	$empresas_list->Recordset->Close();
 ?>
+<?php if ($empresas->Export == "") { ?>
 <div class="box-footer ewGridLowerPanel">
 <?php if ($empresas->CurrentAction <> "gridadd" && $empresas->CurrentAction <> "gridedit") { ?>
 <form name="ewPagerForm" class="ewForm form-inline ewPagerForm" action="<?php echo ew_CurrentPage() ?>">
@@ -2493,6 +2705,7 @@ if ($empresas_list->Recordset)
 </div>
 <div class="clearfix"></div>
 </div>
+<?php } ?>
 </div>
 <?php } ?>
 <?php if ($empresas_list->TotalRecs == 0 && $empresas->CurrentAction == "") { // Show other options ?>
@@ -2506,22 +2719,26 @@ if ($empresas_list->Recordset)
 </div>
 <div class="clearfix"></div>
 <?php } ?>
+<?php if ($empresas->Export == "") { ?>
 <script type="text/javascript">
 fempresaslistsrch.FilterList = <?php echo $empresas_list->GetFilterList() ?>;
 fempresaslistsrch.Init();
 fempresaslist.Init();
 </script>
+<?php } ?>
 <?php
 $empresas_list->ShowPageFooter();
 if (EW_DEBUG_ENABLED)
 	echo ew_DebugMsg();
 ?>
+<?php if ($empresas->Export == "") { ?>
 <script type="text/javascript">
 
 // Write your table-specific startup script here
 // document.write("page loaded");
 
 </script>
+<?php } ?>
 <?php include_once "footer.php" ?>
 <?php
 $empresas_list->Page_Terminate();

@@ -14,10 +14,10 @@ class cpessoa_fisica extends cTable {
 	var $telefone;
 	var $_email;
 	var $celular;
-	var $RG;
 	var $CPF;
-	var $endereco_numero;
+	var $RG;
 	var $id_endereco;
+	var $endereco_numero;
 
 	//
 	// Table class constructor
@@ -34,7 +34,7 @@ class cpessoa_fisica extends cTable {
 		// Update Table
 		$this->UpdateTable = "`pessoa_fisica`";
 		$this->DBID = 'DB';
-		$this->ExportAll = TRUE;
+		$this->ExportAll = FALSE;
 		$this->ExportPageBreakCount = 0; // Page break per every n record (PDF only)
 		$this->ExportPageOrientation = "portrait"; // Page orientation (PDF only)
 		$this->ExportPageSize = "a4"; // Page size (PDF only)
@@ -90,22 +90,17 @@ class cpessoa_fisica extends cTable {
 		$this->celular->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['celular'] = &$this->celular;
 
-		// RG
-		$this->RG = new cField('pessoa_fisica', 'pessoa_fisica', 'x_RG', 'RG', '`RG`', '`RG`', 3, -1, FALSE, '`RG`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
-		$this->RG->Sortable = TRUE; // Allow sort
-		$this->RG->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
-		$this->fields['RG'] = &$this->RG;
-
 		// CPF
 		$this->CPF = new cField('pessoa_fisica', 'pessoa_fisica', 'x_CPF', 'CPF', '`CPF`', '`CPF`', 3, -1, FALSE, '`CPF`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
 		$this->CPF->Sortable = TRUE; // Allow sort
 		$this->CPF->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['CPF'] = &$this->CPF;
 
-		// endereco_numero
-		$this->endereco_numero = new cField('pessoa_fisica', 'pessoa_fisica', 'x_endereco_numero', 'endereco_numero', '`endereco_numero`', '`endereco_numero`', 200, -1, FALSE, '`endereco_numero`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
-		$this->endereco_numero->Sortable = TRUE; // Allow sort
-		$this->fields['endereco_numero'] = &$this->endereco_numero;
+		// RG
+		$this->RG = new cField('pessoa_fisica', 'pessoa_fisica', 'x_RG', 'RG', '`RG`', '`RG`', 3, -1, FALSE, '`RG`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->RG->Sortable = TRUE; // Allow sort
+		$this->RG->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
+		$this->fields['RG'] = &$this->RG;
 
 		// id_endereco
 		$this->id_endereco = new cField('pessoa_fisica', 'pessoa_fisica', 'x_id_endereco', 'id_endereco', '`id_endereco`', '`id_endereco`', 3, -1, FALSE, '`id_endereco`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'SELECT');
@@ -114,6 +109,11 @@ class cpessoa_fisica extends cTable {
 		$this->id_endereco->PleaseSelectText = $Language->Phrase("PleaseSelect"); // PleaseSelect text
 		$this->id_endereco->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['id_endereco'] = &$this->id_endereco;
+
+		// endereco_numero
+		$this->endereco_numero = new cField('pessoa_fisica', 'pessoa_fisica', 'x_endereco_numero', 'endereco_numero', '`endereco_numero`', '`endereco_numero`', 200, -1, FALSE, '`endereco_numero`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->endereco_numero->Sortable = TRUE; // Allow sort
+		$this->fields['endereco_numero'] = &$this->endereco_numero;
 	}
 
 	// Field Visibility
@@ -648,10 +648,10 @@ class cpessoa_fisica extends cTable {
 		$this->telefone->setDbValue($rs->fields('telefone'));
 		$this->_email->setDbValue($rs->fields('email'));
 		$this->celular->setDbValue($rs->fields('celular'));
-		$this->RG->setDbValue($rs->fields('RG'));
 		$this->CPF->setDbValue($rs->fields('CPF'));
-		$this->endereco_numero->setDbValue($rs->fields('endereco_numero'));
+		$this->RG->setDbValue($rs->fields('RG'));
 		$this->id_endereco->setDbValue($rs->fields('id_endereco'));
+		$this->endereco_numero->setDbValue($rs->fields('endereco_numero'));
 	}
 
 	// Render list row values
@@ -669,10 +669,10 @@ class cpessoa_fisica extends cTable {
 		// telefone
 		// email
 		// celular
-		// RG
 		// CPF
-		// endereco_numero
+		// RG
 		// id_endereco
+		// endereco_numero
 		// id_pessoa
 
 		$this->id_pessoa->ViewValue = $this->id_pessoa->CurrentValue;
@@ -703,17 +703,13 @@ class cpessoa_fisica extends cTable {
 		$this->celular->ViewValue = $this->celular->CurrentValue;
 		$this->celular->ViewCustomAttributes = "";
 
-		// RG
-		$this->RG->ViewValue = $this->RG->CurrentValue;
-		$this->RG->ViewCustomAttributes = "";
-
 		// CPF
 		$this->CPF->ViewValue = $this->CPF->CurrentValue;
 		$this->CPF->ViewCustomAttributes = "";
 
-		// endereco_numero
-		$this->endereco_numero->ViewValue = $this->endereco_numero->CurrentValue;
-		$this->endereco_numero->ViewCustomAttributes = "";
+		// RG
+		$this->RG->ViewValue = $this->RG->CurrentValue;
+		$this->RG->ViewCustomAttributes = "";
 
 		// id_endereco
 		if (strval($this->id_endereco->CurrentValue) <> "") {
@@ -740,6 +736,10 @@ class cpessoa_fisica extends cTable {
 			$this->id_endereco->ViewValue = NULL;
 		}
 		$this->id_endereco->ViewCustomAttributes = "";
+
+		// endereco_numero
+		$this->endereco_numero->ViewValue = $this->endereco_numero->CurrentValue;
+		$this->endereco_numero->ViewCustomAttributes = "";
 
 		// id_pessoa
 		$this->id_pessoa->LinkCustomAttributes = "";
@@ -776,25 +776,25 @@ class cpessoa_fisica extends cTable {
 		$this->celular->HrefValue = "";
 		$this->celular->TooltipValue = "";
 
-		// RG
-		$this->RG->LinkCustomAttributes = "";
-		$this->RG->HrefValue = "";
-		$this->RG->TooltipValue = "";
-
 		// CPF
 		$this->CPF->LinkCustomAttributes = "";
 		$this->CPF->HrefValue = "";
 		$this->CPF->TooltipValue = "";
 
-		// endereco_numero
-		$this->endereco_numero->LinkCustomAttributes = "";
-		$this->endereco_numero->HrefValue = "";
-		$this->endereco_numero->TooltipValue = "";
+		// RG
+		$this->RG->LinkCustomAttributes = "";
+		$this->RG->HrefValue = "";
+		$this->RG->TooltipValue = "";
 
 		// id_endereco
 		$this->id_endereco->LinkCustomAttributes = "";
 		$this->id_endereco->HrefValue = "";
 		$this->id_endereco->TooltipValue = "";
+
+		// endereco_numero
+		$this->endereco_numero->LinkCustomAttributes = "";
+		$this->endereco_numero->HrefValue = "";
+		$this->endereco_numero->TooltipValue = "";
 
 		// Call Row Rendered event
 		$this->Row_Rendered();
@@ -852,27 +852,27 @@ class cpessoa_fisica extends cTable {
 		$this->celular->EditValue = $this->celular->CurrentValue;
 		$this->celular->PlaceHolder = ew_RemoveHtml($this->celular->FldCaption());
 
-		// RG
-		$this->RG->EditAttrs["class"] = "form-control";
-		$this->RG->EditCustomAttributes = "";
-		$this->RG->EditValue = $this->RG->CurrentValue;
-		$this->RG->PlaceHolder = ew_RemoveHtml($this->RG->FldCaption());
-
 		// CPF
 		$this->CPF->EditAttrs["class"] = "form-control";
 		$this->CPF->EditCustomAttributes = "";
 		$this->CPF->EditValue = $this->CPF->CurrentValue;
 		$this->CPF->PlaceHolder = ew_RemoveHtml($this->CPF->FldCaption());
 
+		// RG
+		$this->RG->EditAttrs["class"] = "form-control";
+		$this->RG->EditCustomAttributes = "";
+		$this->RG->EditValue = $this->RG->CurrentValue;
+		$this->RG->PlaceHolder = ew_RemoveHtml($this->RG->FldCaption());
+
+		// id_endereco
+		$this->id_endereco->EditAttrs["class"] = "form-control";
+		$this->id_endereco->EditCustomAttributes = "";
+
 		// endereco_numero
 		$this->endereco_numero->EditAttrs["class"] = "form-control";
 		$this->endereco_numero->EditCustomAttributes = "";
 		$this->endereco_numero->EditValue = $this->endereco_numero->CurrentValue;
 		$this->endereco_numero->PlaceHolder = ew_RemoveHtml($this->endereco_numero->FldCaption());
-
-		// id_endereco
-		$this->id_endereco->EditAttrs["class"] = "form-control";
-		$this->id_endereco->EditCustomAttributes = "";
 
 		// Call Row Rendered event
 		$this->Row_Rendered();
@@ -907,10 +907,10 @@ class cpessoa_fisica extends cTable {
 					if ($this->telefone->Exportable) $Doc->ExportCaption($this->telefone);
 					if ($this->_email->Exportable) $Doc->ExportCaption($this->_email);
 					if ($this->celular->Exportable) $Doc->ExportCaption($this->celular);
-					if ($this->RG->Exportable) $Doc->ExportCaption($this->RG);
 					if ($this->CPF->Exportable) $Doc->ExportCaption($this->CPF);
-					if ($this->endereco_numero->Exportable) $Doc->ExportCaption($this->endereco_numero);
+					if ($this->RG->Exportable) $Doc->ExportCaption($this->RG);
 					if ($this->id_endereco->Exportable) $Doc->ExportCaption($this->id_endereco);
+					if ($this->endereco_numero->Exportable) $Doc->ExportCaption($this->endereco_numero);
 				} else {
 					if ($this->id_pessoa->Exportable) $Doc->ExportCaption($this->id_pessoa);
 					if ($this->nome_pessoa->Exportable) $Doc->ExportCaption($this->nome_pessoa);
@@ -919,10 +919,10 @@ class cpessoa_fisica extends cTable {
 					if ($this->telefone->Exportable) $Doc->ExportCaption($this->telefone);
 					if ($this->_email->Exportable) $Doc->ExportCaption($this->_email);
 					if ($this->celular->Exportable) $Doc->ExportCaption($this->celular);
-					if ($this->RG->Exportable) $Doc->ExportCaption($this->RG);
 					if ($this->CPF->Exportable) $Doc->ExportCaption($this->CPF);
-					if ($this->endereco_numero->Exportable) $Doc->ExportCaption($this->endereco_numero);
+					if ($this->RG->Exportable) $Doc->ExportCaption($this->RG);
 					if ($this->id_endereco->Exportable) $Doc->ExportCaption($this->id_endereco);
+					if ($this->endereco_numero->Exportable) $Doc->ExportCaption($this->endereco_numero);
 				}
 				$Doc->EndExportRow();
 			}
@@ -960,10 +960,10 @@ class cpessoa_fisica extends cTable {
 						if ($this->telefone->Exportable) $Doc->ExportField($this->telefone);
 						if ($this->_email->Exportable) $Doc->ExportField($this->_email);
 						if ($this->celular->Exportable) $Doc->ExportField($this->celular);
-						if ($this->RG->Exportable) $Doc->ExportField($this->RG);
 						if ($this->CPF->Exportable) $Doc->ExportField($this->CPF);
-						if ($this->endereco_numero->Exportable) $Doc->ExportField($this->endereco_numero);
+						if ($this->RG->Exportable) $Doc->ExportField($this->RG);
 						if ($this->id_endereco->Exportable) $Doc->ExportField($this->id_endereco);
+						if ($this->endereco_numero->Exportable) $Doc->ExportField($this->endereco_numero);
 					} else {
 						if ($this->id_pessoa->Exportable) $Doc->ExportField($this->id_pessoa);
 						if ($this->nome_pessoa->Exportable) $Doc->ExportField($this->nome_pessoa);
@@ -972,10 +972,10 @@ class cpessoa_fisica extends cTable {
 						if ($this->telefone->Exportable) $Doc->ExportField($this->telefone);
 						if ($this->_email->Exportable) $Doc->ExportField($this->_email);
 						if ($this->celular->Exportable) $Doc->ExportField($this->celular);
-						if ($this->RG->Exportable) $Doc->ExportField($this->RG);
 						if ($this->CPF->Exportable) $Doc->ExportField($this->CPF);
-						if ($this->endereco_numero->Exportable) $Doc->ExportField($this->endereco_numero);
+						if ($this->RG->Exportable) $Doc->ExportField($this->RG);
 						if ($this->id_endereco->Exportable) $Doc->ExportField($this->id_endereco);
+						if ($this->endereco_numero->Exportable) $Doc->ExportField($this->endereco_numero);
 					}
 					$Doc->EndExportRow($RowCnt);
 				}

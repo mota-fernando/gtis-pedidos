@@ -343,8 +343,6 @@ class cpedidos_view extends cpedidos {
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
 		$this->tipo_pedido->SetVisibility();
 		$this->numero->SetVisibility();
-		$this->fecha_data->SetVisibility();
-		$this->fecha_hora->SetVisibility();
 		$this->id_fornecedor->SetVisibility();
 		$this->id_transportadora->SetVisibility();
 		$this->id_prazos->SetVisibility();
@@ -454,6 +452,9 @@ class cpedidos_view extends cpedidos {
 		// Check modal
 		if ($this->IsModal)
 			$gbSkipHeaderFooter = TRUE;
+
+		// Load current record
+		$bLoadCurrentRecord = FALSE;
 		$sReturnUrl = "";
 		$bMatchRecord = FALSE;
 		if ($this->IsPageRequest()) { // Validate request
@@ -501,6 +502,15 @@ class cpedidos_view extends cpedidos {
 		global $Language, $Security;
 		$options = &$this->OtherOptions;
 		$option = &$options["action"];
+
+		// Add
+		$item = &$option->Add("add");
+		$addcaption = ew_HtmlTitle($Language->Phrase("ViewPageAddLink"));
+		if ($this->IsModal) // Modal
+			$item->Body = "<a class=\"ewAction ewAdd\" title=\"" . $addcaption . "\" data-caption=\"" . $addcaption . "\" href=\"javascript:void(0);\" onclick=\"ew_ModalDialogShow({lnk:this,url:'" . ew_HtmlEncode($this->AddUrl) . "'});\">" . $Language->Phrase("ViewPageAddLink") . "</a>";
+		else
+			$item->Body = "<a class=\"ewAction ewAdd\" title=\"" . $addcaption . "\" data-caption=\"" . $addcaption . "\" href=\"" . ew_HtmlEncode($this->AddUrl) . "\">" . $Language->Phrase("ViewPageAddLink") . "</a>";
+		$item->Visible = ($this->AddUrl <> "");
 
 		// Edit
 		$item = &$option->Add("edit");
@@ -882,6 +892,11 @@ class cpedidos_view extends cpedidos {
 		$this->id_representante->ViewCustomAttributes = "";
 
 		// comissao_representante
+		if (strval($this->comissao_representante->CurrentValue) <> "") {
+			$this->comissao_representante->ViewValue = $this->comissao_representante->OptionCaption($this->comissao_representante->CurrentValue);
+		} else {
+			$this->comissao_representante->ViewValue = NULL;
+		}
 		$this->comissao_representante->ViewCustomAttributes = "";
 
 		// id_cliente
@@ -897,16 +912,6 @@ class cpedidos_view extends cpedidos {
 			$this->numero->LinkCustomAttributes = "";
 			$this->numero->HrefValue = "";
 			$this->numero->TooltipValue = "";
-
-			// fecha_data
-			$this->fecha_data->LinkCustomAttributes = "";
-			$this->fecha_data->HrefValue = "";
-			$this->fecha_data->TooltipValue = "";
-
-			// fecha_hora
-			$this->fecha_hora->LinkCustomAttributes = "";
-			$this->fecha_hora->HrefValue = "";
-			$this->fecha_hora->TooltipValue = "";
 
 			// id_fornecedor
 			$this->id_fornecedor->LinkCustomAttributes = "";
@@ -1138,6 +1143,8 @@ fpedidosview.Lists["x_id_prazos"] = {"LinkField":"x_id_prazos","Ajax":true,"Auto
 fpedidosview.Lists["x_id_prazos"].Data = "<?php echo $pedidos_view->id_prazos->LookupFilterQuery(FALSE, "view") ?>";
 fpedidosview.Lists["x_id_representante"] = {"LinkField":"x_id_representantes","Ajax":true,"AutoFill":false,"DisplayFields":["x_id_pessoa","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"representantes"};
 fpedidosview.Lists["x_id_representante"].Data = "<?php echo $pedidos_view->id_representante->LookupFilterQuery(FALSE, "view") ?>";
+fpedidosview.Lists["x_comissao_representante"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
+fpedidosview.Lists["x_comissao_representante"].Options = <?php echo json_encode($pedidos_view->comissao_representante->Options()) ?>;
 
 // Form object for search
 </script>
@@ -1182,28 +1189,6 @@ $pedidos_view->ShowMessage();
 <span id="el_pedidos_numero">
 <span<?php echo $pedidos->numero->ViewAttributes() ?>>
 <?php echo $pedidos->numero->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
-<?php if ($pedidos->fecha_data->Visible) { // fecha_data ?>
-	<tr id="r_fecha_data">
-		<td class="col-sm-2"><span id="elh_pedidos_fecha_data"><?php echo $pedidos->fecha_data->FldCaption() ?></span></td>
-		<td data-name="fecha_data"<?php echo $pedidos->fecha_data->CellAttributes() ?>>
-<span id="el_pedidos_fecha_data">
-<span<?php echo $pedidos->fecha_data->ViewAttributes() ?>>
-<?php echo $pedidos->fecha_data->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
-<?php if ($pedidos->fecha_hora->Visible) { // fecha_hora ?>
-	<tr id="r_fecha_hora">
-		<td class="col-sm-2"><span id="elh_pedidos_fecha_hora"><?php echo $pedidos->fecha_hora->FldCaption() ?></span></td>
-		<td data-name="fecha_hora"<?php echo $pedidos->fecha_hora->CellAttributes() ?>>
-<span id="el_pedidos_fecha_hora">
-<span<?php echo $pedidos->fecha_hora->ViewAttributes() ?>>
-<?php echo $pedidos->fecha_hora->ViewValue ?></span>
 </span>
 </td>
 	</tr>

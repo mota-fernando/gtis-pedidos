@@ -295,10 +295,10 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 		$this->telefone->SetVisibility();
 		$this->_email->SetVisibility();
 		$this->celular->SetVisibility();
-		$this->RG->SetVisibility();
 		$this->CPF->SetVisibility();
-		$this->endereco_numero->SetVisibility();
+		$this->RG->SetVisibility();
 		$this->id_endereco->SetVisibility();
+		$this->endereco_numero->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -556,17 +556,17 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 		if (!$this->celular->FldIsDetailKey) {
 			$this->celular->setFormValue($objForm->GetValue("x_celular"));
 		}
-		if (!$this->RG->FldIsDetailKey) {
-			$this->RG->setFormValue($objForm->GetValue("x_RG"));
-		}
 		if (!$this->CPF->FldIsDetailKey) {
 			$this->CPF->setFormValue($objForm->GetValue("x_CPF"));
 		}
-		if (!$this->endereco_numero->FldIsDetailKey) {
-			$this->endereco_numero->setFormValue($objForm->GetValue("x_endereco_numero"));
+		if (!$this->RG->FldIsDetailKey) {
+			$this->RG->setFormValue($objForm->GetValue("x_RG"));
 		}
 		if (!$this->id_endereco->FldIsDetailKey) {
 			$this->id_endereco->setFormValue($objForm->GetValue("x_id_endereco"));
+		}
+		if (!$this->endereco_numero->FldIsDetailKey) {
+			$this->endereco_numero->setFormValue($objForm->GetValue("x_endereco_numero"));
 		}
 	}
 
@@ -581,10 +581,10 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 		$this->telefone->CurrentValue = $this->telefone->FormValue;
 		$this->_email->CurrentValue = $this->_email->FormValue;
 		$this->celular->CurrentValue = $this->celular->FormValue;
-		$this->RG->CurrentValue = $this->RG->FormValue;
 		$this->CPF->CurrentValue = $this->CPF->FormValue;
-		$this->endereco_numero->CurrentValue = $this->endereco_numero->FormValue;
+		$this->RG->CurrentValue = $this->RG->FormValue;
 		$this->id_endereco->CurrentValue = $this->id_endereco->FormValue;
+		$this->endereco_numero->CurrentValue = $this->endereco_numero->FormValue;
 	}
 
 	// Load row based on key values
@@ -627,10 +627,10 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 		$this->telefone->setDbValue($row['telefone']);
 		$this->_email->setDbValue($row['email']);
 		$this->celular->setDbValue($row['celular']);
-		$this->RG->setDbValue($row['RG']);
 		$this->CPF->setDbValue($row['CPF']);
-		$this->endereco_numero->setDbValue($row['endereco_numero']);
+		$this->RG->setDbValue($row['RG']);
 		$this->id_endereco->setDbValue($row['id_endereco']);
+		$this->endereco_numero->setDbValue($row['endereco_numero']);
 	}
 
 	// Return a row with default values
@@ -643,10 +643,10 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 		$row['telefone'] = NULL;
 		$row['email'] = NULL;
 		$row['celular'] = NULL;
-		$row['RG'] = NULL;
 		$row['CPF'] = NULL;
-		$row['endereco_numero'] = NULL;
+		$row['RG'] = NULL;
 		$row['id_endereco'] = NULL;
+		$row['endereco_numero'] = NULL;
 		return $row;
 	}
 
@@ -662,10 +662,10 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 		$this->telefone->DbValue = $row['telefone'];
 		$this->_email->DbValue = $row['email'];
 		$this->celular->DbValue = $row['celular'];
-		$this->RG->DbValue = $row['RG'];
 		$this->CPF->DbValue = $row['CPF'];
-		$this->endereco_numero->DbValue = $row['endereco_numero'];
+		$this->RG->DbValue = $row['RG'];
 		$this->id_endereco->DbValue = $row['id_endereco'];
+		$this->endereco_numero->DbValue = $row['endereco_numero'];
 	}
 
 	// Load old record
@@ -707,10 +707,10 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 		// telefone
 		// email
 		// celular
-		// RG
 		// CPF
-		// endereco_numero
+		// RG
 		// id_endereco
+		// endereco_numero
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -743,17 +743,13 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 		$this->celular->ViewValue = $this->celular->CurrentValue;
 		$this->celular->ViewCustomAttributes = "";
 
-		// RG
-		$this->RG->ViewValue = $this->RG->CurrentValue;
-		$this->RG->ViewCustomAttributes = "";
-
 		// CPF
 		$this->CPF->ViewValue = $this->CPF->CurrentValue;
 		$this->CPF->ViewCustomAttributes = "";
 
-		// endereco_numero
-		$this->endereco_numero->ViewValue = $this->endereco_numero->CurrentValue;
-		$this->endereco_numero->ViewCustomAttributes = "";
+		// RG
+		$this->RG->ViewValue = $this->RG->CurrentValue;
+		$this->RG->ViewCustomAttributes = "";
 
 		// id_endereco
 		if (strval($this->id_endereco->CurrentValue) <> "") {
@@ -780,6 +776,10 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 			$this->id_endereco->ViewValue = NULL;
 		}
 		$this->id_endereco->ViewCustomAttributes = "";
+
+		// endereco_numero
+		$this->endereco_numero->ViewValue = $this->endereco_numero->CurrentValue;
+		$this->endereco_numero->ViewCustomAttributes = "";
 
 			// id_pessoa
 			$this->id_pessoa->LinkCustomAttributes = "";
@@ -816,25 +816,25 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 			$this->celular->HrefValue = "";
 			$this->celular->TooltipValue = "";
 
-			// RG
-			$this->RG->LinkCustomAttributes = "";
-			$this->RG->HrefValue = "";
-			$this->RG->TooltipValue = "";
-
 			// CPF
 			$this->CPF->LinkCustomAttributes = "";
 			$this->CPF->HrefValue = "";
 			$this->CPF->TooltipValue = "";
 
-			// endereco_numero
-			$this->endereco_numero->LinkCustomAttributes = "";
-			$this->endereco_numero->HrefValue = "";
-			$this->endereco_numero->TooltipValue = "";
+			// RG
+			$this->RG->LinkCustomAttributes = "";
+			$this->RG->HrefValue = "";
+			$this->RG->TooltipValue = "";
 
 			// id_endereco
 			$this->id_endereco->LinkCustomAttributes = "";
 			$this->id_endereco->HrefValue = "";
 			$this->id_endereco->TooltipValue = "";
+
+			// endereco_numero
+			$this->endereco_numero->LinkCustomAttributes = "";
+			$this->endereco_numero->HrefValue = "";
+			$this->endereco_numero->TooltipValue = "";
 		} elseif ($this->RowType == EW_ROWTYPE_EDIT) { // Edit row
 
 			// id_pessoa
@@ -879,23 +879,17 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 			$this->celular->EditValue = ew_HtmlEncode($this->celular->CurrentValue);
 			$this->celular->PlaceHolder = ew_RemoveHtml($this->celular->FldCaption());
 
-			// RG
-			$this->RG->EditAttrs["class"] = "form-control";
-			$this->RG->EditCustomAttributes = "";
-			$this->RG->EditValue = ew_HtmlEncode($this->RG->CurrentValue);
-			$this->RG->PlaceHolder = ew_RemoveHtml($this->RG->FldCaption());
-
 			// CPF
 			$this->CPF->EditAttrs["class"] = "form-control";
 			$this->CPF->EditCustomAttributes = "";
 			$this->CPF->EditValue = ew_HtmlEncode($this->CPF->CurrentValue);
 			$this->CPF->PlaceHolder = ew_RemoveHtml($this->CPF->FldCaption());
 
-			// endereco_numero
-			$this->endereco_numero->EditAttrs["class"] = "form-control";
-			$this->endereco_numero->EditCustomAttributes = "";
-			$this->endereco_numero->EditValue = ew_HtmlEncode($this->endereco_numero->CurrentValue);
-			$this->endereco_numero->PlaceHolder = ew_RemoveHtml($this->endereco_numero->FldCaption());
+			// RG
+			$this->RG->EditAttrs["class"] = "form-control";
+			$this->RG->EditCustomAttributes = "";
+			$this->RG->EditValue = ew_HtmlEncode($this->RG->CurrentValue);
+			$this->RG->PlaceHolder = ew_RemoveHtml($this->RG->FldCaption());
 
 			// id_endereco
 			$this->id_endereco->EditAttrs["class"] = "form-control";
@@ -915,6 +909,12 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
 			if ($rswrk) $rswrk->Close();
 			$this->id_endereco->EditValue = $arwrk;
+
+			// endereco_numero
+			$this->endereco_numero->EditAttrs["class"] = "form-control";
+			$this->endereco_numero->EditCustomAttributes = "";
+			$this->endereco_numero->EditValue = ew_HtmlEncode($this->endereco_numero->CurrentValue);
+			$this->endereco_numero->PlaceHolder = ew_RemoveHtml($this->endereco_numero->FldCaption());
 
 			// Edit refer script
 			// id_pessoa
@@ -946,21 +946,21 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 			$this->celular->LinkCustomAttributes = "";
 			$this->celular->HrefValue = "";
 
-			// RG
-			$this->RG->LinkCustomAttributes = "";
-			$this->RG->HrefValue = "";
-
 			// CPF
 			$this->CPF->LinkCustomAttributes = "";
 			$this->CPF->HrefValue = "";
 
-			// endereco_numero
-			$this->endereco_numero->LinkCustomAttributes = "";
-			$this->endereco_numero->HrefValue = "";
+			// RG
+			$this->RG->LinkCustomAttributes = "";
+			$this->RG->HrefValue = "";
 
 			// id_endereco
 			$this->id_endereco->LinkCustomAttributes = "";
 			$this->id_endereco->HrefValue = "";
+
+			// endereco_numero
+			$this->endereco_numero->LinkCustomAttributes = "";
+			$this->endereco_numero->HrefValue = "";
 		}
 		if ($this->RowType == EW_ROWTYPE_ADD || $this->RowType == EW_ROWTYPE_EDIT || $this->RowType == EW_ROWTYPE_SEARCH) // Add/Edit/Search row
 			$this->SetupFieldTitles();
@@ -989,11 +989,11 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 		if (!ew_CheckInteger($this->celular->FormValue)) {
 			ew_AddMessage($gsFormError, $this->celular->FldErrMsg());
 		}
-		if (!ew_CheckInteger($this->RG->FormValue)) {
-			ew_AddMessage($gsFormError, $this->RG->FldErrMsg());
-		}
 		if (!ew_CheckInteger($this->CPF->FormValue)) {
 			ew_AddMessage($gsFormError, $this->CPF->FldErrMsg());
+		}
+		if (!ew_CheckInteger($this->RG->FormValue)) {
+			ew_AddMessage($gsFormError, $this->RG->FldErrMsg());
 		}
 
 		// Return validate result
@@ -1049,17 +1049,17 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 			// celular
 			$this->celular->SetDbValueDef($rsnew, $this->celular->CurrentValue, NULL, $this->celular->ReadOnly);
 
-			// RG
-			$this->RG->SetDbValueDef($rsnew, $this->RG->CurrentValue, NULL, $this->RG->ReadOnly);
-
 			// CPF
 			$this->CPF->SetDbValueDef($rsnew, $this->CPF->CurrentValue, NULL, $this->CPF->ReadOnly);
 
-			// endereco_numero
-			$this->endereco_numero->SetDbValueDef($rsnew, $this->endereco_numero->CurrentValue, NULL, $this->endereco_numero->ReadOnly);
+			// RG
+			$this->RG->SetDbValueDef($rsnew, $this->RG->CurrentValue, NULL, $this->RG->ReadOnly);
 
 			// id_endereco
 			$this->id_endereco->SetDbValueDef($rsnew, $this->id_endereco->CurrentValue, NULL, $this->id_endereco->ReadOnly);
+
+			// endereco_numero
+			$this->endereco_numero->SetDbValueDef($rsnew, $this->endereco_numero->CurrentValue, NULL, $this->endereco_numero->ReadOnly);
 
 			// Call Row Updating event
 			$bUpdateRow = $this->Row_Updating($rsold, $rsnew);
@@ -1248,12 +1248,12 @@ fpessoa_fisicaedit.Validate = function() {
 			elm = this.GetElements("x" + infix + "_celular");
 			if (elm && !ew_CheckInteger(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($pessoa_fisica->celular->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_RG");
-			if (elm && !ew_CheckInteger(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($pessoa_fisica->RG->FldErrMsg()) ?>");
 			elm = this.GetElements("x" + infix + "_CPF");
 			if (elm && !ew_CheckInteger(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($pessoa_fisica->CPF->FldErrMsg()) ?>");
+			elm = this.GetElements("x" + infix + "_RG");
+			if (elm && !ew_CheckInteger(elm.value))
+				return this.OnError(elm, "<?php echo ew_JsEncode2($pessoa_fisica->RG->FldErrMsg()) ?>");
 
 			// Fire Form_CustomValidate event
 			if (!this.Form_CustomValidate(fobj))
@@ -1376,16 +1376,6 @@ $pessoa_fisica_edit->ShowMessage();
 <?php echo $pessoa_fisica->celular->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
-<?php if ($pessoa_fisica->RG->Visible) { // RG ?>
-	<div id="r_RG" class="form-group">
-		<label id="elh_pessoa_fisica_RG" for="x_RG" class="<?php echo $pessoa_fisica_edit->LeftColumnClass ?>"><?php echo $pessoa_fisica->RG->FldCaption() ?></label>
-		<div class="<?php echo $pessoa_fisica_edit->RightColumnClass ?>"><div<?php echo $pessoa_fisica->RG->CellAttributes() ?>>
-<span id="el_pessoa_fisica_RG">
-<input type="text" data-table="pessoa_fisica" data-field="x_RG" name="x_RG" id="x_RG" size="30" placeholder="<?php echo ew_HtmlEncode($pessoa_fisica->RG->getPlaceHolder()) ?>" value="<?php echo $pessoa_fisica->RG->EditValue ?>"<?php echo $pessoa_fisica->RG->EditAttributes() ?>>
-</span>
-<?php echo $pessoa_fisica->RG->CustomMsg ?></div></div>
-	</div>
-<?php } ?>
 <?php if ($pessoa_fisica->CPF->Visible) { // CPF ?>
 	<div id="r_CPF" class="form-group">
 		<label id="elh_pessoa_fisica_CPF" for="x_CPF" class="<?php echo $pessoa_fisica_edit->LeftColumnClass ?>"><?php echo $pessoa_fisica->CPF->FldCaption() ?></label>
@@ -1396,14 +1386,14 @@ $pessoa_fisica_edit->ShowMessage();
 <?php echo $pessoa_fisica->CPF->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
-<?php if ($pessoa_fisica->endereco_numero->Visible) { // endereco_numero ?>
-	<div id="r_endereco_numero" class="form-group">
-		<label id="elh_pessoa_fisica_endereco_numero" for="x_endereco_numero" class="<?php echo $pessoa_fisica_edit->LeftColumnClass ?>"><?php echo $pessoa_fisica->endereco_numero->FldCaption() ?></label>
-		<div class="<?php echo $pessoa_fisica_edit->RightColumnClass ?>"><div<?php echo $pessoa_fisica->endereco_numero->CellAttributes() ?>>
-<span id="el_pessoa_fisica_endereco_numero">
-<input type="text" data-table="pessoa_fisica" data-field="x_endereco_numero" name="x_endereco_numero" id="x_endereco_numero" size="30" maxlength="11" placeholder="<?php echo ew_HtmlEncode($pessoa_fisica->endereco_numero->getPlaceHolder()) ?>" value="<?php echo $pessoa_fisica->endereco_numero->EditValue ?>"<?php echo $pessoa_fisica->endereco_numero->EditAttributes() ?>>
+<?php if ($pessoa_fisica->RG->Visible) { // RG ?>
+	<div id="r_RG" class="form-group">
+		<label id="elh_pessoa_fisica_RG" for="x_RG" class="<?php echo $pessoa_fisica_edit->LeftColumnClass ?>"><?php echo $pessoa_fisica->RG->FldCaption() ?></label>
+		<div class="<?php echo $pessoa_fisica_edit->RightColumnClass ?>"><div<?php echo $pessoa_fisica->RG->CellAttributes() ?>>
+<span id="el_pessoa_fisica_RG">
+<input type="text" data-table="pessoa_fisica" data-field="x_RG" name="x_RG" id="x_RG" size="30" placeholder="<?php echo ew_HtmlEncode($pessoa_fisica->RG->getPlaceHolder()) ?>" value="<?php echo $pessoa_fisica->RG->EditValue ?>"<?php echo $pessoa_fisica->RG->EditAttributes() ?>>
 </span>
-<?php echo $pessoa_fisica->endereco_numero->CustomMsg ?></div></div>
+<?php echo $pessoa_fisica->RG->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
 <?php if ($pessoa_fisica->id_endereco->Visible) { // id_endereco ?>
@@ -1417,6 +1407,16 @@ $pessoa_fisica_edit->ShowMessage();
 <button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $pessoa_fisica->id_endereco->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_endereco',url:'enderecoaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_endereco"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $pessoa_fisica->id_endereco->FldCaption() ?></span></button>
 </span>
 <?php echo $pessoa_fisica->id_endereco->CustomMsg ?></div></div>
+	</div>
+<?php } ?>
+<?php if ($pessoa_fisica->endereco_numero->Visible) { // endereco_numero ?>
+	<div id="r_endereco_numero" class="form-group">
+		<label id="elh_pessoa_fisica_endereco_numero" for="x_endereco_numero" class="<?php echo $pessoa_fisica_edit->LeftColumnClass ?>"><?php echo $pessoa_fisica->endereco_numero->FldCaption() ?></label>
+		<div class="<?php echo $pessoa_fisica_edit->RightColumnClass ?>"><div<?php echo $pessoa_fisica->endereco_numero->CellAttributes() ?>>
+<span id="el_pessoa_fisica_endereco_numero">
+<input type="text" data-table="pessoa_fisica" data-field="x_endereco_numero" name="x_endereco_numero" id="x_endereco_numero" size="30" maxlength="11" placeholder="<?php echo ew_HtmlEncode($pessoa_fisica->endereco_numero->getPlaceHolder()) ?>" value="<?php echo $pessoa_fisica->endereco_numero->EditValue ?>"<?php echo $pessoa_fisica->endereco_numero->EditAttributes() ?>>
+</span>
+<?php echo $pessoa_fisica->endereco_numero->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
 </div><!-- /page* -->

@@ -1247,7 +1247,7 @@ $detalhe_pedido_add->ShowMessage();
 		<label id="elh_detalhe_pedido_quantidade" for="x_quantidade" class="<?php echo $detalhe_pedido_add->LeftColumnClass ?>"><?php echo $detalhe_pedido->quantidade->FldCaption() ?></label>
 		<div class="<?php echo $detalhe_pedido_add->RightColumnClass ?>"><div<?php echo $detalhe_pedido->quantidade->CellAttributes() ?>>
 <span id="el_detalhe_pedido_quantidade">
-<input type="text" data-table="detalhe_pedido" data-field="x_quantidade" name="x_quantidade" id="x_quantidade" size="30" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->quantidade->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->quantidade->EditValue ?>"<?php echo $detalhe_pedido->quantidade->EditAttributes() ?>>
+<input type="text" data-table="detalhe_pedido" data-field="x_quantidade" name="x_quantidade" id="x_quantidade" size="6" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->quantidade->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->quantidade->EditValue ?>"<?php echo $detalhe_pedido->quantidade->EditAttributes() ?>>
 </span>
 <?php echo $detalhe_pedido->quantidade->CustomMsg ?></div></div>
 	</div>
@@ -1257,7 +1257,7 @@ $detalhe_pedido_add->ShowMessage();
 		<label id="elh_detalhe_pedido_custo" for="x_custo" class="<?php echo $detalhe_pedido_add->LeftColumnClass ?>"><?php echo $detalhe_pedido->custo->FldCaption() ?></label>
 		<div class="<?php echo $detalhe_pedido_add->RightColumnClass ?>"><div<?php echo $detalhe_pedido->custo->CellAttributes() ?>>
 <span id="el_detalhe_pedido_custo">
-<input type="text" data-table="detalhe_pedido" data-field="x_custo" name="x_custo" id="x_custo" size="30" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->custo->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->custo->EditValue ?>"<?php echo $detalhe_pedido->custo->EditAttributes() ?>>
+<input type="text" data-table="detalhe_pedido" data-field="x_custo" name="x_custo" id="x_custo" size="6" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->custo->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->custo->EditValue ?>"<?php echo $detalhe_pedido->custo->EditAttributes() ?>>
 </span>
 <?php echo $detalhe_pedido->custo->CustomMsg ?></div></div>
 	</div>

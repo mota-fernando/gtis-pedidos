@@ -347,8 +347,6 @@ class cprodutos_view extends cprodutos {
 		$this->status_produto->SetVisibility();
 		$this->unidade_medida_produto->SetVisibility();
 		$this->peso_produto->SetVisibility();
-		$this->data_adicionado->SetVisibility();
-		$this->hora_adicionado->SetVisibility();
 		$this->preco_produto->SetVisibility();
 		$this->descricao->SetVisibility();
 		$this->ipi->SetVisibility();
@@ -453,6 +451,9 @@ class cprodutos_view extends cprodutos {
 		// Check modal
 		if ($this->IsModal)
 			$gbSkipHeaderFooter = TRUE;
+
+		// Load current record
+		$bLoadCurrentRecord = FALSE;
 		$sReturnUrl = "";
 		$bMatchRecord = FALSE;
 		if ($this->IsPageRequest()) { // Validate request
@@ -815,16 +816,6 @@ class cprodutos_view extends cprodutos {
 			$this->peso_produto->HrefValue = "";
 			$this->peso_produto->TooltipValue = "";
 
-			// data_adicionado
-			$this->data_adicionado->LinkCustomAttributes = "";
-			$this->data_adicionado->HrefValue = "";
-			$this->data_adicionado->TooltipValue = "";
-
-			// hora_adicionado
-			$this->hora_adicionado->LinkCustomAttributes = "";
-			$this->hora_adicionado->HrefValue = "";
-			$this->hora_adicionado->TooltipValue = "";
-
 			// preco_produto
 			$this->preco_produto->LinkCustomAttributes = "";
 			$this->preco_produto->HrefValue = "";
@@ -1097,28 +1088,6 @@ $produtos_view->ShowMessage();
 <span id="el_produtos_peso_produto">
 <span<?php echo $produtos->peso_produto->ViewAttributes() ?>>
 <?php echo $produtos->peso_produto->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
-<?php if ($produtos->data_adicionado->Visible) { // data_adicionado ?>
-	<tr id="r_data_adicionado">
-		<td class="col-sm-2"><span id="elh_produtos_data_adicionado"><?php echo $produtos->data_adicionado->FldCaption() ?></span></td>
-		<td data-name="data_adicionado"<?php echo $produtos->data_adicionado->CellAttributes() ?>>
-<span id="el_produtos_data_adicionado">
-<span<?php echo $produtos->data_adicionado->ViewAttributes() ?>>
-<?php echo $produtos->data_adicionado->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
-<?php if ($produtos->hora_adicionado->Visible) { // hora_adicionado ?>
-	<tr id="r_hora_adicionado">
-		<td class="col-sm-2"><span id="elh_produtos_hora_adicionado"><?php echo $produtos->hora_adicionado->FldCaption() ?></span></td>
-		<td data-name="hora_adicionado"<?php echo $produtos->hora_adicionado->CellAttributes() ?>>
-<span id="el_produtos_hora_adicionado">
-<span<?php echo $produtos->hora_adicionado->ViewAttributes() ?>>
-<?php echo $produtos->hora_adicionado->ViewValue ?></span>
 </span>
 </td>
 	</tr>

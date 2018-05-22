@@ -362,6 +362,45 @@ class cprodutos_list extends cprodutos {
 	//
 	function Page_Init() {
 		global $gsExport, $gsCustomExport, $gsExportFile, $UserProfile, $Language, $Security, $objForm;
+
+		// Get export parameters
+		$custom = "";
+		if (@$_GET["export"] <> "") {
+			$this->Export = $_GET["export"];
+			$custom = @$_GET["custom"];
+		} elseif (@$_POST["export"] <> "") {
+			$this->Export = $_POST["export"];
+			$custom = @$_POST["custom"];
+		} elseif (ew_IsPost()) {
+			if (@$_POST["exporttype"] <> "")
+				$this->Export = $_POST["exporttype"];
+			$custom = @$_POST["custom"];
+		} elseif (@$_GET["cmd"] == "json") {
+			$this->Export = $_GET["cmd"];
+		} else {
+			$this->setExportReturnUrl(ew_CurrentUrl());
+		}
+		$gsExportFile = $this->TableVar; // Get export file, used in header
+
+		// Get custom export parameters
+		if ($this->Export <> "" && $custom <> "") {
+			$this->CustomExport = $this->Export;
+			$this->Export = "print";
+		}
+		$gsCustomExport = $this->CustomExport;
+		$gsExport = $this->Export; // Get export parameter, used in header
+
+		// Update Export URLs
+		if (defined("EW_USE_PHPEXCEL"))
+			$this->ExportExcelCustom = FALSE;
+		if ($this->ExportExcelCustom)
+			$this->ExportExcelUrl .= "&amp;custom=1";
+		if (defined("EW_USE_PHPWORD"))
+			$this->ExportWordCustom = FALSE;
+		if ($this->ExportWordCustom)
+			$this->ExportWordUrl .= "&amp;custom=1";
+		if ($this->ExportPdfCustom)
+			$this->ExportPdfUrl .= "&amp;custom=1";
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
 
 		// Get grid add count
@@ -371,6 +410,9 @@ class cprodutos_list extends cprodutos {
 
 		// Set up list options
 		$this->SetupListOptions();
+
+		// Setup export options
+		$this->SetupExportOptions();
 		$this->id_produto->SetVisibility();
 		if ($this->IsAdd() || $this->IsCopy() || $this->IsGridAdd())
 			$this->id_produto->Visible = FALSE;
@@ -382,7 +424,11 @@ class cprodutos_list extends cprodutos {
 		$this->unidade_medida_produto->SetVisibility();
 		$this->peso_produto->SetVisibility();
 		$this->data_adicionado->SetVisibility();
+		if ($this->IsAddOrEdit())
+			$this->data_adicionado->Visible = FALSE;
 		$this->hora_adicionado->SetVisibility();
+		if ($this->IsAddOrEdit())
+			$this->hora_adicionado->Visible = FALSE;
 		$this->preco_produto->SetVisibility();
 		$this->descricao->SetVisibility();
 		$this->ipi->SetVisibility();
@@ -643,6 +689,17 @@ class cprodutos_list extends cprodutos {
 		} else {
 			$this->setSessionWhere($sFilter);
 			$this->CurrentFilter = "";
+		}
+
+		// Export selected records
+		if ($this->Export <> "")
+			$this->CurrentFilter = $this->BuildExportSelectedFilter();
+
+		// Export data only
+		if ($this->CustomExport == "" && in_array($this->Export, array_keys($EW_EXPORT))) {
+			$this->ExportData();
+			$this->Page_Terminate(); // Terminate response
+			exit();
 		}
 
 		// Load record count first
@@ -1136,7 +1193,7 @@ class cprodutos_list extends cprodutos {
 
 		// "checkbox"
 		$item = &$this->ListOptions->Add("checkbox");
-		$item->Visible = FALSE;
+		$item->Visible = TRUE;
 		$item->OnLeft = FALSE;
 		$item->Header = "<input type=\"checkbox\" name=\"key\" id=\"key\" onclick=\"ew_SelectAllKey(this);\">";
 		$item->ShowInDropDown = FALSE;
@@ -1795,6 +1852,159 @@ class cprodutos_list extends cprodutos {
 			$this->Row_Rendered();
 	}
 
+	// Build export filter for selected records
+	function BuildExportSelectedFilter() {
+		global $Language;
+		$sWrkFilter = "";
+		if ($this->Export <> "") {
+			$sWrkFilter = $this->GetKeyFilter();
+		}
+		return $sWrkFilter;
+	}
+
+	// Set up export options
+	function SetupExportOptions() {
+		global $Language;
+
+		// Printer friendly
+		$item = &$this->ExportOptions->Add("print");
+		$item->Body = "<a class=\"ewExportLink ewPrint\" title=\"" . ew_HtmlEncode($Language->Phrase("PrinterFriendlyText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("PrinterFriendlyText")) . "\" onclick=\"ew_Export(document.fprodutoslist,'" . ew_CurrentPage() . "','print',false,true);\">" . $Language->Phrase("PrinterFriendly") . "</a>";
+		$item->Visible = TRUE;
+
+		// Export to Excel
+		$item = &$this->ExportOptions->Add("excel");
+		$item->Body = "<a class=\"ewExportLink ewExcel\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToExcelText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToExcelText")) . "\" onclick=\"ew_Export(document.fprodutoslist,'" . ew_CurrentPage() . "','excel',false,true);\">" . $Language->Phrase("ExportToExcel") . "</a>";
+		$item->Visible = TRUE;
+
+		// Export to Word
+		$item = &$this->ExportOptions->Add("word");
+		$item->Body = "<a class=\"ewExportLink ewWord\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToWordText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToWordText")) . "\" onclick=\"ew_Export(document.fprodutoslist,'" . ew_CurrentPage() . "','word',false,true);\">" . $Language->Phrase("ExportToWord") . "</a>";
+		$item->Visible = FALSE;
+
+		// Export to Html
+		$item = &$this->ExportOptions->Add("html");
+		$item->Body = "<a class=\"ewExportLink ewHtml\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToHtmlText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToHtmlText")) . "\" onclick=\"ew_Export(document.fprodutoslist,'" . ew_CurrentPage() . "','html',false,true);\">" . $Language->Phrase("ExportToHtml") . "</a>";
+		$item->Visible = FALSE;
+
+		// Export to Xml
+		$item = &$this->ExportOptions->Add("xml");
+		$item->Body = "<a class=\"ewExportLink ewXml\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToXmlText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToXmlText")) . "\" onclick=\"ew_Export(document.fprodutoslist,'" . ew_CurrentPage() . "','xml',false,true);\">" . $Language->Phrase("ExportToXml") . "</a>";
+		$item->Visible = FALSE;
+
+		// Export to Csv
+		$item = &$this->ExportOptions->Add("csv");
+		$item->Body = "<a class=\"ewExportLink ewCsv\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToCsvText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToCsvText")) . "\" onclick=\"ew_Export(document.fprodutoslist,'" . ew_CurrentPage() . "','csv',false,true);\">" . $Language->Phrase("ExportToCsv") . "</a>";
+		$item->Visible = FALSE;
+
+		// Export to Pdf
+		$item = &$this->ExportOptions->Add("pdf");
+		$item->Body = "<a class=\"ewExportLink ewPdf\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToPDFText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToPDFText")) . "\" onclick=\"ew_Export(document.fprodutoslist,'" . ew_CurrentPage() . "','pdf',false,true);\">" . $Language->Phrase("ExportToPDF") . "</a>";
+		$item->Visible = FALSE;
+
+		// Export to Email
+		$item = &$this->ExportOptions->Add("email");
+		$url = "";
+		$item->Body = "<button id=\"emf_produtos\" class=\"ewExportLink ewEmail\" title=\"" . $Language->Phrase("ExportToEmailText") . "\" data-caption=\"" . $Language->Phrase("ExportToEmailText") . "\" onclick=\"ew_EmailDialogShow({lnk:'emf_produtos',hdr:ewLanguage.Phrase('ExportToEmailText'),f:document.fprodutoslist,sel:true" . $url . "});\">" . $Language->Phrase("ExportToEmail") . "</button>";
+		$item->Visible = FALSE;
+
+		// Drop down button for export
+		$this->ExportOptions->UseButtonGroup = TRUE;
+		$this->ExportOptions->UseImageAndText = TRUE;
+		$this->ExportOptions->UseDropDownButton = FALSE;
+		if ($this->ExportOptions->UseButtonGroup && ew_IsMobile())
+			$this->ExportOptions->UseDropDownButton = TRUE;
+		$this->ExportOptions->DropDownButtonPhrase = $Language->Phrase("ButtonExport");
+
+		// Add group option item
+		$item = &$this->ExportOptions->Add($this->ExportOptions->GroupOptionName);
+		$item->Body = "";
+		$item->Visible = FALSE;
+	}
+
+	// Export data in HTML/CSV/Word/Excel/XML/Email/PDF format
+	function ExportData() {
+		$utf8 = (strtolower(EW_CHARSET) == "utf-8");
+		$bSelectLimit = $this->UseSelectLimit;
+
+		// Load recordset
+		if ($bSelectLimit) {
+			$this->TotalRecs = $this->ListRecordCount();
+		} else {
+			if (!$this->Recordset)
+				$this->Recordset = $this->LoadRecordset();
+			$rs = &$this->Recordset;
+			if ($rs)
+				$this->TotalRecs = $rs->RecordCount();
+		}
+		$this->StartRec = 1;
+
+		// Export all
+		if ($this->ExportAll) {
+			set_time_limit(EW_EXPORT_ALL_TIME_LIMIT);
+			$this->DisplayRecs = $this->TotalRecs;
+			$this->StopRec = $this->TotalRecs;
+		} else { // Export one page only
+			$this->SetupStartRec(); // Set up start record position
+
+			// Set the last record to display
+			if ($this->DisplayRecs <= 0) {
+				$this->StopRec = $this->TotalRecs;
+			} else {
+				$this->StopRec = $this->StartRec + $this->DisplayRecs - 1;
+			}
+		}
+		if ($bSelectLimit)
+			$rs = $this->LoadRecordset($this->StartRec-1, $this->DisplayRecs <= 0 ? $this->TotalRecs : $this->DisplayRecs);
+		if (!$rs) {
+			header("Content-Type:"); // Remove header
+			header("Content-Disposition:");
+			$this->ShowMessage();
+			return;
+		}
+		$this->ExportDoc = ew_ExportDocument($this, "h");
+		$Doc = &$this->ExportDoc;
+		if ($bSelectLimit) {
+			$this->StartRec = 1;
+			$this->StopRec = $this->DisplayRecs <= 0 ? $this->TotalRecs : $this->DisplayRecs;
+		} else {
+
+			//$this->StartRec = $this->StartRec;
+			//$this->StopRec = $this->StopRec;
+
+		}
+
+		// Call Page Exporting server event
+		$this->ExportDoc->ExportCustom = !$this->Page_Exporting();
+		$ParentTable = "";
+		$sHeader = $this->PageHeader;
+		$this->Page_DataRendering($sHeader);
+		$Doc->Text .= $sHeader;
+		$this->ExportDocument($Doc, $rs, $this->StartRec, $this->StopRec, "");
+		$sFooter = $this->PageFooter;
+		$this->Page_DataRendered($sFooter);
+		$Doc->Text .= $sFooter;
+
+		// Close recordset
+		$rs->Close();
+
+		// Call Page Exported server event
+		$this->Page_Exported();
+
+		// Export header and footer
+		$Doc->ExportHeaderAndFooter();
+
+		// Clean output buffer
+		if (!EW_DEBUG_ENABLED && ob_get_length())
+			ob_end_clean();
+
+		// Write debug message if enabled
+		if (EW_DEBUG_ENABLED && $this->Export <> "pdf")
+			echo ew_DebugMsg();
+
+		// Output data
+		$Doc->Export();
+	}
+
 	// Set up Breadcrumb
 	function SetupBreadcrumb() {
 		global $Breadcrumb, $Language;
@@ -1968,6 +2178,7 @@ Page_Rendering();
 $produtos_list->Page_Render();
 ?>
 <?php include_once "header.php" ?>
+<?php if ($produtos->Export == "") { ?>
 <script type="text/javascript">
 
 // Form object
@@ -1997,6 +2208,8 @@ var CurrentSearchForm = fprodutoslistsrch = new ew_Form("fprodutoslistsrch");
 
 // Write your client script here, no need to add script tags.
 </script>
+<?php } ?>
+<?php if ($produtos->Export == "") { ?>
 <div class="ewToolbar">
 <?php if ($produtos_list->TotalRecs > 0 && $produtos_list->ExportOptions->Visible()) { ?>
 <?php $produtos_list->ExportOptions->Render("body") ?>
@@ -2009,6 +2222,7 @@ var CurrentSearchForm = fprodutoslistsrch = new ew_Form("fprodutoslistsrch");
 <?php } ?>
 <div class="clearfix"></div>
 </div>
+<?php } ?>
 <?php
 	$bSelectLimit = $produtos_list->UseSelectLimit;
 	if ($bSelectLimit) {
@@ -2073,6 +2287,7 @@ $produtos_list->ShowMessage();
 <input type="hidden" name="<?php echo EW_TOKEN_NAME ?>" value="<?php echo $produtos_list->Token ?>">
 <?php } ?>
 <input type="hidden" name="t" value="produtos">
+<input type="hidden" name="exporttype" id="exporttype" value="">
 <div id="gmp_produtos" class="<?php if (ew_IsResponsiveLayout()) { ?>table-responsive <?php } ?>ewGridMiddlePanel">
 <?php if ($produtos_list->TotalRecs > 0 || $produtos->CurrentAction == "gridedit") { ?>
 <table id="tbl_produtoslist" class="table ewTable">
@@ -2401,6 +2616,7 @@ $produtos_list->ListOptions->Render("body", "right", $produtos_list->RowCnt);
 if ($produtos_list->Recordset)
 	$produtos_list->Recordset->Close();
 ?>
+<?php if ($produtos->Export == "") { ?>
 <div class="box-footer ewGridLowerPanel">
 <?php if ($produtos->CurrentAction <> "gridadd" && $produtos->CurrentAction <> "gridedit") { ?>
 <form name="ewPagerForm" class="ewForm form-inline ewPagerForm" action="<?php echo ew_CurrentPage() ?>">
@@ -2459,6 +2675,7 @@ if ($produtos_list->Recordset)
 </div>
 <div class="clearfix"></div>
 </div>
+<?php } ?>
 </div>
 <?php } ?>
 <?php if ($produtos_list->TotalRecs == 0 && $produtos->CurrentAction == "") { // Show other options ?>
@@ -2472,22 +2689,26 @@ if ($produtos_list->Recordset)
 </div>
 <div class="clearfix"></div>
 <?php } ?>
+<?php if ($produtos->Export == "") { ?>
 <script type="text/javascript">
 fprodutoslistsrch.FilterList = <?php echo $produtos_list->GetFilterList() ?>;
 fprodutoslistsrch.Init();
 fprodutoslist.Init();
 </script>
+<?php } ?>
 <?php
 $produtos_list->ShowPageFooter();
 if (EW_DEBUG_ENABLED)
 	echo ew_DebugMsg();
 ?>
+<?php if ($produtos->Export == "") { ?>
 <script type="text/javascript">
 
 // Write your table-specific startup script here
 // document.write("page loaded");
 
 </script>
+<?php } ?>
 <?php include_once "footer.php" ?>
 <?php
 $produtos_list->Page_Terminate();

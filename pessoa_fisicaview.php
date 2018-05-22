@@ -346,10 +346,10 @@ class cpessoa_fisica_view extends cpessoa_fisica {
 		$this->telefone->SetVisibility();
 		$this->_email->SetVisibility();
 		$this->celular->SetVisibility();
-		$this->RG->SetVisibility();
 		$this->CPF->SetVisibility();
-		$this->endereco_numero->SetVisibility();
+		$this->RG->SetVisibility();
 		$this->id_endereco->SetVisibility();
+		$this->endereco_numero->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -451,6 +451,9 @@ class cpessoa_fisica_view extends cpessoa_fisica {
 		// Check modal
 		if ($this->IsModal)
 			$gbSkipHeaderFooter = TRUE;
+
+		// Load current record
+		$bLoadCurrentRecord = FALSE;
 		$sReturnUrl = "";
 		$bMatchRecord = FALSE;
 		if ($this->IsPageRequest()) { // Validate request
@@ -618,10 +621,10 @@ class cpessoa_fisica_view extends cpessoa_fisica {
 		$this->telefone->setDbValue($row['telefone']);
 		$this->_email->setDbValue($row['email']);
 		$this->celular->setDbValue($row['celular']);
-		$this->RG->setDbValue($row['RG']);
 		$this->CPF->setDbValue($row['CPF']);
-		$this->endereco_numero->setDbValue($row['endereco_numero']);
+		$this->RG->setDbValue($row['RG']);
 		$this->id_endereco->setDbValue($row['id_endereco']);
+		$this->endereco_numero->setDbValue($row['endereco_numero']);
 	}
 
 	// Return a row with default values
@@ -634,10 +637,10 @@ class cpessoa_fisica_view extends cpessoa_fisica {
 		$row['telefone'] = NULL;
 		$row['email'] = NULL;
 		$row['celular'] = NULL;
-		$row['RG'] = NULL;
 		$row['CPF'] = NULL;
-		$row['endereco_numero'] = NULL;
+		$row['RG'] = NULL;
 		$row['id_endereco'] = NULL;
+		$row['endereco_numero'] = NULL;
 		return $row;
 	}
 
@@ -653,10 +656,10 @@ class cpessoa_fisica_view extends cpessoa_fisica {
 		$this->telefone->DbValue = $row['telefone'];
 		$this->_email->DbValue = $row['email'];
 		$this->celular->DbValue = $row['celular'];
-		$this->RG->DbValue = $row['RG'];
 		$this->CPF->DbValue = $row['CPF'];
-		$this->endereco_numero->DbValue = $row['endereco_numero'];
+		$this->RG->DbValue = $row['RG'];
 		$this->id_endereco->DbValue = $row['id_endereco'];
+		$this->endereco_numero->DbValue = $row['endereco_numero'];
 	}
 
 	// Render row values based on field settings
@@ -682,10 +685,10 @@ class cpessoa_fisica_view extends cpessoa_fisica {
 		// telefone
 		// email
 		// celular
-		// RG
 		// CPF
-		// endereco_numero
+		// RG
 		// id_endereco
+		// endereco_numero
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -718,17 +721,13 @@ class cpessoa_fisica_view extends cpessoa_fisica {
 		$this->celular->ViewValue = $this->celular->CurrentValue;
 		$this->celular->ViewCustomAttributes = "";
 
-		// RG
-		$this->RG->ViewValue = $this->RG->CurrentValue;
-		$this->RG->ViewCustomAttributes = "";
-
 		// CPF
 		$this->CPF->ViewValue = $this->CPF->CurrentValue;
 		$this->CPF->ViewCustomAttributes = "";
 
-		// endereco_numero
-		$this->endereco_numero->ViewValue = $this->endereco_numero->CurrentValue;
-		$this->endereco_numero->ViewCustomAttributes = "";
+		// RG
+		$this->RG->ViewValue = $this->RG->CurrentValue;
+		$this->RG->ViewCustomAttributes = "";
 
 		// id_endereco
 		if (strval($this->id_endereco->CurrentValue) <> "") {
@@ -755,6 +754,10 @@ class cpessoa_fisica_view extends cpessoa_fisica {
 			$this->id_endereco->ViewValue = NULL;
 		}
 		$this->id_endereco->ViewCustomAttributes = "";
+
+		// endereco_numero
+		$this->endereco_numero->ViewValue = $this->endereco_numero->CurrentValue;
+		$this->endereco_numero->ViewCustomAttributes = "";
 
 			// nome_pessoa
 			$this->nome_pessoa->LinkCustomAttributes = "";
@@ -786,25 +789,25 @@ class cpessoa_fisica_view extends cpessoa_fisica {
 			$this->celular->HrefValue = "";
 			$this->celular->TooltipValue = "";
 
-			// RG
-			$this->RG->LinkCustomAttributes = "";
-			$this->RG->HrefValue = "";
-			$this->RG->TooltipValue = "";
-
 			// CPF
 			$this->CPF->LinkCustomAttributes = "";
 			$this->CPF->HrefValue = "";
 			$this->CPF->TooltipValue = "";
 
-			// endereco_numero
-			$this->endereco_numero->LinkCustomAttributes = "";
-			$this->endereco_numero->HrefValue = "";
-			$this->endereco_numero->TooltipValue = "";
+			// RG
+			$this->RG->LinkCustomAttributes = "";
+			$this->RG->HrefValue = "";
+			$this->RG->TooltipValue = "";
 
 			// id_endereco
 			$this->id_endereco->LinkCustomAttributes = "";
 			$this->id_endereco->HrefValue = "";
 			$this->id_endereco->TooltipValue = "";
+
+			// endereco_numero
+			$this->endereco_numero->LinkCustomAttributes = "";
+			$this->endereco_numero->HrefValue = "";
+			$this->endereco_numero->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -1056,17 +1059,6 @@ $pessoa_fisica_view->ShowMessage();
 </td>
 	</tr>
 <?php } ?>
-<?php if ($pessoa_fisica->RG->Visible) { // RG ?>
-	<tr id="r_RG">
-		<td class="col-sm-2"><span id="elh_pessoa_fisica_RG"><?php echo $pessoa_fisica->RG->FldCaption() ?></span></td>
-		<td data-name="RG"<?php echo $pessoa_fisica->RG->CellAttributes() ?>>
-<span id="el_pessoa_fisica_RG">
-<span<?php echo $pessoa_fisica->RG->ViewAttributes() ?>>
-<?php echo $pessoa_fisica->RG->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
 <?php if ($pessoa_fisica->CPF->Visible) { // CPF ?>
 	<tr id="r_CPF">
 		<td class="col-sm-2"><span id="elh_pessoa_fisica_CPF"><?php echo $pessoa_fisica->CPF->FldCaption() ?></span></td>
@@ -1078,13 +1070,13 @@ $pessoa_fisica_view->ShowMessage();
 </td>
 	</tr>
 <?php } ?>
-<?php if ($pessoa_fisica->endereco_numero->Visible) { // endereco_numero ?>
-	<tr id="r_endereco_numero">
-		<td class="col-sm-2"><span id="elh_pessoa_fisica_endereco_numero"><?php echo $pessoa_fisica->endereco_numero->FldCaption() ?></span></td>
-		<td data-name="endereco_numero"<?php echo $pessoa_fisica->endereco_numero->CellAttributes() ?>>
-<span id="el_pessoa_fisica_endereco_numero">
-<span<?php echo $pessoa_fisica->endereco_numero->ViewAttributes() ?>>
-<?php echo $pessoa_fisica->endereco_numero->ViewValue ?></span>
+<?php if ($pessoa_fisica->RG->Visible) { // RG ?>
+	<tr id="r_RG">
+		<td class="col-sm-2"><span id="elh_pessoa_fisica_RG"><?php echo $pessoa_fisica->RG->FldCaption() ?></span></td>
+		<td data-name="RG"<?php echo $pessoa_fisica->RG->CellAttributes() ?>>
+<span id="el_pessoa_fisica_RG">
+<span<?php echo $pessoa_fisica->RG->ViewAttributes() ?>>
+<?php echo $pessoa_fisica->RG->ViewValue ?></span>
 </span>
 </td>
 	</tr>
@@ -1096,6 +1088,17 @@ $pessoa_fisica_view->ShowMessage();
 <span id="el_pessoa_fisica_id_endereco">
 <span<?php echo $pessoa_fisica->id_endereco->ViewAttributes() ?>>
 <?php echo $pessoa_fisica->id_endereco->ViewValue ?></span>
+</span>
+</td>
+	</tr>
+<?php } ?>
+<?php if ($pessoa_fisica->endereco_numero->Visible) { // endereco_numero ?>
+	<tr id="r_endereco_numero">
+		<td class="col-sm-2"><span id="elh_pessoa_fisica_endereco_numero"><?php echo $pessoa_fisica->endereco_numero->FldCaption() ?></span></td>
+		<td data-name="endereco_numero"<?php echo $pessoa_fisica->endereco_numero->CellAttributes() ?>>
+<span id="el_pessoa_fisica_endereco_numero">
+<span<?php echo $pessoa_fisica->endereco_numero->ViewAttributes() ?>>
+<?php echo $pessoa_fisica->endereco_numero->ViewValue ?></span>
 </span>
 </td>
 	</tr>
