@@ -711,7 +711,7 @@ class cpessoa_fisica_view extends cpessoa_fisica {
 
 		// nascimento
 		$this->nascimento->ViewValue = $this->nascimento->CurrentValue;
-		$this->nascimento->ViewValue = ew_FormatDateTime($this->nascimento->ViewValue, 0);
+		$this->nascimento->ViewValue = ew_FormatDateTime($this->nascimento->ViewValue, 2);
 		$this->nascimento->ViewCustomAttributes = "";
 
 		// telefone

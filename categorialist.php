@@ -416,8 +416,8 @@ class ccategoria_list extends ccategoria {
 		$this->id_categoria->SetVisibility();
 		if ($this->IsAdd() || $this->IsCopy() || $this->IsGridAdd())
 			$this->id_categoria->Visible = FALSE;
-		$this->nome_categoria->SetVisibility();
 		$this->id_pai->SetVisibility();
+		$this->nome_categoria->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -753,8 +753,8 @@ class ccategoria_list extends ccategoria {
 		if (EW_SEARCH_FILTER_OPTION == "Server" && isset($UserProfile))
 			$sSavedFilterList = $UserProfile->GetSearchFilters(CurrentUserName(), "fcategorialistsrch");
 		$sFilterList = ew_Concat($sFilterList, $this->id_categoria->AdvancedSearch->ToJson(), ","); // Field id_categoria
-		$sFilterList = ew_Concat($sFilterList, $this->nome_categoria->AdvancedSearch->ToJson(), ","); // Field nome_categoria
 		$sFilterList = ew_Concat($sFilterList, $this->id_pai->AdvancedSearch->ToJson(), ","); // Field id_pai
+		$sFilterList = ew_Concat($sFilterList, $this->nome_categoria->AdvancedSearch->ToJson(), ","); // Field nome_categoria
 		if ($this->BasicSearch->Keyword <> "") {
 			$sWrk = "\"" . EW_TABLE_BASIC_SEARCH . "\":\"" . ew_JsEncode2($this->BasicSearch->Keyword) . "\",\"" . EW_TABLE_BASIC_SEARCH_TYPE . "\":\"" . ew_JsEncode2($this->BasicSearch->Type) . "\"";
 			$sFilterList = ew_Concat($sFilterList, $sWrk, ",");
@@ -807,14 +807,6 @@ class ccategoria_list extends ccategoria {
 		$this->id_categoria->AdvancedSearch->SearchOperator2 = @$filter["w_id_categoria"];
 		$this->id_categoria->AdvancedSearch->Save();
 
-		// Field nome_categoria
-		$this->nome_categoria->AdvancedSearch->SearchValue = @$filter["x_nome_categoria"];
-		$this->nome_categoria->AdvancedSearch->SearchOperator = @$filter["z_nome_categoria"];
-		$this->nome_categoria->AdvancedSearch->SearchCondition = @$filter["v_nome_categoria"];
-		$this->nome_categoria->AdvancedSearch->SearchValue2 = @$filter["y_nome_categoria"];
-		$this->nome_categoria->AdvancedSearch->SearchOperator2 = @$filter["w_nome_categoria"];
-		$this->nome_categoria->AdvancedSearch->Save();
-
 		// Field id_pai
 		$this->id_pai->AdvancedSearch->SearchValue = @$filter["x_id_pai"];
 		$this->id_pai->AdvancedSearch->SearchOperator = @$filter["z_id_pai"];
@@ -822,6 +814,14 @@ class ccategoria_list extends ccategoria {
 		$this->id_pai->AdvancedSearch->SearchValue2 = @$filter["y_id_pai"];
 		$this->id_pai->AdvancedSearch->SearchOperator2 = @$filter["w_id_pai"];
 		$this->id_pai->AdvancedSearch->Save();
+
+		// Field nome_categoria
+		$this->nome_categoria->AdvancedSearch->SearchValue = @$filter["x_nome_categoria"];
+		$this->nome_categoria->AdvancedSearch->SearchOperator = @$filter["z_nome_categoria"];
+		$this->nome_categoria->AdvancedSearch->SearchCondition = @$filter["v_nome_categoria"];
+		$this->nome_categoria->AdvancedSearch->SearchValue2 = @$filter["y_nome_categoria"];
+		$this->nome_categoria->AdvancedSearch->SearchOperator2 = @$filter["w_nome_categoria"];
+		$this->nome_categoria->AdvancedSearch->Save();
 		$this->BasicSearch->setKeyword(@$filter[EW_TABLE_BASIC_SEARCH]);
 		$this->BasicSearch->setType(@$filter[EW_TABLE_BASIC_SEARCH_TYPE]);
 	}
@@ -976,8 +976,8 @@ class ccategoria_list extends ccategoria {
 			$this->CurrentOrder = @$_GET["order"];
 			$this->CurrentOrderType = @$_GET["ordertype"];
 			$this->UpdateSort($this->id_categoria); // id_categoria
-			$this->UpdateSort($this->nome_categoria); // nome_categoria
 			$this->UpdateSort($this->id_pai); // id_pai
+			$this->UpdateSort($this->nome_categoria); // nome_categoria
 			$this->setStartRecordNumber(1); // Reset start position
 		}
 	}
@@ -1011,8 +1011,8 @@ class ccategoria_list extends ccategoria {
 				$sOrderBy = "";
 				$this->setSessionOrderBy($sOrderBy);
 				$this->id_categoria->setSort("");
-				$this->nome_categoria->setSort("");
 				$this->id_pai->setSort("");
+				$this->nome_categoria->setSort("");
 			}
 
 			// Reset start position
@@ -1462,16 +1462,16 @@ class ccategoria_list extends ccategoria {
 		if (!$rs || $rs->EOF)
 			return;
 		$this->id_categoria->setDbValue($row['id_categoria']);
-		$this->nome_categoria->setDbValue($row['nome_categoria']);
 		$this->id_pai->setDbValue($row['id_pai']);
+		$this->nome_categoria->setDbValue($row['nome_categoria']);
 	}
 
 	// Return a row with default values
 	function NewRow() {
 		$row = array();
 		$row['id_categoria'] = NULL;
-		$row['nome_categoria'] = NULL;
 		$row['id_pai'] = NULL;
+		$row['nome_categoria'] = NULL;
 		return $row;
 	}
 
@@ -1481,8 +1481,8 @@ class ccategoria_list extends ccategoria {
 			return;
 		$row = is_array($rs) ? $rs : $rs->fields;
 		$this->id_categoria->DbValue = $row['id_categoria'];
-		$this->nome_categoria->DbValue = $row['nome_categoria'];
 		$this->id_pai->DbValue = $row['id_pai'];
+		$this->nome_categoria->DbValue = $row['nome_categoria'];
 	}
 
 	// Load old record
@@ -1524,8 +1524,8 @@ class ccategoria_list extends ccategoria {
 
 		// Common render codes for all row types
 		// id_categoria
-		// nome_categoria
 		// id_pai
+		// nome_categoria
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -1533,28 +1533,47 @@ class ccategoria_list extends ccategoria {
 		$this->id_categoria->ViewValue = $this->id_categoria->CurrentValue;
 		$this->id_categoria->ViewCustomAttributes = "";
 
+		// id_pai
+		if (strval($this->id_pai->CurrentValue) <> "") {
+			$sFilterWrk = "`id_categoria`" . ew_SearchString("=", $this->id_pai->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_categoria`, `nome_categoria` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `categoria`";
+		$sWhereWrk = "";
+		$this->id_pai->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_pai, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_pai->ViewValue = $this->id_pai->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_pai->ViewValue = $this->id_pai->CurrentValue;
+			}
+		} else {
+			$this->id_pai->ViewValue = NULL;
+		}
+		$this->id_pai->ViewCustomAttributes = "";
+
 		// nome_categoria
 		$this->nome_categoria->ViewValue = $this->nome_categoria->CurrentValue;
 		$this->nome_categoria->ViewCustomAttributes = "";
-
-		// id_pai
-		$this->id_pai->ViewValue = $this->id_pai->CurrentValue;
-		$this->id_pai->ViewCustomAttributes = "";
 
 			// id_categoria
 			$this->id_categoria->LinkCustomAttributes = "";
 			$this->id_categoria->HrefValue = "";
 			$this->id_categoria->TooltipValue = "";
 
-			// nome_categoria
-			$this->nome_categoria->LinkCustomAttributes = "";
-			$this->nome_categoria->HrefValue = "";
-			$this->nome_categoria->TooltipValue = "";
-
 			// id_pai
 			$this->id_pai->LinkCustomAttributes = "";
 			$this->id_pai->HrefValue = "";
 			$this->id_pai->TooltipValue = "";
+
+			// nome_categoria
+			$this->nome_categoria->LinkCustomAttributes = "";
+			$this->nome_categoria->HrefValue = "";
+			$this->nome_categoria->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -1908,8 +1927,10 @@ fcategorialist.Form_CustomValidate =
 fcategorialist.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-// Form object for search
+fcategorialist.Lists["x_id_pai"] = {"LinkField":"x_id_categoria","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_categoria","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"categoria"};
+fcategorialist.Lists["x_id_pai"].Data = "<?php echo $categoria_list->id_pai->LookupFilterQuery(FALSE, "list") ?>";
 
+// Form object for search
 var CurrentSearchForm = fcategorialistsrch = new ew_Form("fcategorialistsrch");
 </script>
 <script type="text/javascript">
@@ -2021,21 +2042,21 @@ $categoria_list->ListOptions->Render("header", "left");
 		</div></div></th>
 	<?php } ?>
 <?php } ?>
-<?php if ($categoria->nome_categoria->Visible) { // nome_categoria ?>
-	<?php if ($categoria->SortUrl($categoria->nome_categoria) == "") { ?>
-		<th data-name="nome_categoria" class="<?php echo $categoria->nome_categoria->HeaderCellClass() ?>"><div id="elh_categoria_nome_categoria" class="categoria_nome_categoria"><div class="ewTableHeaderCaption"><?php echo $categoria->nome_categoria->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="nome_categoria" class="<?php echo $categoria->nome_categoria->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $categoria->SortUrl($categoria->nome_categoria) ?>',1);"><div id="elh_categoria_nome_categoria" class="categoria_nome_categoria">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $categoria->nome_categoria->FldCaption() ?><?php echo $Language->Phrase("SrchLegend") ?></span><span class="ewTableHeaderSort"><?php if ($categoria->nome_categoria->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($categoria->nome_categoria->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
 <?php if ($categoria->id_pai->Visible) { // id_pai ?>
 	<?php if ($categoria->SortUrl($categoria->id_pai) == "") { ?>
 		<th data-name="id_pai" class="<?php echo $categoria->id_pai->HeaderCellClass() ?>"><div id="elh_categoria_id_pai" class="categoria_id_pai"><div class="ewTableHeaderCaption"><?php echo $categoria->id_pai->FldCaption() ?></div></div></th>
 	<?php } else { ?>
 		<th data-name="id_pai" class="<?php echo $categoria->id_pai->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $categoria->SortUrl($categoria->id_pai) ?>',1);"><div id="elh_categoria_id_pai" class="categoria_id_pai">
 			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $categoria->id_pai->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($categoria->id_pai->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($categoria->id_pai->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
+		</div></div></th>
+	<?php } ?>
+<?php } ?>
+<?php if ($categoria->nome_categoria->Visible) { // nome_categoria ?>
+	<?php if ($categoria->SortUrl($categoria->nome_categoria) == "") { ?>
+		<th data-name="nome_categoria" class="<?php echo $categoria->nome_categoria->HeaderCellClass() ?>"><div id="elh_categoria_nome_categoria" class="categoria_nome_categoria"><div class="ewTableHeaderCaption"><?php echo $categoria->nome_categoria->FldCaption() ?></div></div></th>
+	<?php } else { ?>
+		<th data-name="nome_categoria" class="<?php echo $categoria->nome_categoria->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $categoria->SortUrl($categoria->nome_categoria) ?>',1);"><div id="elh_categoria_nome_categoria" class="categoria_nome_categoria">
+			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $categoria->nome_categoria->FldCaption() ?><?php echo $Language->Phrase("SrchLegend") ?></span><span class="ewTableHeaderSort"><?php if ($categoria->nome_categoria->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($categoria->nome_categoria->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
 		</div></div></th>
 	<?php } ?>
 <?php } ?>
@@ -2112,19 +2133,19 @@ $categoria_list->ListOptions->Render("body", "left", $categoria_list->RowCnt);
 </span>
 </td>
 	<?php } ?>
-	<?php if ($categoria->nome_categoria->Visible) { // nome_categoria ?>
-		<td data-name="nome_categoria"<?php echo $categoria->nome_categoria->CellAttributes() ?>>
-<span id="el<?php echo $categoria_list->RowCnt ?>_categoria_nome_categoria" class="categoria_nome_categoria">
-<span<?php echo $categoria->nome_categoria->ViewAttributes() ?>>
-<?php echo $categoria->nome_categoria->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
 	<?php if ($categoria->id_pai->Visible) { // id_pai ?>
 		<td data-name="id_pai"<?php echo $categoria->id_pai->CellAttributes() ?>>
 <span id="el<?php echo $categoria_list->RowCnt ?>_categoria_id_pai" class="categoria_id_pai">
 <span<?php echo $categoria->id_pai->ViewAttributes() ?>>
 <?php echo $categoria->id_pai->ListViewValue() ?></span>
+</span>
+</td>
+	<?php } ?>
+	<?php if ($categoria->nome_categoria->Visible) { // nome_categoria ?>
+		<td data-name="nome_categoria"<?php echo $categoria->nome_categoria->CellAttributes() ?>>
+<span id="el<?php echo $categoria_list->RowCnt ?>_categoria_nome_categoria" class="categoria_nome_categoria">
+<span<?php echo $categoria->nome_categoria->ViewAttributes() ?>>
+<?php echo $categoria->nome_categoria->ListViewValue() ?></span>
 </span>
 </td>
 	<?php } ?>

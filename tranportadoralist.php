@@ -413,10 +413,6 @@ class ctranportadora_list extends ctranportadora {
 
 		// Setup export options
 		$this->SetupExportOptions();
-		$this->id_transportadora->SetVisibility();
-		if ($this->IsAdd() || $this->IsCopy() || $this->IsGridAdd())
-			$this->id_transportadora->Visible = FALSE;
-		$this->transportadora->SetVisibility();
 		$this->id_empresa_transportadora->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
@@ -603,28 +599,8 @@ class ctranportadora_list extends ctranportadora {
 					$option->HideAllOptions();
 			}
 
-			// Get default search criteria
-			ew_AddFilter($this->DefaultSearchWhere, $this->BasicSearchWhere(TRUE));
-
-			// Get basic search values
-			$this->LoadBasicSearchValues();
-
-			// Process filter list
-			$this->ProcessFilterList();
-
-			// Restore search parms from Session if not searching / reset / export
-			if (($this->Export <> "" || $this->Command <> "search" && $this->Command <> "reset" && $this->Command <> "resetall") && $this->Command <> "json" && $this->CheckSearchParms())
-				$this->RestoreSearchParms();
-
-			// Call Recordset SearchValidated event
-			$this->Recordset_SearchValidated();
-
 			// Set up sorting order
 			$this->SetupSortOrder();
-
-			// Get basic search criteria
-			if ($gsSearchError == "")
-				$sSrchBasic = $this->BasicSearchWhere();
 		}
 
 		// Restore display records
@@ -637,31 +613,6 @@ class ctranportadora_list extends ctranportadora {
 		// Load Sorting Order
 		if ($this->Command <> "json")
 			$this->LoadSortOrder();
-
-		// Load search default if no existing search criteria
-		if (!$this->CheckSearchParms()) {
-
-			// Load basic search from default
-			$this->BasicSearch->LoadDefault();
-			if ($this->BasicSearch->Keyword != "")
-				$sSrchBasic = $this->BasicSearchWhere();
-		}
-
-		// Build search criteria
-		ew_AddFilter($this->SearchWhere, $sSrchAdvanced);
-		ew_AddFilter($this->SearchWhere, $sSrchBasic);
-
-		// Call Recordset_Searching event
-		$this->Recordset_Searching($this->SearchWhere);
-
-		// Save search criteria
-		if ($this->Command == "search" && !$this->RestoreSearch) {
-			$this->setSearchWhere($this->SearchWhere); // Save to Session
-			$this->StartRec = 1; // Reset start record counter
-			$this->setStartRecordNumber($this->StartRec);
-		} elseif ($this->Command <> "json") {
-			$this->SearchWhere = $this->getSearchWhere();
-		}
 
 		// Build filter
 		$sFilter = "";
@@ -741,233 +692,6 @@ class ctranportadora_list extends ctranportadora {
 		return TRUE;
 	}
 
-	// Get list of filters
-	function GetFilterList() {
-		global $UserProfile;
-
-		// Initialize
-		$sFilterList = "";
-		$sSavedFilterList = "";
-
-		// Load server side filters
-		if (EW_SEARCH_FILTER_OPTION == "Server" && isset($UserProfile))
-			$sSavedFilterList = $UserProfile->GetSearchFilters(CurrentUserName(), "ftranportadoralistsrch");
-		$sFilterList = ew_Concat($sFilterList, $this->id_transportadora->AdvancedSearch->ToJson(), ","); // Field id_transportadora
-		$sFilterList = ew_Concat($sFilterList, $this->transportadora->AdvancedSearch->ToJson(), ","); // Field transportadora
-		$sFilterList = ew_Concat($sFilterList, $this->id_empresa_transportadora->AdvancedSearch->ToJson(), ","); // Field id_empresa_transportadora
-		if ($this->BasicSearch->Keyword <> "") {
-			$sWrk = "\"" . EW_TABLE_BASIC_SEARCH . "\":\"" . ew_JsEncode2($this->BasicSearch->Keyword) . "\",\"" . EW_TABLE_BASIC_SEARCH_TYPE . "\":\"" . ew_JsEncode2($this->BasicSearch->Type) . "\"";
-			$sFilterList = ew_Concat($sFilterList, $sWrk, ",");
-		}
-		$sFilterList = preg_replace('/,$/', "", $sFilterList);
-
-		// Return filter list in json
-		if ($sFilterList <> "")
-			$sFilterList = "\"data\":{" . $sFilterList . "}";
-		if ($sSavedFilterList <> "") {
-			if ($sFilterList <> "")
-				$sFilterList .= ",";
-			$sFilterList .= "\"filters\":" . $sSavedFilterList;
-		}
-		return ($sFilterList <> "") ? "{" . $sFilterList . "}" : "null";
-	}
-
-	// Process filter list
-	function ProcessFilterList() {
-		global $UserProfile;
-		if (@$_POST["ajax"] == "savefilters") { // Save filter request (Ajax)
-			$filters = @$_POST["filters"];
-			$UserProfile->SetSearchFilters(CurrentUserName(), "ftranportadoralistsrch", $filters);
-
-			// Clean output buffer
-			if (!EW_DEBUG_ENABLED && ob_get_length())
-				ob_end_clean();
-			echo ew_ArrayToJson(array(array("success" => TRUE))); // Success
-			$this->Page_Terminate();
-			exit();
-		} elseif (@$_POST["cmd"] == "resetfilter") {
-			$this->RestoreFilterList();
-		}
-	}
-
-	// Restore list of filters
-	function RestoreFilterList() {
-
-		// Return if not reset filter
-		if (@$_POST["cmd"] <> "resetfilter")
-			return FALSE;
-		$filter = json_decode(@$_POST["filter"], TRUE);
-		$this->Command = "search";
-
-		// Field id_transportadora
-		$this->id_transportadora->AdvancedSearch->SearchValue = @$filter["x_id_transportadora"];
-		$this->id_transportadora->AdvancedSearch->SearchOperator = @$filter["z_id_transportadora"];
-		$this->id_transportadora->AdvancedSearch->SearchCondition = @$filter["v_id_transportadora"];
-		$this->id_transportadora->AdvancedSearch->SearchValue2 = @$filter["y_id_transportadora"];
-		$this->id_transportadora->AdvancedSearch->SearchOperator2 = @$filter["w_id_transportadora"];
-		$this->id_transportadora->AdvancedSearch->Save();
-
-		// Field transportadora
-		$this->transportadora->AdvancedSearch->SearchValue = @$filter["x_transportadora"];
-		$this->transportadora->AdvancedSearch->SearchOperator = @$filter["z_transportadora"];
-		$this->transportadora->AdvancedSearch->SearchCondition = @$filter["v_transportadora"];
-		$this->transportadora->AdvancedSearch->SearchValue2 = @$filter["y_transportadora"];
-		$this->transportadora->AdvancedSearch->SearchOperator2 = @$filter["w_transportadora"];
-		$this->transportadora->AdvancedSearch->Save();
-
-		// Field id_empresa_transportadora
-		$this->id_empresa_transportadora->AdvancedSearch->SearchValue = @$filter["x_id_empresa_transportadora"];
-		$this->id_empresa_transportadora->AdvancedSearch->SearchOperator = @$filter["z_id_empresa_transportadora"];
-		$this->id_empresa_transportadora->AdvancedSearch->SearchCondition = @$filter["v_id_empresa_transportadora"];
-		$this->id_empresa_transportadora->AdvancedSearch->SearchValue2 = @$filter["y_id_empresa_transportadora"];
-		$this->id_empresa_transportadora->AdvancedSearch->SearchOperator2 = @$filter["w_id_empresa_transportadora"];
-		$this->id_empresa_transportadora->AdvancedSearch->Save();
-		$this->BasicSearch->setKeyword(@$filter[EW_TABLE_BASIC_SEARCH]);
-		$this->BasicSearch->setType(@$filter[EW_TABLE_BASIC_SEARCH_TYPE]);
-	}
-
-	// Return basic search SQL
-	function BasicSearchSQL($arKeywords, $type) {
-		$sWhere = "";
-		$this->BuildBasicSearchSQL($sWhere, $this->transportadora, $arKeywords, $type);
-		return $sWhere;
-	}
-
-	// Build basic search SQL
-	function BuildBasicSearchSQL(&$Where, &$Fld, $arKeywords, $type) {
-		global $EW_BASIC_SEARCH_IGNORE_PATTERN;
-		$sDefCond = ($type == "OR") ? "OR" : "AND";
-		$arSQL = array(); // Array for SQL parts
-		$arCond = array(); // Array for search conditions
-		$cnt = count($arKeywords);
-		$j = 0; // Number of SQL parts
-		for ($i = 0; $i < $cnt; $i++) {
-			$Keyword = $arKeywords[$i];
-			$Keyword = trim($Keyword);
-			if ($EW_BASIC_SEARCH_IGNORE_PATTERN <> "") {
-				$Keyword = preg_replace($EW_BASIC_SEARCH_IGNORE_PATTERN, "\\", $Keyword);
-				$ar = explode("\\", $Keyword);
-			} else {
-				$ar = array($Keyword);
-			}
-			foreach ($ar as $Keyword) {
-				if ($Keyword <> "") {
-					$sWrk = "";
-					if ($Keyword == "OR" && $type == "") {
-						if ($j > 0)
-							$arCond[$j-1] = "OR";
-					} elseif ($Keyword == EW_NULL_VALUE) {
-						$sWrk = $Fld->FldExpression . " IS NULL";
-					} elseif ($Keyword == EW_NOT_NULL_VALUE) {
-						$sWrk = $Fld->FldExpression . " IS NOT NULL";
-					} elseif ($Fld->FldIsVirtual) {
-						$sWrk = $Fld->FldVirtualExpression . ew_Like(ew_QuotedValue("%" . $Keyword . "%", EW_DATATYPE_STRING, $this->DBID), $this->DBID);
-					} elseif ($Fld->FldDataType != EW_DATATYPE_NUMBER || is_numeric($Keyword)) {
-						$sWrk = $Fld->FldBasicSearchExpression . ew_Like(ew_QuotedValue("%" . $Keyword . "%", EW_DATATYPE_STRING, $this->DBID), $this->DBID);
-					}
-					if ($sWrk <> "") {
-						$arSQL[$j] = $sWrk;
-						$arCond[$j] = $sDefCond;
-						$j += 1;
-					}
-				}
-			}
-		}
-		$cnt = count($arSQL);
-		$bQuoted = FALSE;
-		$sSql = "";
-		if ($cnt > 0) {
-			for ($i = 0; $i < $cnt-1; $i++) {
-				if ($arCond[$i] == "OR") {
-					if (!$bQuoted) $sSql .= "(";
-					$bQuoted = TRUE;
-				}
-				$sSql .= $arSQL[$i];
-				if ($bQuoted && $arCond[$i] <> "OR") {
-					$sSql .= ")";
-					$bQuoted = FALSE;
-				}
-				$sSql .= " " . $arCond[$i] . " ";
-			}
-			$sSql .= $arSQL[$cnt-1];
-			if ($bQuoted)
-				$sSql .= ")";
-		}
-		if ($sSql <> "") {
-			if ($Where <> "") $Where .= " OR ";
-			$Where .= "(" . $sSql . ")";
-		}
-	}
-
-	// Return basic search WHERE clause based on search keyword and type
-	function BasicSearchWhere($Default = FALSE) {
-		global $Security;
-		$sSearchStr = "";
-		$sSearchKeyword = ($Default) ? $this->BasicSearch->KeywordDefault : $this->BasicSearch->Keyword;
-		$sSearchType = ($Default) ? $this->BasicSearch->TypeDefault : $this->BasicSearch->Type;
-
-		// Get search SQL
-		if ($sSearchKeyword <> "") {
-			$ar = $this->BasicSearch->KeywordList($Default);
-
-			// Search keyword in any fields
-			if (($sSearchType == "OR" || $sSearchType == "AND") && $this->BasicSearch->BasicSearchAnyFields) {
-				foreach ($ar as $sKeyword) {
-					if ($sKeyword <> "") {
-						if ($sSearchStr <> "") $sSearchStr .= " " . $sSearchType . " ";
-						$sSearchStr .= "(" . $this->BasicSearchSQL(array($sKeyword), $sSearchType) . ")";
-					}
-				}
-			} else {
-				$sSearchStr = $this->BasicSearchSQL($ar, $sSearchType);
-			}
-			if (!$Default && in_array($this->Command, array("", "reset", "resetall"))) $this->Command = "search";
-		}
-		if (!$Default && $this->Command == "search") {
-			$this->BasicSearch->setKeyword($sSearchKeyword);
-			$this->BasicSearch->setType($sSearchType);
-		}
-		return $sSearchStr;
-	}
-
-	// Check if search parm exists
-	function CheckSearchParms() {
-
-		// Check basic search
-		if ($this->BasicSearch->IssetSession())
-			return TRUE;
-		return FALSE;
-	}
-
-	// Clear all search parameters
-	function ResetSearchParms() {
-
-		// Clear search WHERE clause
-		$this->SearchWhere = "";
-		$this->setSearchWhere($this->SearchWhere);
-
-		// Clear basic search parameters
-		$this->ResetBasicSearchParms();
-	}
-
-	// Load advanced search default values
-	function LoadAdvancedSearchDefault() {
-		return FALSE;
-	}
-
-	// Clear all basic search parameters
-	function ResetBasicSearchParms() {
-		$this->BasicSearch->UnsetSession();
-	}
-
-	// Restore all search parameters
-	function RestoreSearchParms() {
-		$this->RestoreSearch = TRUE;
-
-		// Restore basic search values
-		$this->BasicSearch->Load();
-	}
-
 	// Set up sort parameters
 	function SetupSortOrder() {
 
@@ -975,8 +699,6 @@ class ctranportadora_list extends ctranportadora {
 		if (@$_GET["order"] <> "") {
 			$this->CurrentOrder = @$_GET["order"];
 			$this->CurrentOrderType = @$_GET["ordertype"];
-			$this->UpdateSort($this->id_transportadora); // id_transportadora
-			$this->UpdateSort($this->transportadora); // transportadora
 			$this->UpdateSort($this->id_empresa_transportadora); // id_empresa_transportadora
 			$this->setStartRecordNumber(1); // Reset start position
 		}
@@ -1002,16 +724,10 @@ class ctranportadora_list extends ctranportadora {
 		// Check if reset command
 		if (substr($this->Command,0,5) == "reset") {
 
-			// Reset search criteria
-			if ($this->Command == "reset" || $this->Command == "resetall")
-				$this->ResetSearchParms();
-
 			// Reset sorting order
 			if ($this->Command == "resetsort") {
 				$sOrderBy = "";
 				$this->setSessionOrderBy($sOrderBy);
-				$this->id_transportadora->setSort("");
-				$this->transportadora->setSort("");
 				$this->id_empresa_transportadora->setSort("");
 			}
 
@@ -1197,10 +913,10 @@ class ctranportadora_list extends ctranportadora {
 		// Filter button
 		$item = &$this->FilterOptions->Add("savecurrentfilter");
 		$item->Body = "<a class=\"ewSaveFilter\" data-form=\"ftranportadoralistsrch\" href=\"#\">" . $Language->Phrase("SaveCurrentFilter") . "</a>";
-		$item->Visible = TRUE;
+		$item->Visible = FALSE;
 		$item = &$this->FilterOptions->Add("deletefilter");
 		$item->Body = "<a class=\"ewDeleteFilter\" data-form=\"ftranportadoralistsrch\" href=\"#\">" . $Language->Phrase("DeleteFilter") . "</a>";
-		$item->Visible = TRUE;
+		$item->Visible = FALSE;
 		$this->FilterOptions->UseDropDownButton = TRUE;
 		$this->FilterOptions->UseButtonGroup = !$this->FilterOptions->UseDropDownButton;
 		$this->FilterOptions->DropDownButtonPhrase = $Language->Phrase("Filters");
@@ -1324,17 +1040,6 @@ class ctranportadora_list extends ctranportadora {
 		$this->SearchOptions->Tag = "div";
 		$this->SearchOptions->TagClassName = "ewSearchOption";
 
-		// Search button
-		$item = &$this->SearchOptions->Add("searchtoggle");
-		$SearchToggleClass = ($this->SearchWhere <> "") ? " active" : " active";
-		$item->Body = "<button type=\"button\" class=\"btn btn-default ewSearchToggle" . $SearchToggleClass . "\" title=\"" . $Language->Phrase("SearchPanel") . "\" data-caption=\"" . $Language->Phrase("SearchPanel") . "\" data-toggle=\"button\" data-form=\"ftranportadoralistsrch\">" . $Language->Phrase("SearchLink") . "</button>";
-		$item->Visible = TRUE;
-
-		// Show all button
-		$item = &$this->SearchOptions->Add("showall");
-		$item->Body = "<a class=\"btn btn-default ewShowAll\" title=\"" . $Language->Phrase("ShowAll") . "\" data-caption=\"" . $Language->Phrase("ShowAll") . "\" href=\"" . $this->PageUrl() . "cmd=reset\">" . $Language->Phrase("ShowAllBtn") . "</a>";
-		$item->Visible = ($this->SearchWhere <> $this->DefaultSearchWhere && $this->SearchWhere <> "0=101");
-
 		// Button group for search
 		$this->SearchOptions->UseDropDownButton = FALSE;
 		$this->SearchOptions->UseImageAndText = TRUE;
@@ -1393,13 +1098,6 @@ class ctranportadora_list extends ctranportadora {
 			$this->StartRec = intval(($this->StartRec-1)/$this->DisplayRecs)*$this->DisplayRecs+1; // Point to page boundary
 			$this->setStartRecordNumber($this->StartRec);
 		}
-	}
-
-	// Load basic search values
-	function LoadBasicSearchValues() {
-		$this->BasicSearch->Keyword = @$_GET[EW_TABLE_BASIC_SEARCH];
-		if ($this->BasicSearch->Keyword <> "" && $this->Command == "") $this->Command = "search";
-		$this->BasicSearch->Type = @$_GET[EW_TABLE_BASIC_SEARCH_TYPE];
 	}
 
 	// Load recordset
@@ -1529,14 +1227,6 @@ class ctranportadora_list extends ctranportadora {
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
-		// id_transportadora
-		$this->id_transportadora->ViewValue = $this->id_transportadora->CurrentValue;
-		$this->id_transportadora->ViewCustomAttributes = "";
-
-		// transportadora
-		$this->transportadora->ViewValue = $this->transportadora->CurrentValue;
-		$this->transportadora->ViewCustomAttributes = "";
-
 		// id_empresa_transportadora
 		if (strval($this->id_empresa_transportadora->CurrentValue) <> "") {
 			$sFilterWrk = "`id_perfil`" . ew_SearchString("=", $this->id_empresa_transportadora->CurrentValue, EW_DATATYPE_NUMBER, "");
@@ -1559,16 +1249,6 @@ class ctranportadora_list extends ctranportadora {
 			$this->id_empresa_transportadora->ViewValue = NULL;
 		}
 		$this->id_empresa_transportadora->ViewCustomAttributes = "";
-
-			// id_transportadora
-			$this->id_transportadora->LinkCustomAttributes = "";
-			$this->id_transportadora->HrefValue = "";
-			$this->id_transportadora->TooltipValue = "";
-
-			// transportadora
-			$this->transportadora->LinkCustomAttributes = "";
-			$this->transportadora->HrefValue = "";
-			$this->transportadora->TooltipValue = "";
 
 			// id_empresa_transportadora
 			$this->id_empresa_transportadora->LinkCustomAttributes = "";
@@ -1931,7 +1611,6 @@ ftranportadoralist.Lists["x_id_empresa_transportadora"] = {"LinkField":"x_id_per
 ftranportadoralist.Lists["x_id_empresa_transportadora"].Data = "<?php echo $tranportadora_list->id_empresa_transportadora->LookupFilterQuery(FALSE, "list") ?>";
 
 // Form object for search
-var CurrentSearchForm = ftranportadoralistsrch = new ew_Form("ftranportadoralistsrch");
 </script>
 <script type="text/javascript">
 
@@ -1942,12 +1621,6 @@ var CurrentSearchForm = ftranportadoralistsrch = new ew_Form("ftranportadoralist
 <div class="ewToolbar">
 <?php if ($tranportadora_list->TotalRecs > 0 && $tranportadora_list->ExportOptions->Visible()) { ?>
 <?php $tranportadora_list->ExportOptions->Render("body") ?>
-<?php } ?>
-<?php if ($tranportadora_list->SearchOptions->Visible()) { ?>
-<?php $tranportadora_list->SearchOptions->Render("body") ?>
-<?php } ?>
-<?php if ($tranportadora_list->FilterOptions->Visible()) { ?>
-<?php $tranportadora_list->FilterOptions->Render("body") ?>
 <?php } ?>
 <div class="clearfix"></div>
 </div>
@@ -1978,33 +1651,6 @@ var CurrentSearchForm = ftranportadoralistsrch = new ew_Form("ftranportadoralist
 	}
 $tranportadora_list->RenderOtherOptions();
 ?>
-<?php if ($tranportadora->Export == "" && $tranportadora->CurrentAction == "") { ?>
-<form name="ftranportadoralistsrch" id="ftranportadoralistsrch" class="form-inline ewForm ewExtSearchForm" action="<?php echo ew_CurrentPage() ?>">
-<?php $SearchPanelClass = ($tranportadora_list->SearchWhere <> "") ? " in" : " in"; ?>
-<div id="ftranportadoralistsrch_SearchPanel" class="ewSearchPanel collapse<?php echo $SearchPanelClass ?>">
-<input type="hidden" name="cmd" value="search">
-<input type="hidden" name="t" value="tranportadora">
-	<div class="ewBasicSearch">
-<div id="xsr_1" class="ewRow">
-	<div class="ewQuickSearch input-group">
-	<input type="text" name="<?php echo EW_TABLE_BASIC_SEARCH ?>" id="<?php echo EW_TABLE_BASIC_SEARCH ?>" class="form-control" value="<?php echo ew_HtmlEncode($tranportadora_list->BasicSearch->getKeyword()) ?>" placeholder="<?php echo ew_HtmlEncode($Language->Phrase("Search")) ?>">
-	<input type="hidden" name="<?php echo EW_TABLE_BASIC_SEARCH_TYPE ?>" id="<?php echo EW_TABLE_BASIC_SEARCH_TYPE ?>" value="<?php echo ew_HtmlEncode($tranportadora_list->BasicSearch->getType()) ?>">
-	<div class="input-group-btn">
-		<button type="button" data-toggle="dropdown" class="btn btn-default"><span id="searchtype"><?php echo $tranportadora_list->BasicSearch->getTypeNameShort() ?></span><span class="caret"></span></button>
-		<ul class="dropdown-menu pull-right" role="menu">
-			<li<?php if ($tranportadora_list->BasicSearch->getType() == "") echo " class=\"active\""; ?>><a href="javascript:void(0);" onclick="ew_SetSearchType(this)"><?php echo $Language->Phrase("QuickSearchAuto") ?></a></li>
-			<li<?php if ($tranportadora_list->BasicSearch->getType() == "=") echo " class=\"active\""; ?>><a href="javascript:void(0);" onclick="ew_SetSearchType(this,'=')"><?php echo $Language->Phrase("QuickSearchExact") ?></a></li>
-			<li<?php if ($tranportadora_list->BasicSearch->getType() == "AND") echo " class=\"active\""; ?>><a href="javascript:void(0);" onclick="ew_SetSearchType(this,'AND')"><?php echo $Language->Phrase("QuickSearchAll") ?></a></li>
-			<li<?php if ($tranportadora_list->BasicSearch->getType() == "OR") echo " class=\"active\""; ?>><a href="javascript:void(0);" onclick="ew_SetSearchType(this,'OR')"><?php echo $Language->Phrase("QuickSearchAny") ?></a></li>
-		</ul>
-	<button class="btn btn-primary ewButton" name="btnsubmit" id="btnsubmit" type="submit"><?php echo $Language->Phrase("SearchBtn") ?></button>
-	</div>
-	</div>
-</div>
-	</div>
-</div>
-</form>
-<?php } ?>
 <?php $tranportadora_list->ShowPageHeader(); ?>
 <?php
 $tranportadora_list->ShowMessage();
@@ -2033,24 +1679,6 @@ $tranportadora_list->RenderListOptions();
 // Render list options (header, left)
 $tranportadora_list->ListOptions->Render("header", "left");
 ?>
-<?php if ($tranportadora->id_transportadora->Visible) { // id_transportadora ?>
-	<?php if ($tranportadora->SortUrl($tranportadora->id_transportadora) == "") { ?>
-		<th data-name="id_transportadora" class="<?php echo $tranportadora->id_transportadora->HeaderCellClass() ?>"><div id="elh_tranportadora_id_transportadora" class="tranportadora_id_transportadora"><div class="ewTableHeaderCaption"><?php echo $tranportadora->id_transportadora->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="id_transportadora" class="<?php echo $tranportadora->id_transportadora->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $tranportadora->SortUrl($tranportadora->id_transportadora) ?>',1);"><div id="elh_tranportadora_id_transportadora" class="tranportadora_id_transportadora">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $tranportadora->id_transportadora->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($tranportadora->id_transportadora->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($tranportadora->id_transportadora->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($tranportadora->transportadora->Visible) { // transportadora ?>
-	<?php if ($tranportadora->SortUrl($tranportadora->transportadora) == "") { ?>
-		<th data-name="transportadora" class="<?php echo $tranportadora->transportadora->HeaderCellClass() ?>"><div id="elh_tranportadora_transportadora" class="tranportadora_transportadora"><div class="ewTableHeaderCaption"><?php echo $tranportadora->transportadora->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="transportadora" class="<?php echo $tranportadora->transportadora->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $tranportadora->SortUrl($tranportadora->transportadora) ?>',1);"><div id="elh_tranportadora_transportadora" class="tranportadora_transportadora">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $tranportadora->transportadora->FldCaption() ?><?php echo $Language->Phrase("SrchLegend") ?></span><span class="ewTableHeaderSort"><?php if ($tranportadora->transportadora->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($tranportadora->transportadora->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
 <?php if ($tranportadora->id_empresa_transportadora->Visible) { // id_empresa_transportadora ?>
 	<?php if ($tranportadora->SortUrl($tranportadora->id_empresa_transportadora) == "") { ?>
 		<th data-name="id_empresa_transportadora" class="<?php echo $tranportadora->id_empresa_transportadora->HeaderCellClass() ?>"><div id="elh_tranportadora_id_empresa_transportadora" class="tranportadora_id_empresa_transportadora"><div class="ewTableHeaderCaption"><?php echo $tranportadora->id_empresa_transportadora->FldCaption() ?></div></div></th>
@@ -2125,22 +1753,6 @@ while ($tranportadora_list->RecCnt < $tranportadora_list->StopRec) {
 // Render list options (body, left)
 $tranportadora_list->ListOptions->Render("body", "left", $tranportadora_list->RowCnt);
 ?>
-	<?php if ($tranportadora->id_transportadora->Visible) { // id_transportadora ?>
-		<td data-name="id_transportadora"<?php echo $tranportadora->id_transportadora->CellAttributes() ?>>
-<span id="el<?php echo $tranportadora_list->RowCnt ?>_tranportadora_id_transportadora" class="tranportadora_id_transportadora">
-<span<?php echo $tranportadora->id_transportadora->ViewAttributes() ?>>
-<?php echo $tranportadora->id_transportadora->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($tranportadora->transportadora->Visible) { // transportadora ?>
-		<td data-name="transportadora"<?php echo $tranportadora->transportadora->CellAttributes() ?>>
-<span id="el<?php echo $tranportadora_list->RowCnt ?>_tranportadora_transportadora" class="tranportadora_transportadora">
-<span<?php echo $tranportadora->transportadora->ViewAttributes() ?>>
-<?php echo $tranportadora->transportadora->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
 	<?php if ($tranportadora->id_empresa_transportadora->Visible) { // id_empresa_transportadora ?>
 		<td data-name="id_empresa_transportadora"<?php echo $tranportadora->id_empresa_transportadora->CellAttributes() ?>>
 <span id="el<?php echo $tranportadora_list->RowCnt ?>_tranportadora_id_empresa_transportadora" class="tranportadora_id_empresa_transportadora">
@@ -2250,8 +1862,6 @@ if ($tranportadora_list->Recordset)
 <?php } ?>
 <?php if ($tranportadora->Export == "") { ?>
 <script type="text/javascript">
-ftranportadoralistsrch.FilterList = <?php echo $tranportadora_list->GetFilterList() ?>;
-ftranportadoralistsrch.Init();
 ftranportadoralist.Init();
 </script>
 <?php } ?>

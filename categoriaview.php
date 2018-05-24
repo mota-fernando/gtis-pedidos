@@ -340,11 +340,7 @@ class ccategoria_view extends ccategoria {
 		// Is modal
 		$this->IsModal = (@$_GET["modal"] == "1" || @$_POST["modal"] == "1");
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
-		$this->id_categoria->SetVisibility();
-		if ($this->IsAdd() || $this->IsCopy() || $this->IsGridAdd())
-			$this->id_categoria->Visible = FALSE;
 		$this->nome_categoria->SetVisibility();
-		$this->id_pai->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -610,16 +606,16 @@ class ccategoria_view extends ccategoria {
 		if (!$rs || $rs->EOF)
 			return;
 		$this->id_categoria->setDbValue($row['id_categoria']);
-		$this->nome_categoria->setDbValue($row['nome_categoria']);
 		$this->id_pai->setDbValue($row['id_pai']);
+		$this->nome_categoria->setDbValue($row['nome_categoria']);
 	}
 
 	// Return a row with default values
 	function NewRow() {
 		$row = array();
 		$row['id_categoria'] = NULL;
-		$row['nome_categoria'] = NULL;
 		$row['id_pai'] = NULL;
+		$row['nome_categoria'] = NULL;
 		return $row;
 	}
 
@@ -629,8 +625,8 @@ class ccategoria_view extends ccategoria {
 			return;
 		$row = is_array($rs) ? $rs : $rs->fields;
 		$this->id_categoria->DbValue = $row['id_categoria'];
-		$this->nome_categoria->DbValue = $row['nome_categoria'];
 		$this->id_pai->DbValue = $row['id_pai'];
+		$this->nome_categoria->DbValue = $row['nome_categoria'];
 	}
 
 	// Render row values based on field settings
@@ -650,8 +646,8 @@ class ccategoria_view extends ccategoria {
 
 		// Common render codes for all row types
 		// id_categoria
-		// nome_categoria
 		// id_pai
+		// nome_categoria
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -659,28 +655,37 @@ class ccategoria_view extends ccategoria {
 		$this->id_categoria->ViewValue = $this->id_categoria->CurrentValue;
 		$this->id_categoria->ViewCustomAttributes = "";
 
+		// id_pai
+		if (strval($this->id_pai->CurrentValue) <> "") {
+			$sFilterWrk = "`id_categoria`" . ew_SearchString("=", $this->id_pai->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_categoria`, `nome_categoria` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `categoria`";
+		$sWhereWrk = "";
+		$this->id_pai->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_pai, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_pai->ViewValue = $this->id_pai->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_pai->ViewValue = $this->id_pai->CurrentValue;
+			}
+		} else {
+			$this->id_pai->ViewValue = NULL;
+		}
+		$this->id_pai->ViewCustomAttributes = "";
+
 		// nome_categoria
 		$this->nome_categoria->ViewValue = $this->nome_categoria->CurrentValue;
 		$this->nome_categoria->ViewCustomAttributes = "";
-
-		// id_pai
-		$this->id_pai->ViewValue = $this->id_pai->CurrentValue;
-		$this->id_pai->ViewCustomAttributes = "";
-
-			// id_categoria
-			$this->id_categoria->LinkCustomAttributes = "";
-			$this->id_categoria->HrefValue = "";
-			$this->id_categoria->TooltipValue = "";
 
 			// nome_categoria
 			$this->nome_categoria->LinkCustomAttributes = "";
 			$this->nome_categoria->HrefValue = "";
 			$this->nome_categoria->TooltipValue = "";
-
-			// id_pai
-			$this->id_pai->LinkCustomAttributes = "";
-			$this->id_pai->HrefValue = "";
-			$this->id_pai->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -864,17 +869,6 @@ $categoria_view->ShowMessage();
 <input type="hidden" name="t" value="categoria">
 <input type="hidden" name="modal" value="<?php echo intval($categoria_view->IsModal) ?>">
 <table class="table table-striped table-bordered table-hover table-condensed ewViewTable">
-<?php if ($categoria->id_categoria->Visible) { // id_categoria ?>
-	<tr id="r_id_categoria">
-		<td class="col-sm-2"><span id="elh_categoria_id_categoria"><?php echo $categoria->id_categoria->FldCaption() ?></span></td>
-		<td data-name="id_categoria"<?php echo $categoria->id_categoria->CellAttributes() ?>>
-<span id="el_categoria_id_categoria">
-<span<?php echo $categoria->id_categoria->ViewAttributes() ?>>
-<?php echo $categoria->id_categoria->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
 <?php if ($categoria->nome_categoria->Visible) { // nome_categoria ?>
 	<tr id="r_nome_categoria">
 		<td class="col-sm-2"><span id="elh_categoria_nome_categoria"><?php echo $categoria->nome_categoria->FldCaption() ?></span></td>
@@ -882,17 +876,6 @@ $categoria_view->ShowMessage();
 <span id="el_categoria_nome_categoria">
 <span<?php echo $categoria->nome_categoria->ViewAttributes() ?>>
 <?php echo $categoria->nome_categoria->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
-<?php if ($categoria->id_pai->Visible) { // id_pai ?>
-	<tr id="r_id_pai">
-		<td class="col-sm-2"><span id="elh_categoria_id_pai"><?php echo $categoria->id_pai->FldCaption() ?></span></td>
-		<td data-name="id_pai"<?php echo $categoria->id_pai->CellAttributes() ?>>
-<span id="el_categoria_id_pai">
-<span<?php echo $categoria->id_pai->ViewAttributes() ?>>
-<?php echo $categoria->id_pai->ViewValue ?></span>
 </span>
 </td>
 	</tr>

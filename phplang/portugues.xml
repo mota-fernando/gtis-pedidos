@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<ew-language date="2018/5/22" version="14.0.0" id="pt-br" name="Portugues" desc="Portugues" author="Eder Villalba / Vinicius Bello ">
+<ew-language date="2018/5/24" version="14.0.0" id="pt-br" name="Portugues" desc="Portugues" author="Eder Villalba / Vinicius Bello ">
   <global>
     <phrase id="actiondeleted" value="Excluído" />
     <phrase id="actioninserted" value="Inserido" />
@@ -646,6 +646,48 @@
     <menu id="4">
       <phrase id="menutext" value="Detalhe Pedido" />
     </menu>
+    <menu id="10014">
+      <phrase id="menutext" value="Relatórios" />
+    </menu>
+    <menu id="10001">
+      <phrase id="menutext" value="categoria" />
+    </menu>
+    <menu id="10002">
+      <phrase id="menutext" value="configurar" />
+    </menu>
+    <menu id="10003">
+      <phrase id="menutext" value="desconto" />
+    </menu>
+    <menu id="10004">
+      <phrase id="menutext" value="detalhe pedido" />
+    </menu>
+    <menu id="10005">
+      <phrase id="menutext" value="empresas" />
+    </menu>
+    <menu id="10006">
+      <phrase id="menutext" value="endereco" />
+    </menu>
+    <menu id="10007">
+      <phrase id="menutext" value="marcas" />
+    </menu>
+    <menu id="10008">
+      <phrase id="menutext" value="pedidos" />
+    </menu>
+    <menu id="10009">
+      <phrase id="menutext" value="pessoa fisica" />
+    </menu>
+    <menu id="10010">
+      <phrase id="menutext" value="prazos" />
+    </menu>
+    <menu id="10011">
+      <phrase id="menutext" value="produtos" />
+    </menu>
+    <menu id="10012">
+      <phrase id="menutext" value="representantes" />
+    </menu>
+    <menu id="10013">
+      <phrase id="menutext" value="tranportadora" />
+    </menu>
     <table id="pedidos">
       <phrase id="tblcaption" value="Pedidos" />
       <field id="id_pedidos">
@@ -926,11 +968,9 @@
       <field id="id_transportadora">
         <phrase id="fldcaption" value="id transportadora" />
       </field>
-      <field id="transportadora">
-        <phrase id="fldcaption" value="transportadora" />
-      </field>
+      <field id="transportadora" />
       <field id="id_empresa_transportadora">
-        <phrase id="fldcaption" value="Transportadora" />
+        <phrase id="fldcaption" value="Empresa Transportadora" />
       </field>
     </table>
     <table id="representantes">
@@ -965,11 +1005,11 @@
       <field id="id_categoria">
         <phrase id="fldcaption" value="id categoria" />
       </field>
-      <field id="nome_categoria">
-        <phrase id="fldcaption" value="nome categoria" />
-      </field>
       <field id="id_pai">
-        <phrase id="fldcaption" value="id pai" />
+        <phrase id="fldcaption" value="Categoria Pai" />
+      </field>
+      <field id="nome_categoria">
+        <phrase id="fldcaption" value="Nome Categoria" />
       </field>
     </table>
   </project>

@@ -286,7 +286,6 @@ class ctranportadora_add extends ctranportadora {
 		// Create form object
 		$objForm = new cFormObj();
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
-		$this->transportadora->SetVisibility();
 		$this->id_empresa_transportadora->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
@@ -502,9 +501,6 @@ class ctranportadora_add extends ctranportadora {
 
 		// Load from form
 		global $objForm;
-		if (!$this->transportadora->FldIsDetailKey) {
-			$this->transportadora->setFormValue($objForm->GetValue("x_transportadora"));
-		}
 		if (!$this->id_empresa_transportadora->FldIsDetailKey) {
 			$this->id_empresa_transportadora->setFormValue($objForm->GetValue("x_id_empresa_transportadora"));
 		}
@@ -513,7 +509,6 @@ class ctranportadora_add extends ctranportadora {
 	// Restore form values
 	function RestoreFormValues() {
 		global $objForm;
-		$this->transportadora->CurrentValue = $this->transportadora->FormValue;
 		$this->id_empresa_transportadora->CurrentValue = $this->id_empresa_transportadora->FormValue;
 	}
 
@@ -613,14 +608,6 @@ class ctranportadora_add extends ctranportadora {
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
-		// id_transportadora
-		$this->id_transportadora->ViewValue = $this->id_transportadora->CurrentValue;
-		$this->id_transportadora->ViewCustomAttributes = "";
-
-		// transportadora
-		$this->transportadora->ViewValue = $this->transportadora->CurrentValue;
-		$this->transportadora->ViewCustomAttributes = "";
-
 		// id_empresa_transportadora
 		if (strval($this->id_empresa_transportadora->CurrentValue) <> "") {
 			$sFilterWrk = "`id_perfil`" . ew_SearchString("=", $this->id_empresa_transportadora->CurrentValue, EW_DATATYPE_NUMBER, "");
@@ -644,22 +631,11 @@ class ctranportadora_add extends ctranportadora {
 		}
 		$this->id_empresa_transportadora->ViewCustomAttributes = "";
 
-			// transportadora
-			$this->transportadora->LinkCustomAttributes = "";
-			$this->transportadora->HrefValue = "";
-			$this->transportadora->TooltipValue = "";
-
 			// id_empresa_transportadora
 			$this->id_empresa_transportadora->LinkCustomAttributes = "";
 			$this->id_empresa_transportadora->HrefValue = "";
 			$this->id_empresa_transportadora->TooltipValue = "";
 		} elseif ($this->RowType == EW_ROWTYPE_ADD) { // Add row
-
-			// transportadora
-			$this->transportadora->EditAttrs["class"] = "form-control";
-			$this->transportadora->EditCustomAttributes = "";
-			$this->transportadora->EditValue = ew_HtmlEncode($this->transportadora->CurrentValue);
-			$this->transportadora->PlaceHolder = ew_RemoveHtml($this->transportadora->FldCaption());
 
 			// id_empresa_transportadora
 			$this->id_empresa_transportadora->EditAttrs["class"] = "form-control";
@@ -681,12 +657,8 @@ class ctranportadora_add extends ctranportadora {
 			$this->id_empresa_transportadora->EditValue = $arwrk;
 
 			// Add refer script
-			// transportadora
-
-			$this->transportadora->LinkCustomAttributes = "";
-			$this->transportadora->HrefValue = "";
-
 			// id_empresa_transportadora
+
 			$this->id_empresa_transportadora->LinkCustomAttributes = "";
 			$this->id_empresa_transportadora->HrefValue = "";
 		}
@@ -731,9 +703,6 @@ class ctranportadora_add extends ctranportadora {
 		if ($rsold) {
 		}
 		$rsnew = array();
-
-		// transportadora
-		$this->transportadora->SetDbValueDef($rsnew, $this->transportadora->CurrentValue, NULL, FALSE);
 
 		// id_empresa_transportadora
 		$this->id_empresa_transportadora->SetDbValueDef($rsnew, $this->id_empresa_transportadora->CurrentValue, NULL, FALSE);
@@ -964,16 +933,6 @@ $tranportadora_add->ShowMessage();
 <input type="hidden" name="a_add" id="a_add" value="A">
 <input type="hidden" name="modal" value="<?php echo intval($tranportadora_add->IsModal) ?>">
 <div class="ewAddDiv"><!-- page* -->
-<?php if ($tranportadora->transportadora->Visible) { // transportadora ?>
-	<div id="r_transportadora" class="form-group">
-		<label id="elh_tranportadora_transportadora" for="x_transportadora" class="<?php echo $tranportadora_add->LeftColumnClass ?>"><?php echo $tranportadora->transportadora->FldCaption() ?></label>
-		<div class="<?php echo $tranportadora_add->RightColumnClass ?>"><div<?php echo $tranportadora->transportadora->CellAttributes() ?>>
-<span id="el_tranportadora_transportadora">
-<input type="text" data-table="tranportadora" data-field="x_transportadora" name="x_transportadora" id="x_transportadora" size="30" maxlength="255" placeholder="<?php echo ew_HtmlEncode($tranportadora->transportadora->getPlaceHolder()) ?>" value="<?php echo $tranportadora->transportadora->EditValue ?>"<?php echo $tranportadora->transportadora->EditAttributes() ?>>
-</span>
-<?php echo $tranportadora->transportadora->CustomMsg ?></div></div>
-	</div>
-<?php } ?>
 <?php if ($tranportadora->id_empresa_transportadora->Visible) { // id_empresa_transportadora ?>
 	<div id="r_id_empresa_transportadora" class="form-group">
 		<label id="elh_tranportadora_id_empresa_transportadora" for="x_id_empresa_transportadora" class="<?php echo $tranportadora_add->LeftColumnClass ?>"><?php echo $tranportadora->id_empresa_transportadora->FldCaption() ?></label>

@@ -69,7 +69,7 @@ class cpessoa_fisica extends cTable {
 		$this->fields['sobrenome_pessoa'] = &$this->sobrenome_pessoa;
 
 		// nascimento
-		$this->nascimento = new cField('pessoa_fisica', 'pessoa_fisica', 'x_nascimento', 'nascimento', '`nascimento`', ew_CastDateFieldForLike('`nascimento`', 0, "DB"), 133, 0, FALSE, '`nascimento`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->nascimento = new cField('pessoa_fisica', 'pessoa_fisica', 'x_nascimento', 'nascimento', '`nascimento`', ew_CastDateFieldForLike('`nascimento`', 2, "DB"), 133, 2, FALSE, '`nascimento`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
 		$this->nascimento->Sortable = TRUE; // Allow sort
 		$this->nascimento->FldDefaultErrMsg = str_replace("%s", $GLOBALS["EW_DATE_FORMAT"], $Language->Phrase("IncorrectDate"));
 		$this->fields['nascimento'] = &$this->nascimento;
@@ -697,7 +697,7 @@ class cpessoa_fisica extends cTable {
 
 		// nascimento
 		$this->nascimento->ViewValue = $this->nascimento->CurrentValue;
-		$this->nascimento->ViewValue = ew_FormatDateTime($this->nascimento->ViewValue, 0);
+		$this->nascimento->ViewValue = ew_FormatDateTime($this->nascimento->ViewValue, 2);
 		$this->nascimento->ViewCustomAttributes = "";
 
 		// telefone
@@ -869,7 +869,7 @@ class cpessoa_fisica extends cTable {
 		// nascimento
 		$this->nascimento->EditAttrs["class"] = "form-control";
 		$this->nascimento->EditCustomAttributes = "";
-		$this->nascimento->EditValue = ew_FormatDateTime($this->nascimento->CurrentValue, 8);
+		$this->nascimento->EditValue = ew_FormatDateTime($this->nascimento->CurrentValue, 2);
 		$this->nascimento->PlaceHolder = ew_RemoveHtml($this->nascimento->FldCaption());
 
 		// telefone

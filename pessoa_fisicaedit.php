@@ -546,7 +546,7 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 		}
 		if (!$this->nascimento->FldIsDetailKey) {
 			$this->nascimento->setFormValue($objForm->GetValue("x_nascimento"));
-			$this->nascimento->CurrentValue = ew_UnFormatDateTime($this->nascimento->CurrentValue, 0);
+			$this->nascimento->CurrentValue = ew_UnFormatDateTime($this->nascimento->CurrentValue, 2);
 		}
 		if (!$this->telefone->FldIsDetailKey) {
 			$this->telefone->setFormValue($objForm->GetValue("x_telefone"));
@@ -581,7 +581,7 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 		$this->nome_pessoa->CurrentValue = $this->nome_pessoa->FormValue;
 		$this->sobrenome_pessoa->CurrentValue = $this->sobrenome_pessoa->FormValue;
 		$this->nascimento->CurrentValue = $this->nascimento->FormValue;
-		$this->nascimento->CurrentValue = ew_UnFormatDateTime($this->nascimento->CurrentValue, 0);
+		$this->nascimento->CurrentValue = ew_UnFormatDateTime($this->nascimento->CurrentValue, 2);
 		$this->telefone->CurrentValue = $this->telefone->FormValue;
 		$this->_email->CurrentValue = $this->_email->FormValue;
 		$this->celular->CurrentValue = $this->celular->FormValue;
@@ -737,7 +737,7 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 
 		// nascimento
 		$this->nascimento->ViewValue = $this->nascimento->CurrentValue;
-		$this->nascimento->ViewValue = ew_FormatDateTime($this->nascimento->ViewValue, 0);
+		$this->nascimento->ViewValue = ew_FormatDateTime($this->nascimento->ViewValue, 2);
 		$this->nascimento->ViewCustomAttributes = "";
 
 		// telefone
@@ -896,7 +896,7 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 			// nascimento
 			$this->nascimento->EditAttrs["class"] = "form-control";
 			$this->nascimento->EditCustomAttributes = "";
-			$this->nascimento->EditValue = ew_HtmlEncode(ew_FormatDateTime($this->nascimento->CurrentValue, 8));
+			$this->nascimento->EditValue = ew_HtmlEncode(ew_FormatDateTime($this->nascimento->CurrentValue, 2));
 			$this->nascimento->PlaceHolder = ew_RemoveHtml($this->nascimento->FldCaption());
 
 			// telefone
@@ -1112,7 +1112,7 @@ class cpessoa_fisica_edit extends cpessoa_fisica {
 			$this->sobrenome_pessoa->SetDbValueDef($rsnew, $this->sobrenome_pessoa->CurrentValue, NULL, $this->sobrenome_pessoa->ReadOnly);
 
 			// nascimento
-			$this->nascimento->SetDbValueDef($rsnew, ew_UnFormatDateTime($this->nascimento->CurrentValue, 0), NULL, $this->nascimento->ReadOnly);
+			$this->nascimento->SetDbValueDef($rsnew, ew_UnFormatDateTime($this->nascimento->CurrentValue, 2), NULL, $this->nascimento->ReadOnly);
 
 			// telefone
 			$this->telefone->SetDbValueDef($rsnew, $this->telefone->CurrentValue, NULL, $this->telefone->ReadOnly);
@@ -1451,7 +1451,12 @@ $pessoa_fisica_edit->ShowMessage();
 		<label id="elh_pessoa_fisica_nascimento" for="x_nascimento" class="<?php echo $pessoa_fisica_edit->LeftColumnClass ?>"><?php echo $pessoa_fisica->nascimento->FldCaption() ?></label>
 		<div class="<?php echo $pessoa_fisica_edit->RightColumnClass ?>"><div<?php echo $pessoa_fisica->nascimento->CellAttributes() ?>>
 <span id="el_pessoa_fisica_nascimento">
-<input type="text" data-table="pessoa_fisica" data-field="x_nascimento" name="x_nascimento" id="x_nascimento" placeholder="<?php echo ew_HtmlEncode($pessoa_fisica->nascimento->getPlaceHolder()) ?>" value="<?php echo $pessoa_fisica->nascimento->EditValue ?>"<?php echo $pessoa_fisica->nascimento->EditAttributes() ?>>
+<input type="text" data-table="pessoa_fisica" data-field="x_nascimento" data-format="2" name="x_nascimento" id="x_nascimento" placeholder="<?php echo ew_HtmlEncode($pessoa_fisica->nascimento->getPlaceHolder()) ?>" value="<?php echo $pessoa_fisica->nascimento->EditValue ?>"<?php echo $pessoa_fisica->nascimento->EditAttributes() ?>>
+<?php if (!$pessoa_fisica->nascimento->ReadOnly && !$pessoa_fisica->nascimento->Disabled && !isset($pessoa_fisica->nascimento->EditAttrs["readonly"]) && !isset($pessoa_fisica->nascimento->EditAttrs["disabled"])) { ?>
+<script type="text/javascript">
+ew_CreateDateTimePicker("fpessoa_fisicaedit", "x_nascimento", {"ignoreReadonly":true,"useCurrent":false,"format":2,"inputGroup":false});
+</script>
+<?php } ?>
 </span>
 <?php echo $pessoa_fisica->nascimento->CustomMsg ?></div></div>
 	</div>

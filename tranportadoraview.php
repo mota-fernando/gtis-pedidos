@@ -651,14 +651,6 @@ class ctranportadora_view extends ctranportadora {
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
-		// id_transportadora
-		$this->id_transportadora->ViewValue = $this->id_transportadora->CurrentValue;
-		$this->id_transportadora->ViewCustomAttributes = "";
-
-		// transportadora
-		$this->transportadora->ViewValue = $this->transportadora->CurrentValue;
-		$this->transportadora->ViewCustomAttributes = "";
-
 		// id_empresa_transportadora
 		if (strval($this->id_empresa_transportadora->CurrentValue) <> "") {
 			$sFilterWrk = "`id_perfil`" . ew_SearchString("=", $this->id_empresa_transportadora->CurrentValue, EW_DATATYPE_NUMBER, "");

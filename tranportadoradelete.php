@@ -280,10 +280,6 @@ class ctranportadora_delete extends ctranportadora {
 	function Page_Init() {
 		global $gsExport, $gsCustomExport, $gsExportFile, $UserProfile, $Language, $Security, $objForm;
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
-		$this->id_transportadora->SetVisibility();
-		if ($this->IsAdd() || $this->IsCopy() || $this->IsGridAdd())
-			$this->id_transportadora->Visible = FALSE;
-		$this->transportadora->SetVisibility();
 		$this->id_empresa_transportadora->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
@@ -504,14 +500,6 @@ class ctranportadora_delete extends ctranportadora {
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
-		// id_transportadora
-		$this->id_transportadora->ViewValue = $this->id_transportadora->CurrentValue;
-		$this->id_transportadora->ViewCustomAttributes = "";
-
-		// transportadora
-		$this->transportadora->ViewValue = $this->transportadora->CurrentValue;
-		$this->transportadora->ViewCustomAttributes = "";
-
 		// id_empresa_transportadora
 		if (strval($this->id_empresa_transportadora->CurrentValue) <> "") {
 			$sFilterWrk = "`id_perfil`" . ew_SearchString("=", $this->id_empresa_transportadora->CurrentValue, EW_DATATYPE_NUMBER, "");
@@ -534,16 +522,6 @@ class ctranportadora_delete extends ctranportadora {
 			$this->id_empresa_transportadora->ViewValue = NULL;
 		}
 		$this->id_empresa_transportadora->ViewCustomAttributes = "";
-
-			// id_transportadora
-			$this->id_transportadora->LinkCustomAttributes = "";
-			$this->id_transportadora->HrefValue = "";
-			$this->id_transportadora->TooltipValue = "";
-
-			// transportadora
-			$this->transportadora->LinkCustomAttributes = "";
-			$this->transportadora->HrefValue = "";
-			$this->transportadora->TooltipValue = "";
 
 			// id_empresa_transportadora
 			$this->id_empresa_transportadora->LinkCustomAttributes = "";
@@ -784,12 +762,6 @@ $tranportadora_delete->ShowMessage();
 <table class="table ewTable">
 	<thead>
 	<tr class="ewTableHeader">
-<?php if ($tranportadora->id_transportadora->Visible) { // id_transportadora ?>
-		<th class="<?php echo $tranportadora->id_transportadora->HeaderCellClass() ?>"><span id="elh_tranportadora_id_transportadora" class="tranportadora_id_transportadora"><?php echo $tranportadora->id_transportadora->FldCaption() ?></span></th>
-<?php } ?>
-<?php if ($tranportadora->transportadora->Visible) { // transportadora ?>
-		<th class="<?php echo $tranportadora->transportadora->HeaderCellClass() ?>"><span id="elh_tranportadora_transportadora" class="tranportadora_transportadora"><?php echo $tranportadora->transportadora->FldCaption() ?></span></th>
-<?php } ?>
 <?php if ($tranportadora->id_empresa_transportadora->Visible) { // id_empresa_transportadora ?>
 		<th class="<?php echo $tranportadora->id_empresa_transportadora->HeaderCellClass() ?>"><span id="elh_tranportadora_id_empresa_transportadora" class="tranportadora_id_empresa_transportadora"><?php echo $tranportadora->id_empresa_transportadora->FldCaption() ?></span></th>
 <?php } ?>
@@ -814,22 +786,6 @@ while (!$tranportadora_delete->Recordset->EOF) {
 	$tranportadora_delete->RenderRow();
 ?>
 	<tr<?php echo $tranportadora->RowAttributes() ?>>
-<?php if ($tranportadora->id_transportadora->Visible) { // id_transportadora ?>
-		<td<?php echo $tranportadora->id_transportadora->CellAttributes() ?>>
-<span id="el<?php echo $tranportadora_delete->RowCnt ?>_tranportadora_id_transportadora" class="tranportadora_id_transportadora">
-<span<?php echo $tranportadora->id_transportadora->ViewAttributes() ?>>
-<?php echo $tranportadora->id_transportadora->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($tranportadora->transportadora->Visible) { // transportadora ?>
-		<td<?php echo $tranportadora->transportadora->CellAttributes() ?>>
-<span id="el<?php echo $tranportadora_delete->RowCnt ?>_tranportadora_transportadora" class="tranportadora_transportadora">
-<span<?php echo $tranportadora->transportadora->ViewAttributes() ?>>
-<?php echo $tranportadora->transportadora->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
 <?php if ($tranportadora->id_empresa_transportadora->Visible) { // id_empresa_transportadora ?>
 		<td<?php echo $tranportadora->id_empresa_transportadora->CellAttributes() ?>>
 <span id="el<?php echo $tranportadora_delete->RowCnt ?>_tranportadora_id_empresa_transportadora" class="tranportadora_id_empresa_transportadora">

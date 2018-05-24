@@ -38,6 +38,8 @@ if (!isset($Language)) {
 <link rel="stylesheet" type="text/css" href="<?php echo $EW_RELATIVE_PATH ?><?php echo EW_PDF_STYLESHEET_FILENAME ?>">
 <?php } ?>
 <script type="text/javascript" src="<?php echo $EW_RELATIVE_PATH ?>jquery/jquery-3.2.1.min.js"></script>
+<script type="text/javascript">jQuery.migrateMute = true;</script>
+<script type="text/javascript" src="<?php echo $EW_RELATIVE_PATH ?>jquery/jquery-migrate-3.0.0.js"></script>
 <script type="text/javascript" src="<?php echo $EW_RELATIVE_PATH ?>jquery/jquery.ui.widget.js"></script>
 <script type="text/javascript" src="<?php echo $EW_RELATIVE_PATH ?>jquery/jquery.storageapi.min.js"></script>
 <?php } ?>
@@ -58,6 +60,9 @@ if (!isset($Language)) {
 ?>
 <script type="text/javascript" src="<?php echo $jsfile ?>"></script>
 <?php } ?>
+<link rel="stylesheet" type="text/css" href="<?php echo $EW_RELATIVE_PATH ?>phpcss/bootstrap-datetimepicker.css">
+<script type="text/javascript" src="<?php echo $EW_RELATIVE_PATH ?>phpjs/bootstrap-datetimepicker.js"></script>
+<script type="text/javascript" src="<?php echo $EW_RELATIVE_PATH ?>phpjs/ewdatetimepicker.js"></script>
 <script type="text/javascript">
 var EW_LANGUAGE_ID = "<?php echo $gsLanguage ?>";
 var EW_DATE_SEPARATOR = "<?php echo $EW_DATE_SEPARATOR ?>"; // Date separator

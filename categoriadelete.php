@@ -283,8 +283,8 @@ class ccategoria_delete extends ccategoria {
 		$this->id_categoria->SetVisibility();
 		if ($this->IsAdd() || $this->IsCopy() || $this->IsGridAdd())
 			$this->id_categoria->Visible = FALSE;
-		$this->nome_categoria->SetVisibility();
 		$this->id_pai->SetVisibility();
+		$this->nome_categoria->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -465,16 +465,16 @@ class ccategoria_delete extends ccategoria {
 		if (!$rs || $rs->EOF)
 			return;
 		$this->id_categoria->setDbValue($row['id_categoria']);
-		$this->nome_categoria->setDbValue($row['nome_categoria']);
 		$this->id_pai->setDbValue($row['id_pai']);
+		$this->nome_categoria->setDbValue($row['nome_categoria']);
 	}
 
 	// Return a row with default values
 	function NewRow() {
 		$row = array();
 		$row['id_categoria'] = NULL;
-		$row['nome_categoria'] = NULL;
 		$row['id_pai'] = NULL;
+		$row['nome_categoria'] = NULL;
 		return $row;
 	}
 
@@ -484,8 +484,8 @@ class ccategoria_delete extends ccategoria {
 			return;
 		$row = is_array($rs) ? $rs : $rs->fields;
 		$this->id_categoria->DbValue = $row['id_categoria'];
-		$this->nome_categoria->DbValue = $row['nome_categoria'];
 		$this->id_pai->DbValue = $row['id_pai'];
+		$this->nome_categoria->DbValue = $row['nome_categoria'];
 	}
 
 	// Render row values based on field settings
@@ -499,8 +499,8 @@ class ccategoria_delete extends ccategoria {
 
 		// Common render codes for all row types
 		// id_categoria
-		// nome_categoria
 		// id_pai
+		// nome_categoria
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -508,28 +508,47 @@ class ccategoria_delete extends ccategoria {
 		$this->id_categoria->ViewValue = $this->id_categoria->CurrentValue;
 		$this->id_categoria->ViewCustomAttributes = "";
 
+		// id_pai
+		if (strval($this->id_pai->CurrentValue) <> "") {
+			$sFilterWrk = "`id_categoria`" . ew_SearchString("=", $this->id_pai->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_categoria`, `nome_categoria` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `categoria`";
+		$sWhereWrk = "";
+		$this->id_pai->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_pai, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_pai->ViewValue = $this->id_pai->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_pai->ViewValue = $this->id_pai->CurrentValue;
+			}
+		} else {
+			$this->id_pai->ViewValue = NULL;
+		}
+		$this->id_pai->ViewCustomAttributes = "";
+
 		// nome_categoria
 		$this->nome_categoria->ViewValue = $this->nome_categoria->CurrentValue;
 		$this->nome_categoria->ViewCustomAttributes = "";
-
-		// id_pai
-		$this->id_pai->ViewValue = $this->id_pai->CurrentValue;
-		$this->id_pai->ViewCustomAttributes = "";
 
 			// id_categoria
 			$this->id_categoria->LinkCustomAttributes = "";
 			$this->id_categoria->HrefValue = "";
 			$this->id_categoria->TooltipValue = "";
 
-			// nome_categoria
-			$this->nome_categoria->LinkCustomAttributes = "";
-			$this->nome_categoria->HrefValue = "";
-			$this->nome_categoria->TooltipValue = "";
-
 			// id_pai
 			$this->id_pai->LinkCustomAttributes = "";
 			$this->id_pai->HrefValue = "";
 			$this->id_pai->TooltipValue = "";
+
+			// nome_categoria
+			$this->nome_categoria->LinkCustomAttributes = "";
+			$this->nome_categoria->HrefValue = "";
+			$this->nome_categoria->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -737,8 +756,10 @@ fcategoriadelete.Form_CustomValidate =
 fcategoriadelete.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-// Form object for search
+fcategoriadelete.Lists["x_id_pai"] = {"LinkField":"x_id_categoria","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_categoria","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"categoria"};
+fcategoriadelete.Lists["x_id_pai"].Data = "<?php echo $categoria_delete->id_pai->LookupFilterQuery(FALSE, "delete") ?>";
 
+// Form object for search
 </script>
 <script type="text/javascript">
 
@@ -766,11 +787,11 @@ $categoria_delete->ShowMessage();
 <?php if ($categoria->id_categoria->Visible) { // id_categoria ?>
 		<th class="<?php echo $categoria->id_categoria->HeaderCellClass() ?>"><span id="elh_categoria_id_categoria" class="categoria_id_categoria"><?php echo $categoria->id_categoria->FldCaption() ?></span></th>
 <?php } ?>
-<?php if ($categoria->nome_categoria->Visible) { // nome_categoria ?>
-		<th class="<?php echo $categoria->nome_categoria->HeaderCellClass() ?>"><span id="elh_categoria_nome_categoria" class="categoria_nome_categoria"><?php echo $categoria->nome_categoria->FldCaption() ?></span></th>
-<?php } ?>
 <?php if ($categoria->id_pai->Visible) { // id_pai ?>
 		<th class="<?php echo $categoria->id_pai->HeaderCellClass() ?>"><span id="elh_categoria_id_pai" class="categoria_id_pai"><?php echo $categoria->id_pai->FldCaption() ?></span></th>
+<?php } ?>
+<?php if ($categoria->nome_categoria->Visible) { // nome_categoria ?>
+		<th class="<?php echo $categoria->nome_categoria->HeaderCellClass() ?>"><span id="elh_categoria_nome_categoria" class="categoria_nome_categoria"><?php echo $categoria->nome_categoria->FldCaption() ?></span></th>
 <?php } ?>
 	</tr>
 	</thead>
@@ -801,19 +822,19 @@ while (!$categoria_delete->Recordset->EOF) {
 </span>
 </td>
 <?php } ?>
-<?php if ($categoria->nome_categoria->Visible) { // nome_categoria ?>
-		<td<?php echo $categoria->nome_categoria->CellAttributes() ?>>
-<span id="el<?php echo $categoria_delete->RowCnt ?>_categoria_nome_categoria" class="categoria_nome_categoria">
-<span<?php echo $categoria->nome_categoria->ViewAttributes() ?>>
-<?php echo $categoria->nome_categoria->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
 <?php if ($categoria->id_pai->Visible) { // id_pai ?>
 		<td<?php echo $categoria->id_pai->CellAttributes() ?>>
 <span id="el<?php echo $categoria_delete->RowCnt ?>_categoria_id_pai" class="categoria_id_pai">
 <span<?php echo $categoria->id_pai->ViewAttributes() ?>>
 <?php echo $categoria->id_pai->ListViewValue() ?></span>
+</span>
+</td>
+<?php } ?>
+<?php if ($categoria->nome_categoria->Visible) { // nome_categoria ?>
+		<td<?php echo $categoria->nome_categoria->CellAttributes() ?>>
+<span id="el<?php echo $categoria_delete->RowCnt ?>_categoria_nome_categoria" class="categoria_nome_categoria">
+<span<?php echo $categoria->nome_categoria->ViewAttributes() ?>>
+<?php echo $categoria->nome_categoria->ListViewValue() ?></span>
 </span>
 </td>
 <?php } ?>

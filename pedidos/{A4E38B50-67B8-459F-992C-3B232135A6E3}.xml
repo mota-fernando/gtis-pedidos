@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<configuration date="2018/05/22" author="e.World Technology Ltd.">
-  <project id="{A4E38B50-67B8-459F-992C-3B232135A6E3}" file="C:\Users\Root\Documents\PHPMaker\Projects\pedidos.pmp" name="pedidos" product="PHPMaker" version="14.0" datetime="2018/05/22 13:52:37" languagefolder="phplang" userlevel="-2,&quot;Anonymous&quot;,0;">
+<configuration date="2018/05/24" author="e.World Technology Ltd.">
+  <project id="{A4E38B50-67B8-459F-992C-3B232135A6E3}" file="C:\Users\Root\Documents\PHPMaker\Projects\pedidos.pmp" name="pedidos" product="PHPMaker" version="14.0" datetime="2018/05/24 20:16:33" languagefolder="phplang" userlevel="-2,&quot;Anonymous&quot;,0;" relatedid="{3346984C-52AD-427D-8358-EC1897ABFA49}">
     <table id="pedidos" name="pedidos" caption="Pedidos" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />
     <table id="detalhe_pedido" name="detalhe_pedido" caption="Ítens do Pedido" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />
     <table id="pessoa_fisica" name="pessoa_fisica" caption="Clientes" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />

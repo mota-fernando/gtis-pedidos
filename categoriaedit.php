@@ -289,8 +289,8 @@ class ccategoria_edit extends ccategoria {
 		$this->id_categoria->SetVisibility();
 		if ($this->IsAdd() || $this->IsCopy() || $this->IsGridAdd())
 			$this->id_categoria->Visible = FALSE;
-		$this->nome_categoria->SetVisibility();
 		$this->id_pai->SetVisibility();
+		$this->nome_categoria->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -529,11 +529,11 @@ class ccategoria_edit extends ccategoria {
 		global $objForm;
 		if (!$this->id_categoria->FldIsDetailKey)
 			$this->id_categoria->setFormValue($objForm->GetValue("x_id_categoria"));
-		if (!$this->nome_categoria->FldIsDetailKey) {
-			$this->nome_categoria->setFormValue($objForm->GetValue("x_nome_categoria"));
-		}
 		if (!$this->id_pai->FldIsDetailKey) {
 			$this->id_pai->setFormValue($objForm->GetValue("x_id_pai"));
+		}
+		if (!$this->nome_categoria->FldIsDetailKey) {
+			$this->nome_categoria->setFormValue($objForm->GetValue("x_nome_categoria"));
 		}
 	}
 
@@ -541,8 +541,8 @@ class ccategoria_edit extends ccategoria {
 	function RestoreFormValues() {
 		global $objForm;
 		$this->id_categoria->CurrentValue = $this->id_categoria->FormValue;
-		$this->nome_categoria->CurrentValue = $this->nome_categoria->FormValue;
 		$this->id_pai->CurrentValue = $this->id_pai->FormValue;
+		$this->nome_categoria->CurrentValue = $this->nome_categoria->FormValue;
 	}
 
 	// Load row based on key values
@@ -579,16 +579,16 @@ class ccategoria_edit extends ccategoria {
 		if (!$rs || $rs->EOF)
 			return;
 		$this->id_categoria->setDbValue($row['id_categoria']);
-		$this->nome_categoria->setDbValue($row['nome_categoria']);
 		$this->id_pai->setDbValue($row['id_pai']);
+		$this->nome_categoria->setDbValue($row['nome_categoria']);
 	}
 
 	// Return a row with default values
 	function NewRow() {
 		$row = array();
 		$row['id_categoria'] = NULL;
-		$row['nome_categoria'] = NULL;
 		$row['id_pai'] = NULL;
+		$row['nome_categoria'] = NULL;
 		return $row;
 	}
 
@@ -598,8 +598,8 @@ class ccategoria_edit extends ccategoria {
 			return;
 		$row = is_array($rs) ? $rs : $rs->fields;
 		$this->id_categoria->DbValue = $row['id_categoria'];
-		$this->nome_categoria->DbValue = $row['nome_categoria'];
 		$this->id_pai->DbValue = $row['id_pai'];
+		$this->nome_categoria->DbValue = $row['nome_categoria'];
 	}
 
 	// Load old record
@@ -635,8 +635,8 @@ class ccategoria_edit extends ccategoria {
 
 		// Common render codes for all row types
 		// id_categoria
-		// nome_categoria
 		// id_pai
+		// nome_categoria
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -644,28 +644,47 @@ class ccategoria_edit extends ccategoria {
 		$this->id_categoria->ViewValue = $this->id_categoria->CurrentValue;
 		$this->id_categoria->ViewCustomAttributes = "";
 
+		// id_pai
+		if (strval($this->id_pai->CurrentValue) <> "") {
+			$sFilterWrk = "`id_categoria`" . ew_SearchString("=", $this->id_pai->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_categoria`, `nome_categoria` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `categoria`";
+		$sWhereWrk = "";
+		$this->id_pai->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_pai, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_pai->ViewValue = $this->id_pai->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_pai->ViewValue = $this->id_pai->CurrentValue;
+			}
+		} else {
+			$this->id_pai->ViewValue = NULL;
+		}
+		$this->id_pai->ViewCustomAttributes = "";
+
 		// nome_categoria
 		$this->nome_categoria->ViewValue = $this->nome_categoria->CurrentValue;
 		$this->nome_categoria->ViewCustomAttributes = "";
-
-		// id_pai
-		$this->id_pai->ViewValue = $this->id_pai->CurrentValue;
-		$this->id_pai->ViewCustomAttributes = "";
 
 			// id_categoria
 			$this->id_categoria->LinkCustomAttributes = "";
 			$this->id_categoria->HrefValue = "";
 			$this->id_categoria->TooltipValue = "";
 
-			// nome_categoria
-			$this->nome_categoria->LinkCustomAttributes = "";
-			$this->nome_categoria->HrefValue = "";
-			$this->nome_categoria->TooltipValue = "";
-
 			// id_pai
 			$this->id_pai->LinkCustomAttributes = "";
 			$this->id_pai->HrefValue = "";
 			$this->id_pai->TooltipValue = "";
+
+			// nome_categoria
+			$this->nome_categoria->LinkCustomAttributes = "";
+			$this->nome_categoria->HrefValue = "";
+			$this->nome_categoria->TooltipValue = "";
 		} elseif ($this->RowType == EW_ROWTYPE_EDIT) { // Edit row
 
 			// id_categoria
@@ -674,17 +693,30 @@ class ccategoria_edit extends ccategoria {
 			$this->id_categoria->EditValue = $this->id_categoria->CurrentValue;
 			$this->id_categoria->ViewCustomAttributes = "";
 
+			// id_pai
+			$this->id_pai->EditAttrs["class"] = "form-control";
+			$this->id_pai->EditCustomAttributes = "";
+			if (trim(strval($this->id_pai->CurrentValue)) == "") {
+				$sFilterWrk = "0=1";
+			} else {
+				$sFilterWrk = "`id_categoria`" . ew_SearchString("=", $this->id_pai->CurrentValue, EW_DATATYPE_NUMBER, "");
+			}
+			$sSqlWrk = "SELECT `id_categoria`, `nome_categoria` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `categoria`";
+			$sWhereWrk = "";
+			$this->id_pai->LookupFilters = array();
+			ew_AddFilter($sWhereWrk, $sFilterWrk);
+			$this->Lookup_Selecting($this->id_pai, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
+			if ($rswrk) $rswrk->Close();
+			$this->id_pai->EditValue = $arwrk;
+
 			// nome_categoria
 			$this->nome_categoria->EditAttrs["class"] = "form-control";
 			$this->nome_categoria->EditCustomAttributes = "";
 			$this->nome_categoria->EditValue = ew_HtmlEncode($this->nome_categoria->CurrentValue);
 			$this->nome_categoria->PlaceHolder = ew_RemoveHtml($this->nome_categoria->FldCaption());
-
-			// id_pai
-			$this->id_pai->EditAttrs["class"] = "form-control";
-			$this->id_pai->EditCustomAttributes = "";
-			$this->id_pai->EditValue = ew_HtmlEncode($this->id_pai->CurrentValue);
-			$this->id_pai->PlaceHolder = ew_RemoveHtml($this->id_pai->FldCaption());
 
 			// Edit refer script
 			// id_categoria
@@ -692,13 +724,13 @@ class ccategoria_edit extends ccategoria {
 			$this->id_categoria->LinkCustomAttributes = "";
 			$this->id_categoria->HrefValue = "";
 
-			// nome_categoria
-			$this->nome_categoria->LinkCustomAttributes = "";
-			$this->nome_categoria->HrefValue = "";
-
 			// id_pai
 			$this->id_pai->LinkCustomAttributes = "";
 			$this->id_pai->HrefValue = "";
+
+			// nome_categoria
+			$this->nome_categoria->LinkCustomAttributes = "";
+			$this->nome_categoria->HrefValue = "";
 		}
 		if ($this->RowType == EW_ROWTYPE_ADD || $this->RowType == EW_ROWTYPE_EDIT || $this->RowType == EW_ROWTYPE_SEARCH) // Add/Edit/Search row
 			$this->SetupFieldTitles();
@@ -718,14 +750,11 @@ class ccategoria_edit extends ccategoria {
 		// Check if validation required
 		if (!EW_SERVER_VALIDATE)
 			return ($gsFormError == "");
-		if (!$this->nome_categoria->FldIsDetailKey && !is_null($this->nome_categoria->FormValue) && $this->nome_categoria->FormValue == "") {
-			ew_AddMessage($gsFormError, str_replace("%s", $this->nome_categoria->FldCaption(), $this->nome_categoria->ReqErrMsg));
-		}
 		if (!$this->id_pai->FldIsDetailKey && !is_null($this->id_pai->FormValue) && $this->id_pai->FormValue == "") {
 			ew_AddMessage($gsFormError, str_replace("%s", $this->id_pai->FldCaption(), $this->id_pai->ReqErrMsg));
 		}
-		if (!ew_CheckInteger($this->id_pai->FormValue)) {
-			ew_AddMessage($gsFormError, $this->id_pai->FldErrMsg());
+		if (!$this->nome_categoria->FldIsDetailKey && !is_null($this->nome_categoria->FormValue) && $this->nome_categoria->FormValue == "") {
+			ew_AddMessage($gsFormError, str_replace("%s", $this->nome_categoria->FldCaption(), $this->nome_categoria->ReqErrMsg));
 		}
 
 		// Return validate result
@@ -763,11 +792,11 @@ class ccategoria_edit extends ccategoria {
 			$this->LoadDbValues($rsold);
 			$rsnew = array();
 
-			// nome_categoria
-			$this->nome_categoria->SetDbValueDef($rsnew, $this->nome_categoria->CurrentValue, "", $this->nome_categoria->ReadOnly);
-
 			// id_pai
 			$this->id_pai->SetDbValueDef($rsnew, $this->id_pai->CurrentValue, 0, $this->id_pai->ReadOnly);
+
+			// nome_categoria
+			$this->nome_categoria->SetDbValueDef($rsnew, $this->nome_categoria->CurrentValue, "", $this->nome_categoria->ReadOnly);
 
 			// Call Row Updating event
 			$bUpdateRow = $this->Row_Updating($rsold, $rsnew);
@@ -816,6 +845,18 @@ class ccategoria_edit extends ccategoria {
 		global $gsLanguage;
 		$pageId = $pageId ?: $this->PageID;
 		switch ($fld->FldVar) {
+		case "x_id_pai":
+			$sSqlWrk = "";
+			$sSqlWrk = "SELECT `id_categoria` AS `LinkFld`, `nome_categoria` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `categoria`";
+			$sWhereWrk = "";
+			$fld->LookupFilters = array();
+			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`id_categoria` IN ({filter_value})', "t0" => "3", "fn0" => "");
+			$sSqlWrk = "";
+			$this->Lookup_Selecting($this->id_pai, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			if ($sSqlWrk <> "")
+				$fld->LookupFilters["s"] .= $sSqlWrk;
+			break;
 		}
 	}
 
@@ -935,15 +976,12 @@ fcategoriaedit.Validate = function() {
 	for (var i = startcnt; i <= rowcnt; i++) {
 		var infix = ($k[0]) ? String(i) : "";
 		$fobj.data("rowindex", infix);
-			elm = this.GetElements("x" + infix + "_nome_categoria");
-			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
-				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $categoria->nome_categoria->FldCaption(), $categoria->nome_categoria->ReqErrMsg)) ?>");
 			elm = this.GetElements("x" + infix + "_id_pai");
 			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
 				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $categoria->id_pai->FldCaption(), $categoria->id_pai->ReqErrMsg)) ?>");
-			elm = this.GetElements("x" + infix + "_id_pai");
-			if (elm && !ew_CheckInteger(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($categoria->id_pai->FldErrMsg()) ?>");
+			elm = this.GetElements("x" + infix + "_nome_categoria");
+			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
+				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $categoria->nome_categoria->FldCaption(), $categoria->nome_categoria->ReqErrMsg)) ?>");
 
 			// Fire Form_CustomValidate event
 			if (!this.Form_CustomValidate(fobj))
@@ -973,8 +1011,10 @@ fcategoriaedit.Form_CustomValidate =
 fcategoriaedit.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-// Form object for search
+fcategoriaedit.Lists["x_id_pai"] = {"LinkField":"x_id_categoria","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_categoria","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"categoria"};
+fcategoriaedit.Lists["x_id_pai"].Data = "<?php echo $categoria_edit->id_pai->LookupFilterQuery(FALSE, "edit") ?>";
 
+// Form object for search
 </script>
 <script type="text/javascript">
 
@@ -1004,24 +1044,31 @@ $categoria_edit->ShowMessage();
 <?php echo $categoria->id_categoria->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
+<?php if ($categoria->id_pai->Visible) { // id_pai ?>
+	<div id="r_id_pai" class="form-group">
+		<label id="elh_categoria_id_pai" for="x_id_pai" class="<?php echo $categoria_edit->LeftColumnClass ?>"><?php echo $categoria->id_pai->FldCaption() ?><?php echo $Language->Phrase("FieldRequiredIndicator") ?></label>
+		<div class="<?php echo $categoria_edit->RightColumnClass ?>"><div<?php echo $categoria->id_pai->CellAttributes() ?>>
+<span id="el_categoria_id_pai">
+<select data-table="categoria" data-field="x_id_pai" data-value-separator="<?php echo $categoria->id_pai->DisplayValueSeparatorAttribute() ?>" id="x_id_pai" name="x_id_pai"<?php echo $categoria->id_pai->EditAttributes() ?>>
+<?php echo $categoria->id_pai->SelectOptionListHtml("x_id_pai") ?>
+</select>
+</span>
+<?php echo $categoria->id_pai->CustomMsg ?></div></div>
+	</div>
+<?php } ?>
 <?php if ($categoria->nome_categoria->Visible) { // nome_categoria ?>
 	<div id="r_nome_categoria" class="form-group">
 		<label id="elh_categoria_nome_categoria" for="x_nome_categoria" class="<?php echo $categoria_edit->LeftColumnClass ?>"><?php echo $categoria->nome_categoria->FldCaption() ?><?php echo $Language->Phrase("FieldRequiredIndicator") ?></label>
 		<div class="<?php echo $categoria_edit->RightColumnClass ?>"><div<?php echo $categoria->nome_categoria->CellAttributes() ?>>
 <span id="el_categoria_nome_categoria">
 <input type="text" data-table="categoria" data-field="x_nome_categoria" name="x_nome_categoria" id="x_nome_categoria" size="30" maxlength="140" placeholder="<?php echo ew_HtmlEncode($categoria->nome_categoria->getPlaceHolder()) ?>" value="<?php echo $categoria->nome_categoria->EditValue ?>"<?php echo $categoria->nome_categoria->EditAttributes() ?>>
+<?php if (!$categoria->nome_categoria->ReadOnly && !$categoria->nome_categoria->Disabled && !isset($categoria->nome_categoria->EditAttrs["readonly"]) && !isset($categoria->nome_categoria->EditAttrs["disabled"])) { ?>
+<script type="text/javascript">
+ew_CreateDateTimePicker("fcategoriaedit", "x_nome_categoria", {"ignoreReadonly":true,"useCurrent":false,"format":0,"inputGroup":false});
+</script>
+<?php } ?>
 </span>
 <?php echo $categoria->nome_categoria->CustomMsg ?></div></div>
-	</div>
-<?php } ?>
-<?php if ($categoria->id_pai->Visible) { // id_pai ?>
-	<div id="r_id_pai" class="form-group">
-		<label id="elh_categoria_id_pai" for="x_id_pai" class="<?php echo $categoria_edit->LeftColumnClass ?>"><?php echo $categoria->id_pai->FldCaption() ?><?php echo $Language->Phrase("FieldRequiredIndicator") ?></label>
-		<div class="<?php echo $categoria_edit->RightColumnClass ?>"><div<?php echo $categoria->id_pai->CellAttributes() ?>>
-<span id="el_categoria_id_pai">
-<input type="text" data-table="categoria" data-field="x_id_pai" name="x_id_pai" id="x_id_pai" size="30" placeholder="<?php echo ew_HtmlEncode($categoria->id_pai->getPlaceHolder()) ?>" value="<?php echo $categoria->id_pai->EditValue ?>"<?php echo $categoria->id_pai->EditAttributes() ?>>
-</span>
-<?php echo $categoria->id_pai->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
 </div><!-- /page* -->

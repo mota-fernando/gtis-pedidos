@@ -45,13 +45,13 @@ class ctranportadora extends cTable {
 
 		// id_transportadora
 		$this->id_transportadora = new cField('tranportadora', 'tranportadora', 'x_id_transportadora', 'id_transportadora', '`id_transportadora`', '`id_transportadora`', 3, -1, FALSE, '`id_transportadora`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'NO');
-		$this->id_transportadora->Sortable = TRUE; // Allow sort
+		$this->id_transportadora->Sortable = FALSE; // Allow sort
 		$this->id_transportadora->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['id_transportadora'] = &$this->id_transportadora;
 
 		// transportadora
 		$this->transportadora = new cField('tranportadora', 'tranportadora', 'x_transportadora', 'transportadora', '`transportadora`', '`transportadora`', 200, -1, FALSE, '`transportadora`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
-		$this->transportadora->Sortable = TRUE; // Allow sort
+		$this->transportadora->Sortable = FALSE; // Allow sort
 		$this->fields['transportadora'] = &$this->transportadora;
 
 		// id_empresa_transportadora
@@ -710,8 +710,6 @@ class ctranportadora extends cTable {
 				if ($ExportPageType == "view") {
 					if ($this->id_empresa_transportadora->Exportable) $Doc->ExportCaption($this->id_empresa_transportadora);
 				} else {
-					if ($this->id_transportadora->Exportable) $Doc->ExportCaption($this->id_transportadora);
-					if ($this->transportadora->Exportable) $Doc->ExportCaption($this->transportadora);
 					if ($this->id_empresa_transportadora->Exportable) $Doc->ExportCaption($this->id_empresa_transportadora);
 				}
 				$Doc->EndExportRow();
@@ -746,8 +744,6 @@ class ctranportadora extends cTable {
 					if ($ExportPageType == "view") {
 						if ($this->id_empresa_transportadora->Exportable) $Doc->ExportField($this->id_empresa_transportadora);
 					} else {
-						if ($this->id_transportadora->Exportable) $Doc->ExportField($this->id_transportadora);
-						if ($this->transportadora->Exportable) $Doc->ExportField($this->transportadora);
 						if ($this->id_empresa_transportadora->Exportable) $Doc->ExportField($this->id_empresa_transportadora);
 					}
 					$Doc->EndExportRow($RowCnt);

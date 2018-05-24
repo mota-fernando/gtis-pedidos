@@ -481,7 +481,7 @@ class cpessoa_fisica_addopt extends cpessoa_fisica {
 		}
 		if (!$this->nascimento->FldIsDetailKey) {
 			$this->nascimento->setFormValue(ew_ConvertFromUtf8($objForm->GetValue("x_nascimento")));
-			$this->nascimento->CurrentValue = ew_UnFormatDateTime($this->nascimento->CurrentValue, 0);
+			$this->nascimento->CurrentValue = ew_UnFormatDateTime($this->nascimento->CurrentValue, 2);
 		}
 		if (!$this->telefone->FldIsDetailKey) {
 			$this->telefone->setFormValue(ew_ConvertFromUtf8($objForm->GetValue("x_telefone")));
@@ -515,7 +515,7 @@ class cpessoa_fisica_addopt extends cpessoa_fisica {
 		$this->nome_pessoa->CurrentValue = ew_ConvertToUtf8($this->nome_pessoa->FormValue);
 		$this->sobrenome_pessoa->CurrentValue = ew_ConvertToUtf8($this->sobrenome_pessoa->FormValue);
 		$this->nascimento->CurrentValue = ew_ConvertToUtf8($this->nascimento->FormValue);
-		$this->nascimento->CurrentValue = ew_UnFormatDateTime($this->nascimento->CurrentValue, 0);
+		$this->nascimento->CurrentValue = ew_UnFormatDateTime($this->nascimento->CurrentValue, 2);
 		$this->telefone->CurrentValue = ew_ConvertToUtf8($this->telefone->FormValue);
 		$this->_email->CurrentValue = ew_ConvertToUtf8($this->_email->FormValue);
 		$this->celular->CurrentValue = ew_ConvertToUtf8($this->celular->FormValue);
@@ -650,7 +650,7 @@ class cpessoa_fisica_addopt extends cpessoa_fisica {
 
 		// nascimento
 		$this->nascimento->ViewValue = $this->nascimento->CurrentValue;
-		$this->nascimento->ViewValue = ew_FormatDateTime($this->nascimento->ViewValue, 0);
+		$this->nascimento->ViewValue = ew_FormatDateTime($this->nascimento->ViewValue, 2);
 		$this->nascimento->ViewCustomAttributes = "";
 
 		// telefone
@@ -798,7 +798,7 @@ class cpessoa_fisica_addopt extends cpessoa_fisica {
 			// nascimento
 			$this->nascimento->EditAttrs["class"] = "form-control";
 			$this->nascimento->EditCustomAttributes = "";
-			$this->nascimento->EditValue = ew_HtmlEncode(ew_FormatDateTime($this->nascimento->CurrentValue, 8));
+			$this->nascimento->EditValue = ew_HtmlEncode(ew_FormatDateTime($this->nascimento->CurrentValue, 2));
 			$this->nascimento->PlaceHolder = ew_RemoveHtml($this->nascimento->FldCaption());
 
 			// telefone
@@ -998,7 +998,7 @@ class cpessoa_fisica_addopt extends cpessoa_fisica {
 		$this->sobrenome_pessoa->SetDbValueDef($rsnew, $this->sobrenome_pessoa->CurrentValue, NULL, FALSE);
 
 		// nascimento
-		$this->nascimento->SetDbValueDef($rsnew, ew_UnFormatDateTime($this->nascimento->CurrentValue, 0), NULL, FALSE);
+		$this->nascimento->SetDbValueDef($rsnew, ew_UnFormatDateTime($this->nascimento->CurrentValue, 2), NULL, FALSE);
 
 		// telefone
 		$this->telefone->SetDbValueDef($rsnew, $this->telefone->CurrentValue, NULL, FALSE);
@@ -1306,7 +1306,12 @@ $pessoa_fisica_addopt->ShowMessage();
 	<div class="form-group">
 		<label class="col-sm-2 control-label ewLabel" for="x_nascimento"><?php echo $pessoa_fisica->nascimento->FldCaption() ?></label>
 		<div class="col-sm-10">
-<input type="text" data-table="pessoa_fisica" data-field="x_nascimento" name="x_nascimento" id="x_nascimento" placeholder="<?php echo ew_HtmlEncode($pessoa_fisica->nascimento->getPlaceHolder()) ?>" value="<?php echo $pessoa_fisica->nascimento->EditValue ?>"<?php echo $pessoa_fisica->nascimento->EditAttributes() ?>>
+<input type="text" data-table="pessoa_fisica" data-field="x_nascimento" data-format="2" name="x_nascimento" id="x_nascimento" placeholder="<?php echo ew_HtmlEncode($pessoa_fisica->nascimento->getPlaceHolder()) ?>" value="<?php echo $pessoa_fisica->nascimento->EditValue ?>"<?php echo $pessoa_fisica->nascimento->EditAttributes() ?>>
+<?php if (!$pessoa_fisica->nascimento->ReadOnly && !$pessoa_fisica->nascimento->Disabled && !isset($pessoa_fisica->nascimento->EditAttrs["readonly"]) && !isset($pessoa_fisica->nascimento->EditAttrs["disabled"])) { ?>
+<script type="text/javascript">
+ew_CreateDateTimePicker("fpessoa_fisicaaddopt", "x_nascimento", {"ignoreReadonly":true,"useCurrent":false,"format":2,"inputGroup":false});
+</script>
+<?php } ?>
 </div>
 	</div>
 <?php } ?>

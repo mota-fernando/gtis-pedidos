@@ -526,10 +526,6 @@ class ctranportadora_addopt extends ctranportadora {
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
-		// id_transportadora
-		$this->id_transportadora->ViewValue = $this->id_transportadora->CurrentValue;
-		$this->id_transportadora->ViewCustomAttributes = "";
-
 		// transportadora
 		$this->transportadora->ViewValue = $this->transportadora->CurrentValue;
 		$this->transportadora->ViewCustomAttributes = "";

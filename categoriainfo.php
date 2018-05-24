@@ -8,8 +8,8 @@ $categoria = NULL;
 //
 class ccategoria extends cTable {
 	var $id_categoria;
-	var $nome_categoria;
 	var $id_pai;
+	var $nome_categoria;
 
 	//
 	// Table class constructor
@@ -49,16 +49,18 @@ class ccategoria extends cTable {
 		$this->id_categoria->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['id_categoria'] = &$this->id_categoria;
 
+		// id_pai
+		$this->id_pai = new cField('categoria', 'categoria', 'x_id_pai', 'id_pai', '`id_pai`', '`id_pai`', 3, -1, FALSE, '`id_pai`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'SELECT');
+		$this->id_pai->Sortable = TRUE; // Allow sort
+		$this->id_pai->UsePleaseSelect = TRUE; // Use PleaseSelect by default
+		$this->id_pai->PleaseSelectText = $Language->Phrase("PleaseSelect"); // PleaseSelect text
+		$this->id_pai->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
+		$this->fields['id_pai'] = &$this->id_pai;
+
 		// nome_categoria
 		$this->nome_categoria = new cField('categoria', 'categoria', 'x_nome_categoria', 'nome_categoria', '`nome_categoria`', '`nome_categoria`', 200, -1, FALSE, '`nome_categoria`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
 		$this->nome_categoria->Sortable = TRUE; // Allow sort
 		$this->fields['nome_categoria'] = &$this->nome_categoria;
-
-		// id_pai
-		$this->id_pai = new cField('categoria', 'categoria', 'x_id_pai', 'id_pai', '`id_pai`', '`id_pai`', 3, -1, FALSE, '`id_pai`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
-		$this->id_pai->Sortable = TRUE; // Allow sort
-		$this->id_pai->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
-		$this->fields['id_pai'] = &$this->id_pai;
 	}
 
 	// Field Visibility
@@ -587,8 +589,8 @@ class ccategoria extends cTable {
 	// Load row values from recordset
 	function LoadListRowValues(&$rs) {
 		$this->id_categoria->setDbValue($rs->fields('id_categoria'));
-		$this->nome_categoria->setDbValue($rs->fields('nome_categoria'));
 		$this->id_pai->setDbValue($rs->fields('id_pai'));
+		$this->nome_categoria->setDbValue($rs->fields('nome_categoria'));
 	}
 
 	// Render list row values
@@ -600,35 +602,54 @@ class ccategoria extends cTable {
 
 	// Common render codes
 		// id_categoria
-		// nome_categoria
 		// id_pai
+		// nome_categoria
 		// id_categoria
 
 		$this->id_categoria->ViewValue = $this->id_categoria->CurrentValue;
 		$this->id_categoria->ViewCustomAttributes = "";
 
+		// id_pai
+		if (strval($this->id_pai->CurrentValue) <> "") {
+			$sFilterWrk = "`id_categoria`" . ew_SearchString("=", $this->id_pai->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_categoria`, `nome_categoria` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `categoria`";
+		$sWhereWrk = "";
+		$this->id_pai->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_pai, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_pai->ViewValue = $this->id_pai->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_pai->ViewValue = $this->id_pai->CurrentValue;
+			}
+		} else {
+			$this->id_pai->ViewValue = NULL;
+		}
+		$this->id_pai->ViewCustomAttributes = "";
+
 		// nome_categoria
 		$this->nome_categoria->ViewValue = $this->nome_categoria->CurrentValue;
 		$this->nome_categoria->ViewCustomAttributes = "";
-
-		// id_pai
-		$this->id_pai->ViewValue = $this->id_pai->CurrentValue;
-		$this->id_pai->ViewCustomAttributes = "";
 
 		// id_categoria
 		$this->id_categoria->LinkCustomAttributes = "";
 		$this->id_categoria->HrefValue = "";
 		$this->id_categoria->TooltipValue = "";
 
-		// nome_categoria
-		$this->nome_categoria->LinkCustomAttributes = "";
-		$this->nome_categoria->HrefValue = "";
-		$this->nome_categoria->TooltipValue = "";
-
 		// id_pai
 		$this->id_pai->LinkCustomAttributes = "";
 		$this->id_pai->HrefValue = "";
 		$this->id_pai->TooltipValue = "";
+
+		// nome_categoria
+		$this->nome_categoria->LinkCustomAttributes = "";
+		$this->nome_categoria->HrefValue = "";
+		$this->nome_categoria->TooltipValue = "";
 
 		// Call Row Rendered event
 		$this->Row_Rendered();
@@ -650,17 +671,15 @@ class ccategoria extends cTable {
 		$this->id_categoria->EditValue = $this->id_categoria->CurrentValue;
 		$this->id_categoria->ViewCustomAttributes = "";
 
+		// id_pai
+		$this->id_pai->EditAttrs["class"] = "form-control";
+		$this->id_pai->EditCustomAttributes = "";
+
 		// nome_categoria
 		$this->nome_categoria->EditAttrs["class"] = "form-control";
 		$this->nome_categoria->EditCustomAttributes = "";
 		$this->nome_categoria->EditValue = $this->nome_categoria->CurrentValue;
 		$this->nome_categoria->PlaceHolder = ew_RemoveHtml($this->nome_categoria->FldCaption());
-
-		// id_pai
-		$this->id_pai->EditAttrs["class"] = "form-control";
-		$this->id_pai->EditCustomAttributes = "";
-		$this->id_pai->EditValue = $this->id_pai->CurrentValue;
-		$this->id_pai->PlaceHolder = ew_RemoveHtml($this->id_pai->FldCaption());
 
 		// Call Row Rendered event
 		$this->Row_Rendered();
@@ -689,13 +708,11 @@ class ccategoria extends cTable {
 			if ($Doc->Horizontal) { // Horizontal format, write header
 				$Doc->BeginExportRow();
 				if ($ExportPageType == "view") {
-					if ($this->id_categoria->Exportable) $Doc->ExportCaption($this->id_categoria);
 					if ($this->nome_categoria->Exportable) $Doc->ExportCaption($this->nome_categoria);
-					if ($this->id_pai->Exportable) $Doc->ExportCaption($this->id_pai);
 				} else {
 					if ($this->id_categoria->Exportable) $Doc->ExportCaption($this->id_categoria);
-					if ($this->nome_categoria->Exportable) $Doc->ExportCaption($this->nome_categoria);
 					if ($this->id_pai->Exportable) $Doc->ExportCaption($this->id_pai);
+					if ($this->nome_categoria->Exportable) $Doc->ExportCaption($this->nome_categoria);
 				}
 				$Doc->EndExportRow();
 			}
@@ -727,13 +744,11 @@ class ccategoria extends cTable {
 				if (!$Doc->ExportCustom) {
 					$Doc->BeginExportRow($RowCnt); // Allow CSS styles if enabled
 					if ($ExportPageType == "view") {
-						if ($this->id_categoria->Exportable) $Doc->ExportField($this->id_categoria);
 						if ($this->nome_categoria->Exportable) $Doc->ExportField($this->nome_categoria);
-						if ($this->id_pai->Exportable) $Doc->ExportField($this->id_pai);
 					} else {
 						if ($this->id_categoria->Exportable) $Doc->ExportField($this->id_categoria);
-						if ($this->nome_categoria->Exportable) $Doc->ExportField($this->nome_categoria);
 						if ($this->id_pai->Exportable) $Doc->ExportField($this->id_pai);
+						if ($this->nome_categoria->Exportable) $Doc->ExportField($this->nome_categoria);
 					}
 					$Doc->EndExportRow($RowCnt);
 				}
