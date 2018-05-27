@@ -47,18 +47,21 @@ fdetalhe_pedidogrid.Validate = function() {
 			elm = this.GetElements("x" + infix + "_id_produto");
 			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
 				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $detalhe_pedido->id_produto->FldCaption(), $detalhe_pedido->id_produto->ReqErrMsg)) ?>");
+			elm = this.GetElements("x" + infix + "_preco");
+			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
+				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $detalhe_pedido->preco->FldCaption(), $detalhe_pedido->preco->ReqErrMsg)) ?>");
 			elm = this.GetElements("x" + infix + "_quantidade");
 			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
 				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $detalhe_pedido->quantidade->FldCaption(), $detalhe_pedido->quantidade->ReqErrMsg)) ?>");
 			elm = this.GetElements("x" + infix + "_quantidade");
 			if (elm && !ew_CheckInteger(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($detalhe_pedido->quantidade->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_custo");
+			elm = this.GetElements("x" + infix + "_subtotal");
 			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
-				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $detalhe_pedido->custo->FldCaption(), $detalhe_pedido->custo->ReqErrMsg)) ?>");
-			elm = this.GetElements("x" + infix + "_custo");
+				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $detalhe_pedido->subtotal->FldCaption(), $detalhe_pedido->subtotal->ReqErrMsg)) ?>");
+			elm = this.GetElements("x" + infix + "_subtotal");
 			if (elm && !ew_CheckNumber(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($detalhe_pedido->custo->FldErrMsg()) ?>");
+				return this.OnError(elm, "<?php echo ew_JsEncode2($detalhe_pedido->subtotal->FldErrMsg()) ?>");
 
 			// Fire Form_CustomValidate event
 			if (!this.Form_CustomValidate(fobj))
@@ -73,9 +76,10 @@ fdetalhe_pedidogrid.EmptyRow = function(infix) {
 	var fobj = this.Form;
 	if (ew_ValueChanged(fobj, infix, "numero_pedido", false)) return false;
 	if (ew_ValueChanged(fobj, infix, "id_produto", false)) return false;
+	if (ew_ValueChanged(fobj, infix, "desconto", false)) return false;
+	if (ew_ValueChanged(fobj, infix, "preco", false)) return false;
 	if (ew_ValueChanged(fobj, infix, "quantidade", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "custo", false)) return false;
-	if (ew_ValueChanged(fobj, infix, "id_desconto", false)) return false;
+	if (ew_ValueChanged(fobj, infix, "subtotal", false)) return false;
 	return true;
 }
 
@@ -91,10 +95,12 @@ fdetalhe_pedidogrid.Form_CustomValidate =
 fdetalhe_pedidogrid.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-fdetalhe_pedidogrid.Lists["x_id_produto"] = {"LinkField":"x_id_produto","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_produto","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"produtos"};
+fdetalhe_pedidogrid.Lists["x_id_produto"] = {"LinkField":"x_id_produto","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_produto","","",""],"ParentFields":[],"ChildFields":["x_preco"],"FilterFields":[],"Options":[],"Template":"","LinkTable":"produtos"};
 fdetalhe_pedidogrid.Lists["x_id_produto"].Data = "<?php echo $detalhe_pedido_grid->id_produto->LookupFilterQuery(FALSE, "grid") ?>";
-fdetalhe_pedidogrid.Lists["x_id_desconto"] = {"LinkField":"x_id_desconto","Ajax":true,"AutoFill":false,"DisplayFields":["x_porcentagem","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"desconto"};
-fdetalhe_pedidogrid.Lists["x_id_desconto"].Data = "<?php echo $detalhe_pedido_grid->id_desconto->LookupFilterQuery(FALSE, "grid") ?>";
+fdetalhe_pedidogrid.Lists["x_desconto"] = {"LinkField":"x_porcentagem","Ajax":true,"AutoFill":false,"DisplayFields":["x_porcentagem","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"desconto"};
+fdetalhe_pedidogrid.Lists["x_desconto"].Data = "<?php echo $detalhe_pedido_grid->desconto->LookupFilterQuery(FALSE, "grid") ?>";
+fdetalhe_pedidogrid.Lists["x_preco"] = {"LinkField":"x_preco_produto","Ajax":true,"AutoFill":false,"DisplayFields":["x_preco_produto","","",""],"ParentFields":["x_id_produto"],"ChildFields":[],"FilterFields":["x_id_produto"],"Options":[],"Template":"","LinkTable":"produtos"};
+fdetalhe_pedidogrid.Lists["x_preco"].Data = "<?php echo $detalhe_pedido_grid->preco->LookupFilterQuery(FALSE, "grid") ?>";
 
 // Form object for search
 </script>
@@ -150,6 +156,15 @@ $detalhe_pedido_grid->ShowMessage();
 <?php if ($detalhe_pedido_grid->TotalRecs > 0 || $detalhe_pedido->CurrentAction <> "") { ?>
 <div class="box ewBox ewGrid<?php if ($detalhe_pedido_grid->IsAddOrEdit()) { ?> ewGridAddEdit<?php } ?> detalhe_pedido">
 <div id="fdetalhe_pedidogrid" class="ewForm ewListForm form-inline">
+<?php if ($detalhe_pedido_grid->ShowOtherOptions) { ?>
+<div class="box-header ewGridUpperPanel">
+<?php
+	foreach ($detalhe_pedido_grid->OtherOptions as &$option)
+		$option->Render("body");
+?>
+</div>
+<div class="clearfix"></div>
+<?php } ?>
 <div id="gmp_detalhe_pedido" class="<?php if (ew_IsResponsiveLayout()) { ?>table-responsive <?php } ?>ewGridMiddlePanel">
 <table id="tbl_detalhe_pedidogrid" class="table ewTable">
 <thead>
@@ -192,6 +207,24 @@ $detalhe_pedido_grid->ListOptions->Render("header", "left");
 		</div></div></th>
 	<?php } ?>
 <?php } ?>
+<?php if ($detalhe_pedido->desconto->Visible) { // desconto ?>
+	<?php if ($detalhe_pedido->SortUrl($detalhe_pedido->desconto) == "") { ?>
+		<th data-name="desconto" class="<?php echo $detalhe_pedido->desconto->HeaderCellClass() ?>"><div id="elh_detalhe_pedido_desconto" class="detalhe_pedido_desconto"><div class="ewTableHeaderCaption"><?php echo $detalhe_pedido->desconto->FldCaption() ?></div></div></th>
+	<?php } else { ?>
+		<th data-name="desconto" class="<?php echo $detalhe_pedido->desconto->HeaderCellClass() ?>"><div><div id="elh_detalhe_pedido_desconto" class="detalhe_pedido_desconto">
+			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $detalhe_pedido->desconto->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($detalhe_pedido->desconto->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($detalhe_pedido->desconto->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
+		</div></div></th>
+	<?php } ?>
+<?php } ?>
+<?php if ($detalhe_pedido->preco->Visible) { // preco ?>
+	<?php if ($detalhe_pedido->SortUrl($detalhe_pedido->preco) == "") { ?>
+		<th data-name="preco" class="<?php echo $detalhe_pedido->preco->HeaderCellClass() ?>"><div id="elh_detalhe_pedido_preco" class="detalhe_pedido_preco"><div class="ewTableHeaderCaption"><?php echo $detalhe_pedido->preco->FldCaption() ?></div></div></th>
+	<?php } else { ?>
+		<th data-name="preco" class="<?php echo $detalhe_pedido->preco->HeaderCellClass() ?>"><div><div id="elh_detalhe_pedido_preco" class="detalhe_pedido_preco">
+			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $detalhe_pedido->preco->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($detalhe_pedido->preco->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($detalhe_pedido->preco->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
+		</div></div></th>
+	<?php } ?>
+<?php } ?>
 <?php if ($detalhe_pedido->quantidade->Visible) { // quantidade ?>
 	<?php if ($detalhe_pedido->SortUrl($detalhe_pedido->quantidade) == "") { ?>
 		<th data-name="quantidade" class="<?php echo $detalhe_pedido->quantidade->HeaderCellClass() ?>"><div id="elh_detalhe_pedido_quantidade" class="detalhe_pedido_quantidade"><div class="ewTableHeaderCaption"><?php echo $detalhe_pedido->quantidade->FldCaption() ?></div></div></th>
@@ -201,21 +234,12 @@ $detalhe_pedido_grid->ListOptions->Render("header", "left");
 		</div></div></th>
 	<?php } ?>
 <?php } ?>
-<?php if ($detalhe_pedido->custo->Visible) { // custo ?>
-	<?php if ($detalhe_pedido->SortUrl($detalhe_pedido->custo) == "") { ?>
-		<th data-name="custo" class="<?php echo $detalhe_pedido->custo->HeaderCellClass() ?>"><div id="elh_detalhe_pedido_custo" class="detalhe_pedido_custo"><div class="ewTableHeaderCaption"><?php echo $detalhe_pedido->custo->FldCaption() ?></div></div></th>
+<?php if ($detalhe_pedido->subtotal->Visible) { // subtotal ?>
+	<?php if ($detalhe_pedido->SortUrl($detalhe_pedido->subtotal) == "") { ?>
+		<th data-name="subtotal" class="<?php echo $detalhe_pedido->subtotal->HeaderCellClass() ?>"><div id="elh_detalhe_pedido_subtotal" class="detalhe_pedido_subtotal"><div class="ewTableHeaderCaption"><?php echo $detalhe_pedido->subtotal->FldCaption() ?></div></div></th>
 	<?php } else { ?>
-		<th data-name="custo" class="<?php echo $detalhe_pedido->custo->HeaderCellClass() ?>"><div><div id="elh_detalhe_pedido_custo" class="detalhe_pedido_custo">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $detalhe_pedido->custo->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($detalhe_pedido->custo->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($detalhe_pedido->custo->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($detalhe_pedido->id_desconto->Visible) { // id_desconto ?>
-	<?php if ($detalhe_pedido->SortUrl($detalhe_pedido->id_desconto) == "") { ?>
-		<th data-name="id_desconto" class="<?php echo $detalhe_pedido->id_desconto->HeaderCellClass() ?>"><div id="elh_detalhe_pedido_id_desconto" class="detalhe_pedido_id_desconto"><div class="ewTableHeaderCaption"><?php echo $detalhe_pedido->id_desconto->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="id_desconto" class="<?php echo $detalhe_pedido->id_desconto->HeaderCellClass() ?>"><div><div id="elh_detalhe_pedido_id_desconto" class="detalhe_pedido_id_desconto">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $detalhe_pedido->id_desconto->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($detalhe_pedido->id_desconto->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($detalhe_pedido->id_desconto->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
+		<th data-name="subtotal" class="<?php echo $detalhe_pedido->subtotal->HeaderCellClass() ?>"><div><div id="elh_detalhe_pedido_subtotal" class="detalhe_pedido_subtotal">
+			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $detalhe_pedido->subtotal->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($detalhe_pedido->subtotal->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($detalhe_pedido->subtotal->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
 		</div></div></th>
 	<?php } ?>
 <?php } ?>
@@ -403,6 +427,7 @@ $detalhe_pedido_grid->ListOptions->Render("body", "left", $detalhe_pedido_grid->
 		<td data-name="id_produto"<?php echo $detalhe_pedido->id_produto->CellAttributes() ?>>
 <?php if ($detalhe_pedido->RowType == EW_ROWTYPE_ADD) { // Add record ?>
 <span id="el<?php echo $detalhe_pedido_grid->RowCnt ?>_detalhe_pedido_id_produto" class="form-group detalhe_pedido_id_produto">
+<?php $detalhe_pedido->id_produto->EditAttrs["onchange"] = "ew_UpdateOpt.call(this); " . @$detalhe_pedido->id_produto->EditAttrs["onchange"]; ?>
 <select data-table="detalhe_pedido" data-field="x_id_produto" data-value-separator="<?php echo $detalhe_pedido->id_produto->DisplayValueSeparatorAttribute() ?>" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_produto" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_produto"<?php echo $detalhe_pedido->id_produto->EditAttributes() ?>>
 <?php echo $detalhe_pedido->id_produto->SelectOptionListHtml("x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_produto") ?>
 </select>
@@ -412,6 +437,7 @@ $detalhe_pedido_grid->ListOptions->Render("body", "left", $detalhe_pedido_grid->
 <?php } ?>
 <?php if ($detalhe_pedido->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
 <span id="el<?php echo $detalhe_pedido_grid->RowCnt ?>_detalhe_pedido_id_produto" class="form-group detalhe_pedido_id_produto">
+<?php $detalhe_pedido->id_produto->EditAttrs["onchange"] = "ew_UpdateOpt.call(this); " . @$detalhe_pedido->id_produto->EditAttrs["onchange"]; ?>
 <select data-table="detalhe_pedido" data-field="x_id_produto" data-value-separator="<?php echo $detalhe_pedido->id_produto->DisplayValueSeparatorAttribute() ?>" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_produto" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_produto"<?php echo $detalhe_pedido->id_produto->EditAttributes() ?>>
 <?php echo $detalhe_pedido->id_produto->SelectOptionListHtml("x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_produto") ?>
 </select>
@@ -433,17 +459,83 @@ $detalhe_pedido_grid->ListOptions->Render("body", "left", $detalhe_pedido_grid->
 <?php } ?>
 </td>
 	<?php } ?>
+	<?php if ($detalhe_pedido->desconto->Visible) { // desconto ?>
+		<td data-name="desconto"<?php echo $detalhe_pedido->desconto->CellAttributes() ?>>
+<?php if ($detalhe_pedido->RowType == EW_ROWTYPE_ADD) { // Add record ?>
+<span id="el<?php echo $detalhe_pedido_grid->RowCnt ?>_detalhe_pedido_desconto" class="form-group detalhe_pedido_desconto">
+<select data-table="detalhe_pedido" data-field="x_desconto" data-value-separator="<?php echo $detalhe_pedido->desconto->DisplayValueSeparatorAttribute() ?>" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto"<?php echo $detalhe_pedido->desconto->EditAttributes() ?>>
+<?php echo $detalhe_pedido->desconto->SelectOptionListHtml("x<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto") ?>
+</select>
+<button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $detalhe_pedido->desconto->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto',url:'descontoaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $detalhe_pedido->desconto->FldCaption() ?></span></button>
+</span>
+<input type="hidden" data-table="detalhe_pedido" data-field="x_desconto" name="o<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto" id="o<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto" value="<?php echo ew_HtmlEncode($detalhe_pedido->desconto->OldValue) ?>">
+<?php } ?>
+<?php if ($detalhe_pedido->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
+<span id="el<?php echo $detalhe_pedido_grid->RowCnt ?>_detalhe_pedido_desconto" class="form-group detalhe_pedido_desconto">
+<select data-table="detalhe_pedido" data-field="x_desconto" data-value-separator="<?php echo $detalhe_pedido->desconto->DisplayValueSeparatorAttribute() ?>" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto"<?php echo $detalhe_pedido->desconto->EditAttributes() ?>>
+<?php echo $detalhe_pedido->desconto->SelectOptionListHtml("x<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto") ?>
+</select>
+<button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $detalhe_pedido->desconto->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto',url:'descontoaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $detalhe_pedido->desconto->FldCaption() ?></span></button>
+</span>
+<?php } ?>
+<?php if ($detalhe_pedido->RowType == EW_ROWTYPE_VIEW) { // View record ?>
+<span id="el<?php echo $detalhe_pedido_grid->RowCnt ?>_detalhe_pedido_desconto" class="detalhe_pedido_desconto">
+<span<?php echo $detalhe_pedido->desconto->ViewAttributes() ?>>
+<?php echo $detalhe_pedido->desconto->ListViewValue() ?></span>
+</span>
+<?php if ($detalhe_pedido->CurrentAction <> "F") { ?>
+<input type="hidden" data-table="detalhe_pedido" data-field="x_desconto" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto" value="<?php echo ew_HtmlEncode($detalhe_pedido->desconto->FormValue) ?>">
+<input type="hidden" data-table="detalhe_pedido" data-field="x_desconto" name="o<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto" id="o<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto" value="<?php echo ew_HtmlEncode($detalhe_pedido->desconto->OldValue) ?>">
+<?php } else { ?>
+<input type="hidden" data-table="detalhe_pedido" data-field="x_desconto" name="fdetalhe_pedidogrid$x<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto" id="fdetalhe_pedidogrid$x<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto" value="<?php echo ew_HtmlEncode($detalhe_pedido->desconto->FormValue) ?>">
+<input type="hidden" data-table="detalhe_pedido" data-field="x_desconto" name="fdetalhe_pedidogrid$o<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto" id="fdetalhe_pedidogrid$o<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto" value="<?php echo ew_HtmlEncode($detalhe_pedido->desconto->OldValue) ?>">
+<?php } ?>
+<?php } ?>
+</td>
+	<?php } ?>
+	<?php if ($detalhe_pedido->preco->Visible) { // preco ?>
+		<td data-name="preco"<?php echo $detalhe_pedido->preco->CellAttributes() ?>>
+<?php if ($detalhe_pedido->RowType == EW_ROWTYPE_ADD) { // Add record ?>
+<span id="el<?php echo $detalhe_pedido_grid->RowCnt ?>_detalhe_pedido_preco" class="form-group detalhe_pedido_preco">
+<select data-table="detalhe_pedido" data-field="x_preco" data-value-separator="<?php echo $detalhe_pedido->preco->DisplayValueSeparatorAttribute() ?>" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_preco" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_preco"<?php echo $detalhe_pedido->preco->EditAttributes() ?>>
+<?php echo $detalhe_pedido->preco->SelectOptionListHtml("x<?php echo $detalhe_pedido_grid->RowIndex ?>_preco") ?>
+</select>
+</span>
+<input type="hidden" data-table="detalhe_pedido" data-field="x_preco" name="o<?php echo $detalhe_pedido_grid->RowIndex ?>_preco" id="o<?php echo $detalhe_pedido_grid->RowIndex ?>_preco" value="<?php echo ew_HtmlEncode($detalhe_pedido->preco->OldValue) ?>">
+<?php } ?>
+<?php if ($detalhe_pedido->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
+<span id="el<?php echo $detalhe_pedido_grid->RowCnt ?>_detalhe_pedido_preco" class="form-group detalhe_pedido_preco">
+<select data-table="detalhe_pedido" data-field="x_preco" data-value-separator="<?php echo $detalhe_pedido->preco->DisplayValueSeparatorAttribute() ?>" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_preco" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_preco"<?php echo $detalhe_pedido->preco->EditAttributes() ?>>
+<?php echo $detalhe_pedido->preco->SelectOptionListHtml("x<?php echo $detalhe_pedido_grid->RowIndex ?>_preco") ?>
+</select>
+</span>
+<?php } ?>
+<?php if ($detalhe_pedido->RowType == EW_ROWTYPE_VIEW) { // View record ?>
+<span id="el<?php echo $detalhe_pedido_grid->RowCnt ?>_detalhe_pedido_preco" class="detalhe_pedido_preco">
+<span<?php echo $detalhe_pedido->preco->ViewAttributes() ?>>
+<?php echo $detalhe_pedido->preco->ListViewValue() ?></span>
+</span>
+<?php if ($detalhe_pedido->CurrentAction <> "F") { ?>
+<input type="hidden" data-table="detalhe_pedido" data-field="x_preco" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_preco" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_preco" value="<?php echo ew_HtmlEncode($detalhe_pedido->preco->FormValue) ?>">
+<input type="hidden" data-table="detalhe_pedido" data-field="x_preco" name="o<?php echo $detalhe_pedido_grid->RowIndex ?>_preco" id="o<?php echo $detalhe_pedido_grid->RowIndex ?>_preco" value="<?php echo ew_HtmlEncode($detalhe_pedido->preco->OldValue) ?>">
+<?php } else { ?>
+<input type="hidden" data-table="detalhe_pedido" data-field="x_preco" name="fdetalhe_pedidogrid$x<?php echo $detalhe_pedido_grid->RowIndex ?>_preco" id="fdetalhe_pedidogrid$x<?php echo $detalhe_pedido_grid->RowIndex ?>_preco" value="<?php echo ew_HtmlEncode($detalhe_pedido->preco->FormValue) ?>">
+<input type="hidden" data-table="detalhe_pedido" data-field="x_preco" name="fdetalhe_pedidogrid$o<?php echo $detalhe_pedido_grid->RowIndex ?>_preco" id="fdetalhe_pedidogrid$o<?php echo $detalhe_pedido_grid->RowIndex ?>_preco" value="<?php echo ew_HtmlEncode($detalhe_pedido->preco->OldValue) ?>">
+<?php } ?>
+<?php } ?>
+</td>
+	<?php } ?>
 	<?php if ($detalhe_pedido->quantidade->Visible) { // quantidade ?>
 		<td data-name="quantidade"<?php echo $detalhe_pedido->quantidade->CellAttributes() ?>>
 <?php if ($detalhe_pedido->RowType == EW_ROWTYPE_ADD) { // Add record ?>
 <span id="el<?php echo $detalhe_pedido_grid->RowCnt ?>_detalhe_pedido_quantidade" class="form-group detalhe_pedido_quantidade">
-<input type="text" data-table="detalhe_pedido" data-field="x_quantidade" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" size="6" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->quantidade->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->quantidade->EditValue ?>"<?php echo $detalhe_pedido->quantidade->EditAttributes() ?>>
+<input type="text" data-table="detalhe_pedido" data-field="x_quantidade" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" size="4" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->quantidade->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->quantidade->EditValue ?>"<?php echo $detalhe_pedido->quantidade->EditAttributes() ?>>
 </span>
 <input type="hidden" data-table="detalhe_pedido" data-field="x_quantidade" name="o<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" id="o<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" value="<?php echo ew_HtmlEncode($detalhe_pedido->quantidade->OldValue) ?>">
 <?php } ?>
 <?php if ($detalhe_pedido->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
 <span id="el<?php echo $detalhe_pedido_grid->RowCnt ?>_detalhe_pedido_quantidade" class="form-group detalhe_pedido_quantidade">
-<input type="text" data-table="detalhe_pedido" data-field="x_quantidade" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" size="6" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->quantidade->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->quantidade->EditValue ?>"<?php echo $detalhe_pedido->quantidade->EditAttributes() ?>>
+<input type="text" data-table="detalhe_pedido" data-field="x_quantidade" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" size="4" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->quantidade->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->quantidade->EditValue ?>"<?php echo $detalhe_pedido->quantidade->EditAttributes() ?>>
 </span>
 <?php } ?>
 <?php if ($detalhe_pedido->RowType == EW_ROWTYPE_VIEW) { // View record ?>
@@ -461,64 +553,30 @@ $detalhe_pedido_grid->ListOptions->Render("body", "left", $detalhe_pedido_grid->
 <?php } ?>
 </td>
 	<?php } ?>
-	<?php if ($detalhe_pedido->custo->Visible) { // custo ?>
-		<td data-name="custo"<?php echo $detalhe_pedido->custo->CellAttributes() ?>>
+	<?php if ($detalhe_pedido->subtotal->Visible) { // subtotal ?>
+		<td data-name="subtotal"<?php echo $detalhe_pedido->subtotal->CellAttributes() ?>>
 <?php if ($detalhe_pedido->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $detalhe_pedido_grid->RowCnt ?>_detalhe_pedido_custo" class="form-group detalhe_pedido_custo">
-<input type="text" data-table="detalhe_pedido" data-field="x_custo" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" size="6" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->custo->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->custo->EditValue ?>"<?php echo $detalhe_pedido->custo->EditAttributes() ?>>
+<span id="el<?php echo $detalhe_pedido_grid->RowCnt ?>_detalhe_pedido_subtotal" class="form-group detalhe_pedido_subtotal">
+<input type="text" data-table="detalhe_pedido" data-field="x_subtotal" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_subtotal" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_subtotal" size="4" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->subtotal->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->subtotal->EditValue ?>"<?php echo $detalhe_pedido->subtotal->EditAttributes() ?>>
 </span>
-<input type="hidden" data-table="detalhe_pedido" data-field="x_custo" name="o<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" id="o<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" value="<?php echo ew_HtmlEncode($detalhe_pedido->custo->OldValue) ?>">
+<input type="hidden" data-table="detalhe_pedido" data-field="x_subtotal" name="o<?php echo $detalhe_pedido_grid->RowIndex ?>_subtotal" id="o<?php echo $detalhe_pedido_grid->RowIndex ?>_subtotal" value="<?php echo ew_HtmlEncode($detalhe_pedido->subtotal->OldValue) ?>">
 <?php } ?>
 <?php if ($detalhe_pedido->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $detalhe_pedido_grid->RowCnt ?>_detalhe_pedido_custo" class="form-group detalhe_pedido_custo">
-<input type="text" data-table="detalhe_pedido" data-field="x_custo" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" size="6" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->custo->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->custo->EditValue ?>"<?php echo $detalhe_pedido->custo->EditAttributes() ?>>
+<span id="el<?php echo $detalhe_pedido_grid->RowCnt ?>_detalhe_pedido_subtotal" class="form-group detalhe_pedido_subtotal">
+<input type="text" data-table="detalhe_pedido" data-field="x_subtotal" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_subtotal" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_subtotal" size="4" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->subtotal->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->subtotal->EditValue ?>"<?php echo $detalhe_pedido->subtotal->EditAttributes() ?>>
 </span>
 <?php } ?>
 <?php if ($detalhe_pedido->RowType == EW_ROWTYPE_VIEW) { // View record ?>
-<span id="el<?php echo $detalhe_pedido_grid->RowCnt ?>_detalhe_pedido_custo" class="detalhe_pedido_custo">
-<span<?php echo $detalhe_pedido->custo->ViewAttributes() ?>>
-<?php echo $detalhe_pedido->custo->ListViewValue() ?></span>
+<span id="el<?php echo $detalhe_pedido_grid->RowCnt ?>_detalhe_pedido_subtotal" class="detalhe_pedido_subtotal">
+<span<?php echo $detalhe_pedido->subtotal->ViewAttributes() ?>>
+<?php echo $detalhe_pedido->subtotal->ListViewValue() ?></span>
 </span>
 <?php if ($detalhe_pedido->CurrentAction <> "F") { ?>
-<input type="hidden" data-table="detalhe_pedido" data-field="x_custo" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" value="<?php echo ew_HtmlEncode($detalhe_pedido->custo->FormValue) ?>">
-<input type="hidden" data-table="detalhe_pedido" data-field="x_custo" name="o<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" id="o<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" value="<?php echo ew_HtmlEncode($detalhe_pedido->custo->OldValue) ?>">
+<input type="hidden" data-table="detalhe_pedido" data-field="x_subtotal" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_subtotal" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_subtotal" value="<?php echo ew_HtmlEncode($detalhe_pedido->subtotal->FormValue) ?>">
+<input type="hidden" data-table="detalhe_pedido" data-field="x_subtotal" name="o<?php echo $detalhe_pedido_grid->RowIndex ?>_subtotal" id="o<?php echo $detalhe_pedido_grid->RowIndex ?>_subtotal" value="<?php echo ew_HtmlEncode($detalhe_pedido->subtotal->OldValue) ?>">
 <?php } else { ?>
-<input type="hidden" data-table="detalhe_pedido" data-field="x_custo" name="fdetalhe_pedidogrid$x<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" id="fdetalhe_pedidogrid$x<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" value="<?php echo ew_HtmlEncode($detalhe_pedido->custo->FormValue) ?>">
-<input type="hidden" data-table="detalhe_pedido" data-field="x_custo" name="fdetalhe_pedidogrid$o<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" id="fdetalhe_pedidogrid$o<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" value="<?php echo ew_HtmlEncode($detalhe_pedido->custo->OldValue) ?>">
-<?php } ?>
-<?php } ?>
-</td>
-	<?php } ?>
-	<?php if ($detalhe_pedido->id_desconto->Visible) { // id_desconto ?>
-		<td data-name="id_desconto"<?php echo $detalhe_pedido->id_desconto->CellAttributes() ?>>
-<?php if ($detalhe_pedido->RowType == EW_ROWTYPE_ADD) { // Add record ?>
-<span id="el<?php echo $detalhe_pedido_grid->RowCnt ?>_detalhe_pedido_id_desconto" class="form-group detalhe_pedido_id_desconto">
-<select data-table="detalhe_pedido" data-field="x_id_desconto" data-value-separator="<?php echo $detalhe_pedido->id_desconto->DisplayValueSeparatorAttribute() ?>" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto"<?php echo $detalhe_pedido->id_desconto->EditAttributes() ?>>
-<?php echo $detalhe_pedido->id_desconto->SelectOptionListHtml("x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto") ?>
-</select>
-<button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $detalhe_pedido->id_desconto->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto',url:'descontoaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $detalhe_pedido->id_desconto->FldCaption() ?></span></button>
-</span>
-<input type="hidden" data-table="detalhe_pedido" data-field="x_id_desconto" name="o<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto" id="o<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto" value="<?php echo ew_HtmlEncode($detalhe_pedido->id_desconto->OldValue) ?>">
-<?php } ?>
-<?php if ($detalhe_pedido->RowType == EW_ROWTYPE_EDIT) { // Edit record ?>
-<span id="el<?php echo $detalhe_pedido_grid->RowCnt ?>_detalhe_pedido_id_desconto" class="form-group detalhe_pedido_id_desconto">
-<select data-table="detalhe_pedido" data-field="x_id_desconto" data-value-separator="<?php echo $detalhe_pedido->id_desconto->DisplayValueSeparatorAttribute() ?>" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto"<?php echo $detalhe_pedido->id_desconto->EditAttributes() ?>>
-<?php echo $detalhe_pedido->id_desconto->SelectOptionListHtml("x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto") ?>
-</select>
-<button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $detalhe_pedido->id_desconto->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto',url:'descontoaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $detalhe_pedido->id_desconto->FldCaption() ?></span></button>
-</span>
-<?php } ?>
-<?php if ($detalhe_pedido->RowType == EW_ROWTYPE_VIEW) { // View record ?>
-<span id="el<?php echo $detalhe_pedido_grid->RowCnt ?>_detalhe_pedido_id_desconto" class="detalhe_pedido_id_desconto">
-<span<?php echo $detalhe_pedido->id_desconto->ViewAttributes() ?>>
-<?php echo $detalhe_pedido->id_desconto->ListViewValue() ?></span>
-</span>
-<?php if ($detalhe_pedido->CurrentAction <> "F") { ?>
-<input type="hidden" data-table="detalhe_pedido" data-field="x_id_desconto" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto" value="<?php echo ew_HtmlEncode($detalhe_pedido->id_desconto->FormValue) ?>">
-<input type="hidden" data-table="detalhe_pedido" data-field="x_id_desconto" name="o<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto" id="o<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto" value="<?php echo ew_HtmlEncode($detalhe_pedido->id_desconto->OldValue) ?>">
-<?php } else { ?>
-<input type="hidden" data-table="detalhe_pedido" data-field="x_id_desconto" name="fdetalhe_pedidogrid$x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto" id="fdetalhe_pedidogrid$x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto" value="<?php echo ew_HtmlEncode($detalhe_pedido->id_desconto->FormValue) ?>">
-<input type="hidden" data-table="detalhe_pedido" data-field="x_id_desconto" name="fdetalhe_pedidogrid$o<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto" id="fdetalhe_pedidogrid$o<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto" value="<?php echo ew_HtmlEncode($detalhe_pedido->id_desconto->OldValue) ?>">
+<input type="hidden" data-table="detalhe_pedido" data-field="x_subtotal" name="fdetalhe_pedidogrid$x<?php echo $detalhe_pedido_grid->RowIndex ?>_subtotal" id="fdetalhe_pedidogrid$x<?php echo $detalhe_pedido_grid->RowIndex ?>_subtotal" value="<?php echo ew_HtmlEncode($detalhe_pedido->subtotal->FormValue) ?>">
+<input type="hidden" data-table="detalhe_pedido" data-field="x_subtotal" name="fdetalhe_pedidogrid$o<?php echo $detalhe_pedido_grid->RowIndex ?>_subtotal" id="fdetalhe_pedidogrid$o<?php echo $detalhe_pedido_grid->RowIndex ?>_subtotal" value="<?php echo ew_HtmlEncode($detalhe_pedido->subtotal->OldValue) ?>">
 <?php } ?>
 <?php } ?>
 </td>
@@ -606,6 +664,7 @@ $detalhe_pedido_grid->ListOptions->Render("body", "left", $detalhe_pedido_grid->
 		<td data-name="id_produto">
 <?php if ($detalhe_pedido->CurrentAction <> "F") { ?>
 <span id="el$rowindex$_detalhe_pedido_id_produto" class="form-group detalhe_pedido_id_produto">
+<?php $detalhe_pedido->id_produto->EditAttrs["onchange"] = "ew_UpdateOpt.call(this); " . @$detalhe_pedido->id_produto->EditAttrs["onchange"]; ?>
 <select data-table="detalhe_pedido" data-field="x_id_produto" data-value-separator="<?php echo $detalhe_pedido->id_produto->DisplayValueSeparatorAttribute() ?>" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_produto" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_produto"<?php echo $detalhe_pedido->id_produto->EditAttributes() ?>>
 <?php echo $detalhe_pedido->id_produto->SelectOptionListHtml("x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_produto") ?>
 </select>
@@ -621,11 +680,48 @@ $detalhe_pedido_grid->ListOptions->Render("body", "left", $detalhe_pedido_grid->
 <input type="hidden" data-table="detalhe_pedido" data-field="x_id_produto" name="o<?php echo $detalhe_pedido_grid->RowIndex ?>_id_produto" id="o<?php echo $detalhe_pedido_grid->RowIndex ?>_id_produto" value="<?php echo ew_HtmlEncode($detalhe_pedido->id_produto->OldValue) ?>">
 </td>
 	<?php } ?>
+	<?php if ($detalhe_pedido->desconto->Visible) { // desconto ?>
+		<td data-name="desconto">
+<?php if ($detalhe_pedido->CurrentAction <> "F") { ?>
+<span id="el$rowindex$_detalhe_pedido_desconto" class="form-group detalhe_pedido_desconto">
+<select data-table="detalhe_pedido" data-field="x_desconto" data-value-separator="<?php echo $detalhe_pedido->desconto->DisplayValueSeparatorAttribute() ?>" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto"<?php echo $detalhe_pedido->desconto->EditAttributes() ?>>
+<?php echo $detalhe_pedido->desconto->SelectOptionListHtml("x<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto") ?>
+</select>
+<button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $detalhe_pedido->desconto->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto',url:'descontoaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $detalhe_pedido->desconto->FldCaption() ?></span></button>
+</span>
+<?php } else { ?>
+<span id="el$rowindex$_detalhe_pedido_desconto" class="form-group detalhe_pedido_desconto">
+<span<?php echo $detalhe_pedido->desconto->ViewAttributes() ?>>
+<p class="form-control-static"><?php echo $detalhe_pedido->desconto->ViewValue ?></p></span>
+</span>
+<input type="hidden" data-table="detalhe_pedido" data-field="x_desconto" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto" value="<?php echo ew_HtmlEncode($detalhe_pedido->desconto->FormValue) ?>">
+<?php } ?>
+<input type="hidden" data-table="detalhe_pedido" data-field="x_desconto" name="o<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto" id="o<?php echo $detalhe_pedido_grid->RowIndex ?>_desconto" value="<?php echo ew_HtmlEncode($detalhe_pedido->desconto->OldValue) ?>">
+</td>
+	<?php } ?>
+	<?php if ($detalhe_pedido->preco->Visible) { // preco ?>
+		<td data-name="preco">
+<?php if ($detalhe_pedido->CurrentAction <> "F") { ?>
+<span id="el$rowindex$_detalhe_pedido_preco" class="form-group detalhe_pedido_preco">
+<select data-table="detalhe_pedido" data-field="x_preco" data-value-separator="<?php echo $detalhe_pedido->preco->DisplayValueSeparatorAttribute() ?>" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_preco" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_preco"<?php echo $detalhe_pedido->preco->EditAttributes() ?>>
+<?php echo $detalhe_pedido->preco->SelectOptionListHtml("x<?php echo $detalhe_pedido_grid->RowIndex ?>_preco") ?>
+</select>
+</span>
+<?php } else { ?>
+<span id="el$rowindex$_detalhe_pedido_preco" class="form-group detalhe_pedido_preco">
+<span<?php echo $detalhe_pedido->preco->ViewAttributes() ?>>
+<p class="form-control-static"><?php echo $detalhe_pedido->preco->ViewValue ?></p></span>
+</span>
+<input type="hidden" data-table="detalhe_pedido" data-field="x_preco" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_preco" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_preco" value="<?php echo ew_HtmlEncode($detalhe_pedido->preco->FormValue) ?>">
+<?php } ?>
+<input type="hidden" data-table="detalhe_pedido" data-field="x_preco" name="o<?php echo $detalhe_pedido_grid->RowIndex ?>_preco" id="o<?php echo $detalhe_pedido_grid->RowIndex ?>_preco" value="<?php echo ew_HtmlEncode($detalhe_pedido->preco->OldValue) ?>">
+</td>
+	<?php } ?>
 	<?php if ($detalhe_pedido->quantidade->Visible) { // quantidade ?>
 		<td data-name="quantidade">
 <?php if ($detalhe_pedido->CurrentAction <> "F") { ?>
 <span id="el$rowindex$_detalhe_pedido_quantidade" class="form-group detalhe_pedido_quantidade">
-<input type="text" data-table="detalhe_pedido" data-field="x_quantidade" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" size="6" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->quantidade->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->quantidade->EditValue ?>"<?php echo $detalhe_pedido->quantidade->EditAttributes() ?>>
+<input type="text" data-table="detalhe_pedido" data-field="x_quantidade" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" size="4" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->quantidade->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->quantidade->EditValue ?>"<?php echo $detalhe_pedido->quantidade->EditAttributes() ?>>
 </span>
 <?php } else { ?>
 <span id="el$rowindex$_detalhe_pedido_quantidade" class="form-group detalhe_pedido_quantidade">
@@ -637,39 +733,20 @@ $detalhe_pedido_grid->ListOptions->Render("body", "left", $detalhe_pedido_grid->
 <input type="hidden" data-table="detalhe_pedido" data-field="x_quantidade" name="o<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" id="o<?php echo $detalhe_pedido_grid->RowIndex ?>_quantidade" value="<?php echo ew_HtmlEncode($detalhe_pedido->quantidade->OldValue) ?>">
 </td>
 	<?php } ?>
-	<?php if ($detalhe_pedido->custo->Visible) { // custo ?>
-		<td data-name="custo">
+	<?php if ($detalhe_pedido->subtotal->Visible) { // subtotal ?>
+		<td data-name="subtotal">
 <?php if ($detalhe_pedido->CurrentAction <> "F") { ?>
-<span id="el$rowindex$_detalhe_pedido_custo" class="form-group detalhe_pedido_custo">
-<input type="text" data-table="detalhe_pedido" data-field="x_custo" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" size="6" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->custo->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->custo->EditValue ?>"<?php echo $detalhe_pedido->custo->EditAttributes() ?>>
+<span id="el$rowindex$_detalhe_pedido_subtotal" class="form-group detalhe_pedido_subtotal">
+<input type="text" data-table="detalhe_pedido" data-field="x_subtotal" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_subtotal" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_subtotal" size="4" placeholder="<?php echo ew_HtmlEncode($detalhe_pedido->subtotal->getPlaceHolder()) ?>" value="<?php echo $detalhe_pedido->subtotal->EditValue ?>"<?php echo $detalhe_pedido->subtotal->EditAttributes() ?>>
 </span>
 <?php } else { ?>
-<span id="el$rowindex$_detalhe_pedido_custo" class="form-group detalhe_pedido_custo">
-<span<?php echo $detalhe_pedido->custo->ViewAttributes() ?>>
-<p class="form-control-static"><?php echo $detalhe_pedido->custo->ViewValue ?></p></span>
+<span id="el$rowindex$_detalhe_pedido_subtotal" class="form-group detalhe_pedido_subtotal">
+<span<?php echo $detalhe_pedido->subtotal->ViewAttributes() ?>>
+<p class="form-control-static"><?php echo $detalhe_pedido->subtotal->ViewValue ?></p></span>
 </span>
-<input type="hidden" data-table="detalhe_pedido" data-field="x_custo" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" value="<?php echo ew_HtmlEncode($detalhe_pedido->custo->FormValue) ?>">
+<input type="hidden" data-table="detalhe_pedido" data-field="x_subtotal" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_subtotal" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_subtotal" value="<?php echo ew_HtmlEncode($detalhe_pedido->subtotal->FormValue) ?>">
 <?php } ?>
-<input type="hidden" data-table="detalhe_pedido" data-field="x_custo" name="o<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" id="o<?php echo $detalhe_pedido_grid->RowIndex ?>_custo" value="<?php echo ew_HtmlEncode($detalhe_pedido->custo->OldValue) ?>">
-</td>
-	<?php } ?>
-	<?php if ($detalhe_pedido->id_desconto->Visible) { // id_desconto ?>
-		<td data-name="id_desconto">
-<?php if ($detalhe_pedido->CurrentAction <> "F") { ?>
-<span id="el$rowindex$_detalhe_pedido_id_desconto" class="form-group detalhe_pedido_id_desconto">
-<select data-table="detalhe_pedido" data-field="x_id_desconto" data-value-separator="<?php echo $detalhe_pedido->id_desconto->DisplayValueSeparatorAttribute() ?>" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto"<?php echo $detalhe_pedido->id_desconto->EditAttributes() ?>>
-<?php echo $detalhe_pedido->id_desconto->SelectOptionListHtml("x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto") ?>
-</select>
-<button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $detalhe_pedido->id_desconto->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto',url:'descontoaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $detalhe_pedido->id_desconto->FldCaption() ?></span></button>
-</span>
-<?php } else { ?>
-<span id="el$rowindex$_detalhe_pedido_id_desconto" class="form-group detalhe_pedido_id_desconto">
-<span<?php echo $detalhe_pedido->id_desconto->ViewAttributes() ?>>
-<p class="form-control-static"><?php echo $detalhe_pedido->id_desconto->ViewValue ?></p></span>
-</span>
-<input type="hidden" data-table="detalhe_pedido" data-field="x_id_desconto" name="x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto" id="x<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto" value="<?php echo ew_HtmlEncode($detalhe_pedido->id_desconto->FormValue) ?>">
-<?php } ?>
-<input type="hidden" data-table="detalhe_pedido" data-field="x_id_desconto" name="o<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto" id="o<?php echo $detalhe_pedido_grid->RowIndex ?>_id_desconto" value="<?php echo ew_HtmlEncode($detalhe_pedido->id_desconto->OldValue) ?>">
+<input type="hidden" data-table="detalhe_pedido" data-field="x_subtotal" name="o<?php echo $detalhe_pedido_grid->RowIndex ?>_subtotal" id="o<?php echo $detalhe_pedido_grid->RowIndex ?>_subtotal" value="<?php echo ew_HtmlEncode($detalhe_pedido->subtotal->OldValue) ?>">
 </td>
 	<?php } ?>
 <?php

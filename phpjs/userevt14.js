@@ -1,1 +1,1 @@
-(function(n){})(jQuery);
+(function(e){e("[data-table=detalhe_pedido][data-field=x_desconto]").on({"change keyup":function(a){var t=e(this).fields();var d=t["preco"].toNumber()*t["quantidade"].toNumber();var d=d-d*(t["desconto"].toNumber()/100);t["subtotal"].value(d)}});e("[data-table=detalhe_pedido][data-field=x_quantidade]").on({"change keyup":function(a){var t=e(this).fields();var d=t["preco"].toNumber()*t["quantidade"].toNumber();var d=d-d*(t["desconto"].toNumber()/100);t["subtotal"].value(d)}})})(jQuery);

@@ -10,9 +10,10 @@ class cdetalhe_pedido extends cTable {
 	var $id_detalhe;
 	var $numero_pedido;
 	var $id_produto;
+	var $desconto;
+	var $preco;
 	var $quantidade;
-	var $custo;
-	var $id_desconto;
+	var $subtotal;
 
 	//
 	// Table class constructor
@@ -66,25 +67,33 @@ class cdetalhe_pedido extends cTable {
 		$this->id_produto->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['id_produto'] = &$this->id_produto;
 
+		// desconto
+		$this->desconto = new cField('detalhe_pedido', 'detalhe_pedido', 'x_desconto', 'desconto', '`desconto`', '`desconto`', 3, -1, FALSE, '`desconto`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'SELECT');
+		$this->desconto->Sortable = TRUE; // Allow sort
+		$this->desconto->UsePleaseSelect = TRUE; // Use PleaseSelect by default
+		$this->desconto->PleaseSelectText = $Language->Phrase("PleaseSelect"); // PleaseSelect text
+		$this->desconto->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
+		$this->fields['desconto'] = &$this->desconto;
+
+		// preco
+		$this->preco = new cField('detalhe_pedido', 'detalhe_pedido', 'x_preco', 'preco', '`preco`', '`preco`', 4, -1, FALSE, '`preco`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'SELECT');
+		$this->preco->Sortable = TRUE; // Allow sort
+		$this->preco->UsePleaseSelect = TRUE; // Use PleaseSelect by default
+		$this->preco->PleaseSelectText = $Language->Phrase("PleaseSelect"); // PleaseSelect text
+		$this->preco->FldDefaultErrMsg = $Language->Phrase("IncorrectFloat");
+		$this->fields['preco'] = &$this->preco;
+
 		// quantidade
 		$this->quantidade = new cField('detalhe_pedido', 'detalhe_pedido', 'x_quantidade', 'quantidade', '`quantidade`', '`quantidade`', 3, -1, FALSE, '`quantidade`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
 		$this->quantidade->Sortable = TRUE; // Allow sort
 		$this->quantidade->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['quantidade'] = &$this->quantidade;
 
-		// custo
-		$this->custo = new cField('detalhe_pedido', 'detalhe_pedido', 'x_custo', 'custo', '`custo`', '`custo`', 4, -1, FALSE, '`custo`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
-		$this->custo->Sortable = TRUE; // Allow sort
-		$this->custo->FldDefaultErrMsg = $Language->Phrase("IncorrectFloat");
-		$this->fields['custo'] = &$this->custo;
-
-		// id_desconto
-		$this->id_desconto = new cField('detalhe_pedido', 'detalhe_pedido', 'x_id_desconto', 'id_desconto', '`id_desconto`', '`id_desconto`', 3, -1, FALSE, '`id_desconto`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'SELECT');
-		$this->id_desconto->Sortable = TRUE; // Allow sort
-		$this->id_desconto->UsePleaseSelect = TRUE; // Use PleaseSelect by default
-		$this->id_desconto->PleaseSelectText = $Language->Phrase("PleaseSelect"); // PleaseSelect text
-		$this->id_desconto->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
-		$this->fields['id_desconto'] = &$this->id_desconto;
+		// subtotal
+		$this->subtotal = new cField('detalhe_pedido', 'detalhe_pedido', 'x_subtotal', 'subtotal', '`subtotal`', '`subtotal`', 4, -1, FALSE, '`subtotal`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->subtotal->Sortable = TRUE; // Allow sort
+		$this->subtotal->FldDefaultErrMsg = $Language->Phrase("IncorrectFloat");
+		$this->fields['subtotal'] = &$this->subtotal;
 	}
 
 	// Field Visibility
@@ -666,9 +675,10 @@ class cdetalhe_pedido extends cTable {
 		$this->id_detalhe->setDbValue($rs->fields('id_detalhe'));
 		$this->numero_pedido->setDbValue($rs->fields('numero_pedido'));
 		$this->id_produto->setDbValue($rs->fields('id_produto'));
+		$this->desconto->setDbValue($rs->fields('desconto'));
+		$this->preco->setDbValue($rs->fields('preco'));
 		$this->quantidade->setDbValue($rs->fields('quantidade'));
-		$this->custo->setDbValue($rs->fields('custo'));
-		$this->id_desconto->setDbValue($rs->fields('id_desconto'));
+		$this->subtotal->setDbValue($rs->fields('subtotal'));
 	}
 
 	// Render list row values
@@ -682,9 +692,10 @@ class cdetalhe_pedido extends cTable {
 		// id_detalhe
 		// numero_pedido
 		// id_produto
+		// desconto
+		// preco
 		// quantidade
-		// custo
-		// id_desconto
+		// subtotal
 		// id_detalhe
 
 		$this->id_detalhe->ViewValue = $this->id_detalhe->CurrentValue;
@@ -717,36 +728,59 @@ class cdetalhe_pedido extends cTable {
 		}
 		$this->id_produto->ViewCustomAttributes = "";
 
-		// quantidade
-		$this->quantidade->ViewValue = $this->quantidade->CurrentValue;
-		$this->quantidade->ViewCustomAttributes = "";
-
-		// custo
-		$this->custo->ViewValue = $this->custo->CurrentValue;
-		$this->custo->ViewCustomAttributes = "";
-
-		// id_desconto
-		if (strval($this->id_desconto->CurrentValue) <> "") {
-			$sFilterWrk = "`id_desconto`" . ew_SearchString("=", $this->id_desconto->CurrentValue, EW_DATATYPE_NUMBER, "");
-		$sSqlWrk = "SELECT `id_desconto`, `porcentagem` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `desconto`";
+		// desconto
+		if (strval($this->desconto->CurrentValue) <> "") {
+			$sFilterWrk = "`porcentagem`" . ew_SearchString("=", $this->desconto->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `porcentagem`, `porcentagem` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `desconto`";
 		$sWhereWrk = "";
-		$this->id_desconto->LookupFilters = array();
+		$this->desconto->LookupFilters = array();
 		ew_AddFilter($sWhereWrk, $sFilterWrk);
-		$this->Lookup_Selecting($this->id_desconto, $sWhereWrk); // Call Lookup Selecting
+		$this->Lookup_Selecting($this->desconto, $sWhereWrk); // Call Lookup Selecting
 		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
 			$rswrk = Conn()->Execute($sSqlWrk);
 			if ($rswrk && !$rswrk->EOF) { // Lookup values found
 				$arwrk = array();
 				$arwrk[1] = $rswrk->fields('DispFld');
-				$this->id_desconto->ViewValue = $this->id_desconto->DisplayValue($arwrk);
+				$this->desconto->ViewValue = $this->desconto->DisplayValue($arwrk);
 				$rswrk->Close();
 			} else {
-				$this->id_desconto->ViewValue = $this->id_desconto->CurrentValue;
+				$this->desconto->ViewValue = $this->desconto->CurrentValue;
 			}
 		} else {
-			$this->id_desconto->ViewValue = NULL;
+			$this->desconto->ViewValue = NULL;
 		}
-		$this->id_desconto->ViewCustomAttributes = "";
+		$this->desconto->ViewCustomAttributes = "";
+
+		// preco
+		if (strval($this->preco->CurrentValue) <> "") {
+			$sFilterWrk = "`preco_produto`" . ew_SearchString("=", $this->preco->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `preco_produto`, `preco_produto` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `produtos`";
+		$sWhereWrk = "";
+		$this->preco->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->preco, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = ew_FormatCurrency($rswrk->fields('DispFld'), 2, -1, -1, -1);
+				$this->preco->ViewValue = $this->preco->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->preco->ViewValue = $this->preco->CurrentValue;
+			}
+		} else {
+			$this->preco->ViewValue = NULL;
+		}
+		$this->preco->ViewCustomAttributes = "";
+
+		// quantidade
+		$this->quantidade->ViewValue = $this->quantidade->CurrentValue;
+		$this->quantidade->ViewCustomAttributes = "";
+
+		// subtotal
+		$this->subtotal->ViewValue = $this->subtotal->CurrentValue;
+		$this->subtotal->ViewCustomAttributes = "";
 
 		// id_detalhe
 		$this->id_detalhe->LinkCustomAttributes = "";
@@ -763,20 +797,25 @@ class cdetalhe_pedido extends cTable {
 		$this->id_produto->HrefValue = "";
 		$this->id_produto->TooltipValue = "";
 
+		// desconto
+		$this->desconto->LinkCustomAttributes = "";
+		$this->desconto->HrefValue = "";
+		$this->desconto->TooltipValue = "";
+
+		// preco
+		$this->preco->LinkCustomAttributes = "";
+		$this->preco->HrefValue = "";
+		$this->preco->TooltipValue = "";
+
 		// quantidade
 		$this->quantidade->LinkCustomAttributes = "";
 		$this->quantidade->HrefValue = "";
 		$this->quantidade->TooltipValue = "";
 
-		// custo
-		$this->custo->LinkCustomAttributes = "";
-		$this->custo->HrefValue = "";
-		$this->custo->TooltipValue = "";
-
-		// id_desconto
-		$this->id_desconto->LinkCustomAttributes = "";
-		$this->id_desconto->HrefValue = "";
-		$this->id_desconto->TooltipValue = "";
+		// subtotal
+		$this->subtotal->LinkCustomAttributes = "";
+		$this->subtotal->HrefValue = "";
+		$this->subtotal->TooltipValue = "";
 
 		// Call Row Rendered event
 		$this->Row_Rendered();
@@ -814,22 +853,26 @@ class cdetalhe_pedido extends cTable {
 		$this->id_produto->EditAttrs["class"] = "form-control";
 		$this->id_produto->EditCustomAttributes = "";
 
+		// desconto
+		$this->desconto->EditAttrs["class"] = "form-control";
+		$this->desconto->EditCustomAttributes = "";
+
+		// preco
+		$this->preco->EditAttrs["class"] = "form-control";
+		$this->preco->EditCustomAttributes = "";
+
 		// quantidade
 		$this->quantidade->EditAttrs["class"] = "form-control";
 		$this->quantidade->EditCustomAttributes = "";
 		$this->quantidade->EditValue = $this->quantidade->CurrentValue;
 		$this->quantidade->PlaceHolder = ew_RemoveHtml($this->quantidade->FldCaption());
 
-		// custo
-		$this->custo->EditAttrs["class"] = "form-control";
-		$this->custo->EditCustomAttributes = "";
-		$this->custo->EditValue = $this->custo->CurrentValue;
-		$this->custo->PlaceHolder = ew_RemoveHtml($this->custo->FldCaption());
-		if (strval($this->custo->EditValue) <> "" && is_numeric($this->custo->EditValue)) $this->custo->EditValue = ew_FormatNumber($this->custo->EditValue, -2, -1, -2, 0);
-
-		// id_desconto
-		$this->id_desconto->EditAttrs["class"] = "form-control";
-		$this->id_desconto->EditCustomAttributes = "";
+		// subtotal
+		$this->subtotal->EditAttrs["class"] = "form-control";
+		$this->subtotal->EditCustomAttributes = "";
+		$this->subtotal->EditValue = $this->subtotal->CurrentValue;
+		$this->subtotal->PlaceHolder = ew_RemoveHtml($this->subtotal->FldCaption());
+		if (strval($this->subtotal->EditValue) <> "" && is_numeric($this->subtotal->EditValue)) $this->subtotal->EditValue = ew_FormatNumber($this->subtotal->EditValue, -2, -1, -2, 0);
 
 		// Call Row Rendered event
 		$this->Row_Rendered();
@@ -837,25 +880,22 @@ class cdetalhe_pedido extends cTable {
 
 	// Aggregate list row values
 	function AggregateListRowValues() {
-			$this->quantidade->Count++; // Increment count
 			if (is_numeric($this->quantidade->CurrentValue))
 				$this->quantidade->Total += $this->quantidade->CurrentValue; // Accumulate total
-			if (is_numeric($this->custo->CurrentValue))
-				$this->custo->Total += $this->custo->CurrentValue; // Accumulate total
+			if (is_numeric($this->subtotal->CurrentValue))
+				$this->subtotal->Total += $this->subtotal->CurrentValue; // Accumulate total
 	}
 
 	// Aggregate list row (for rendering)
 	function AggregateListRow() {
-			if ($this->quantidade->Count > 0) {
-				$this->quantidade->CurrentValue = $this->quantidade->Total / $this->quantidade->Count;
-			}
+			$this->quantidade->CurrentValue = $this->quantidade->Total;
 			$this->quantidade->ViewValue = $this->quantidade->CurrentValue;
 			$this->quantidade->ViewCustomAttributes = "";
 			$this->quantidade->HrefValue = ""; // Clear href value
-			$this->custo->CurrentValue = $this->custo->Total;
-			$this->custo->ViewValue = $this->custo->CurrentValue;
-			$this->custo->ViewCustomAttributes = "";
-			$this->custo->HrefValue = ""; // Clear href value
+			$this->subtotal->CurrentValue = $this->subtotal->Total;
+			$this->subtotal->ViewValue = $this->subtotal->CurrentValue;
+			$this->subtotal->ViewCustomAttributes = "";
+			$this->subtotal->HrefValue = ""; // Clear href value
 
 		// Call Row Rendered event
 		$this->Row_Rendered();
@@ -875,16 +915,18 @@ class cdetalhe_pedido extends cTable {
 				if ($ExportPageType == "view") {
 					if ($this->numero_pedido->Exportable) $Doc->ExportCaption($this->numero_pedido);
 					if ($this->id_produto->Exportable) $Doc->ExportCaption($this->id_produto);
+					if ($this->desconto->Exportable) $Doc->ExportCaption($this->desconto);
+					if ($this->preco->Exportable) $Doc->ExportCaption($this->preco);
 					if ($this->quantidade->Exportable) $Doc->ExportCaption($this->quantidade);
-					if ($this->custo->Exportable) $Doc->ExportCaption($this->custo);
-					if ($this->id_desconto->Exportable) $Doc->ExportCaption($this->id_desconto);
+					if ($this->subtotal->Exportable) $Doc->ExportCaption($this->subtotal);
 				} else {
 					if ($this->id_detalhe->Exportable) $Doc->ExportCaption($this->id_detalhe);
 					if ($this->numero_pedido->Exportable) $Doc->ExportCaption($this->numero_pedido);
 					if ($this->id_produto->Exportable) $Doc->ExportCaption($this->id_produto);
+					if ($this->desconto->Exportable) $Doc->ExportCaption($this->desconto);
+					if ($this->preco->Exportable) $Doc->ExportCaption($this->preco);
 					if ($this->quantidade->Exportable) $Doc->ExportCaption($this->quantidade);
-					if ($this->custo->Exportable) $Doc->ExportCaption($this->custo);
-					if ($this->id_desconto->Exportable) $Doc->ExportCaption($this->id_desconto);
+					if ($this->subtotal->Exportable) $Doc->ExportCaption($this->subtotal);
 				}
 				$Doc->EndExportRow();
 			}
@@ -919,16 +961,18 @@ class cdetalhe_pedido extends cTable {
 					if ($ExportPageType == "view") {
 						if ($this->numero_pedido->Exportable) $Doc->ExportField($this->numero_pedido);
 						if ($this->id_produto->Exportable) $Doc->ExportField($this->id_produto);
+						if ($this->desconto->Exportable) $Doc->ExportField($this->desconto);
+						if ($this->preco->Exportable) $Doc->ExportField($this->preco);
 						if ($this->quantidade->Exportable) $Doc->ExportField($this->quantidade);
-						if ($this->custo->Exportable) $Doc->ExportField($this->custo);
-						if ($this->id_desconto->Exportable) $Doc->ExportField($this->id_desconto);
+						if ($this->subtotal->Exportable) $Doc->ExportField($this->subtotal);
 					} else {
 						if ($this->id_detalhe->Exportable) $Doc->ExportField($this->id_detalhe);
 						if ($this->numero_pedido->Exportable) $Doc->ExportField($this->numero_pedido);
 						if ($this->id_produto->Exportable) $Doc->ExportField($this->id_produto);
+						if ($this->desconto->Exportable) $Doc->ExportField($this->desconto);
+						if ($this->preco->Exportable) $Doc->ExportField($this->preco);
 						if ($this->quantidade->Exportable) $Doc->ExportField($this->quantidade);
-						if ($this->custo->Exportable) $Doc->ExportField($this->custo);
-						if ($this->id_desconto->Exportable) $Doc->ExportField($this->id_desconto);
+						if ($this->subtotal->Exportable) $Doc->ExportField($this->subtotal);
 					}
 					$Doc->EndExportRow($RowCnt);
 				}
@@ -950,9 +994,10 @@ class cdetalhe_pedido extends cTable {
 				if ($this->id_detalhe->Exportable) $Doc->ExportAggregate($this->id_detalhe, '');
 				if ($this->numero_pedido->Exportable) $Doc->ExportAggregate($this->numero_pedido, '');
 				if ($this->id_produto->Exportable) $Doc->ExportAggregate($this->id_produto, '');
-				if ($this->quantidade->Exportable) $Doc->ExportAggregate($this->quantidade, 'AVERAGE');
-				if ($this->custo->Exportable) $Doc->ExportAggregate($this->custo, 'TOTAL');
-				if ($this->id_desconto->Exportable) $Doc->ExportAggregate($this->id_desconto, '');
+				if ($this->desconto->Exportable) $Doc->ExportAggregate($this->desconto, '');
+				if ($this->preco->Exportable) $Doc->ExportAggregate($this->preco, '');
+				if ($this->quantidade->Exportable) $Doc->ExportAggregate($this->quantidade, 'TOTAL');
+				if ($this->subtotal->Exportable) $Doc->ExportAggregate($this->subtotal, 'TOTAL');
 				$Doc->EndExportRow();
 			}
 		}

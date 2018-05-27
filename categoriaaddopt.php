@@ -13,12 +13,12 @@ ob_start(); // Turn on output buffering
 // Page class
 //
 
-$categoria_delete = NULL; // Initialize page object first
+$categoria_addopt = NULL; // Initialize page object first
 
-class ccategoria_delete extends ccategoria {
+class ccategoria_addopt extends ccategoria {
 
 	// Page ID
-	var $PageID = 'delete';
+	var $PageID = 'addopt';
 
 	// Project ID
 	var $ProjectID = '{A4E38B50-67B8-459F-992C-3B232135A6E3}';
@@ -27,7 +27,7 @@ class ccategoria_delete extends ccategoria {
 	var $TableName = 'categoria';
 
 	// Page object name
-	var $PageObjName = 'categoria_delete';
+	var $PageObjName = 'categoria_addopt';
 
 	// Page headings
 	var $Heading = '';
@@ -256,7 +256,7 @@ class ccategoria_delete extends ccategoria {
 
 		// Page ID
 		if (!defined("EW_PAGE_ID"))
-			define("EW_PAGE_ID", 'delete', TRUE);
+			define("EW_PAGE_ID", 'addopt', TRUE);
 
 		// Table name (for backward compatibility)
 		if (!defined("EW_TABLE_NAME"))
@@ -279,10 +279,10 @@ class ccategoria_delete extends ccategoria {
 	//
 	function Page_Init() {
 		global $gsExport, $gsCustomExport, $gsExportFile, $UserProfile, $Language, $Security, $objForm;
+
+		// Create form object
+		$objForm = new cFormObj();
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
-		$this->id_categoria->SetVisibility();
-		if ($this->IsAdd() || $this->IsCopy() || $this->IsGridAdd())
-			$this->id_categoria->Visible = FALSE;
 		$this->id_pai->SetVisibility();
 		$this->categoria->SetVisibility();
 
@@ -297,6 +297,20 @@ class ccategoria_delete extends ccategoria {
 			echo $Language->Phrase("InvalidPostRequest");
 			$this->Page_Terminate();
 			exit();
+		}
+
+		// Process auto fill
+		if (@$_POST["ajax"] == "autofill") {
+			$results = $this->GetAutoFill(@$_POST["name"], @$_POST["q"]);
+			if ($results) {
+
+				// Clean output buffer
+				if (!EW_DEBUG_ENABLED && ob_get_length())
+					ob_end_clean();
+				echo $results;
+				$this->Page_Terminate();
+				exit();
+			}
 		}
 
 		// Create Token
@@ -346,89 +360,96 @@ class ccategoria_delete extends ccategoria {
 		}
 		exit();
 	}
-	var $DbMasterFilter = "";
-	var $DbDetailFilter = "";
-	var $StartRec;
-	var $TotalRecs = 0;
-	var $RecCnt;
-	var $RecKeys = array();
-	var $Recordset;
-	var $StartRowCnt = 1;
-	var $RowCnt = 0;
 
 	//
 	// Page main
 	//
 	function Page_Main() {
-		global $Language;
+		global $objForm, $Language, $gsFormError;
+		set_error_handler("ew_ErrorHandler");
 
 		// Set up Breadcrumb
-		$this->SetupBreadcrumb();
+		//$this->SetupBreadcrumb(); // Not used
 
-		// Load key parameters
-		$this->RecKeys = $this->GetRecordKeys(); // Load record keys
-		$sFilter = $this->GetKeyFilter();
-		if ($sFilter == "")
-			$this->Page_Terminate("categorialist.php"); // Prevent SQL injection, return to list
+		$this->LoadRowValues(); // Load default values
 
-		// Set up filter (SQL WHHERE clause) and get return SQL
-		// SQL constructor in categoria class, categoriainfo.php
+		// Process form if post back
+		if ($objForm->GetValue("a_addopt") <> "") {
+			$this->CurrentAction = $objForm->GetValue("a_addopt"); // Get form action
+			$this->LoadFormValues(); // Load form values
 
-		$this->CurrentFilter = $sFilter;
-
-		// Get action
-		if (@$_POST["a_delete"] <> "") {
-			$this->CurrentAction = $_POST["a_delete"];
-		} elseif (@$_GET["a_delete"] == "1") {
-			$this->CurrentAction = "D"; // Delete record directly
-		} else {
-			$this->CurrentAction = "I"; // Display record
-		}
-		if ($this->CurrentAction == "D") {
-			$this->SendEmail = TRUE; // Send email on delete success
-			if ($this->DeleteRows()) { // Delete rows
-				if ($this->getSuccessMessage() == "")
-					$this->setSuccessMessage($Language->Phrase("DeleteSuccess")); // Set up success message
-				$this->Page_Terminate($this->getReturnUrl()); // Return to caller
-			} else { // Delete failed
-				$this->CurrentAction = "I"; // Display record
+			// Validate form
+			if (!$this->ValidateForm()) {
+				$this->CurrentAction = "I"; // Form error, reset action
+				$this->setFailureMessage($gsFormError);
 			}
+		} else { // Not post back
+			$this->CurrentAction = "I"; // Display blank record
 		}
-		if ($this->CurrentAction == "I") { // Load records for display
-			if ($this->Recordset = $this->LoadRecordset())
-				$this->TotalRecs = $this->Recordset->RecordCount(); // Get record count
-			if ($this->TotalRecs <= 0) { // No record found, exit
-				if ($this->Recordset)
-					$this->Recordset->Close();
-				$this->Page_Terminate("categorialist.php"); // Return to list
-			}
+
+		// Perform action based on action code
+		switch ($this->CurrentAction) {
+			case "I": // Blank record, no action required
+				break;
+			case "A": // Add new record
+				$this->SendEmail = TRUE; // Send email on add success
+				if ($this->AddRow()) { // Add successful
+					$row = array();
+					$row["x_id_categoria"] = $this->id_categoria->DbValue;
+					$row["x_id_pai"] = $this->id_pai->DbValue;
+					$row["x_categoria"] = ew_ConvertToUtf8($this->categoria->DbValue);
+					if (!EW_DEBUG_ENABLED && ob_get_length())
+						ob_end_clean();
+					ew_Header(FALSE, "utf-8", TRUE);
+					echo ew_ArrayToJson(array($row));
+				} else {
+					$this->ShowMessage();
+				}
+				$this->Page_Terminate();
+				exit();
+		}
+
+		// Render row
+		$this->RowType = EW_ROWTYPE_ADD; // Render add type
+		$this->ResetAttrs();
+		$this->RenderRow();
+	}
+
+	// Get upload files
+	function GetUploadFiles() {
+		global $objForm, $Language;
+
+		// Get upload data
+	}
+
+	// Load default values
+	function LoadDefaultValues() {
+		$this->id_categoria->CurrentValue = NULL;
+		$this->id_categoria->OldValue = $this->id_categoria->CurrentValue;
+		$this->id_pai->CurrentValue = NULL;
+		$this->id_pai->OldValue = $this->id_pai->CurrentValue;
+		$this->categoria->CurrentValue = NULL;
+		$this->categoria->OldValue = $this->categoria->CurrentValue;
+	}
+
+	// Load form values
+	function LoadFormValues() {
+
+		// Load from form
+		global $objForm;
+		if (!$this->id_pai->FldIsDetailKey) {
+			$this->id_pai->setFormValue(ew_ConvertFromUtf8($objForm->GetValue("x_id_pai")));
+		}
+		if (!$this->categoria->FldIsDetailKey) {
+			$this->categoria->setFormValue(ew_ConvertFromUtf8($objForm->GetValue("x_categoria")));
 		}
 	}
 
-	// Load recordset
-	function LoadRecordset($offset = -1, $rowcnt = -1) {
-
-		// Load List page SQL
-		$sSql = $this->ListSQL();
-		$conn = &$this->Connection();
-
-		// Load recordset
-		$dbtype = ew_GetConnectionType($this->DBID);
-		if ($this->UseSelectLimit) {
-			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
-			if ($dbtype == "MSSQL") {
-				$rs = $conn->SelectLimit($sSql, $rowcnt, $offset, array("_hasOrderBy" => trim($this->getOrderBy()) || trim($this->getSessionOrderBy())));
-			} else {
-				$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
-			}
-			$conn->raiseErrorFn = '';
-		} else {
-			$rs = ew_LoadRecordset($sSql, $conn);
-		}
-
-		// Call Recordset Selected event
-		$this->Recordset_Selected($rs);
-		return $rs;
+	// Restore form values
+	function RestoreFormValues() {
+		global $objForm;
+		$this->id_pai->CurrentValue = ew_ConvertToUtf8($this->id_pai->FormValue);
+		$this->categoria->CurrentValue = ew_ConvertToUtf8($this->categoria->FormValue);
 	}
 
 	// Load row based on key values
@@ -471,10 +492,11 @@ class ccategoria_delete extends ccategoria {
 
 	// Return a row with default values
 	function NewRow() {
+		$this->LoadDefaultValues();
 		$row = array();
-		$row['id_categoria'] = NULL;
-		$row['id_pai'] = NULL;
-		$row['categoria'] = NULL;
+		$row['id_categoria'] = $this->id_categoria->CurrentValue;
+		$row['id_pai'] = $this->id_pai->CurrentValue;
+		$row['categoria'] = $this->categoria->CurrentValue;
 		return $row;
 	}
 
@@ -535,11 +557,6 @@ class ccategoria_delete extends ccategoria {
 		$this->categoria->ViewValue = $this->categoria->CurrentValue;
 		$this->categoria->ViewCustomAttributes = "";
 
-			// id_categoria
-			$this->id_categoria->LinkCustomAttributes = "";
-			$this->id_categoria->HrefValue = "";
-			$this->id_categoria->TooltipValue = "";
-
 			// id_pai
 			$this->id_pai->LinkCustomAttributes = "";
 			$this->id_pai->HrefValue = "";
@@ -549,64 +566,104 @@ class ccategoria_delete extends ccategoria {
 			$this->categoria->LinkCustomAttributes = "";
 			$this->categoria->HrefValue = "";
 			$this->categoria->TooltipValue = "";
+		} elseif ($this->RowType == EW_ROWTYPE_ADD) { // Add row
+
+			// id_pai
+			$this->id_pai->EditAttrs["class"] = "form-control";
+			$this->id_pai->EditCustomAttributes = "";
+			if (trim(strval($this->id_pai->CurrentValue)) == "") {
+				$sFilterWrk = "0=1";
+			} else {
+				$sFilterWrk = "`id_categoria`" . ew_SearchString("=", $this->id_pai->CurrentValue, EW_DATATYPE_NUMBER, "");
+			}
+			$sSqlWrk = "SELECT `id_categoria`, `categoria` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `categoria`";
+			$sWhereWrk = "";
+			$this->id_pai->LookupFilters = array();
+			ew_AddFilter($sWhereWrk, $sFilterWrk);
+			$this->Lookup_Selecting($this->id_pai, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
+			if ($rswrk) $rswrk->Close();
+			$this->id_pai->EditValue = $arwrk;
+
+			// categoria
+			$this->categoria->EditAttrs["class"] = "form-control";
+			$this->categoria->EditCustomAttributes = "";
+			$this->categoria->EditValue = ew_HtmlEncode($this->categoria->CurrentValue);
+			$this->categoria->PlaceHolder = ew_RemoveHtml($this->categoria->FldCaption());
+
+			// Add refer script
+			// id_pai
+
+			$this->id_pai->LinkCustomAttributes = "";
+			$this->id_pai->HrefValue = "";
+
+			// categoria
+			$this->categoria->LinkCustomAttributes = "";
+			$this->categoria->HrefValue = "";
 		}
+		if ($this->RowType == EW_ROWTYPE_ADD || $this->RowType == EW_ROWTYPE_EDIT || $this->RowType == EW_ROWTYPE_SEARCH) // Add/Edit/Search row
+			$this->SetupFieldTitles();
 
 		// Call Row Rendered event
 		if ($this->RowType <> EW_ROWTYPE_AGGREGATEINIT)
 			$this->Row_Rendered();
 	}
 
-	//
-	// Delete records based on current filter
-	//
-	function DeleteRows() {
+	// Validate form
+	function ValidateForm() {
+		global $Language, $gsFormError;
+
+		// Initialize form error message
+		$gsFormError = "";
+
+		// Check if validation required
+		if (!EW_SERVER_VALIDATE)
+			return ($gsFormError == "");
+		if (!$this->categoria->FldIsDetailKey && !is_null($this->categoria->FormValue) && $this->categoria->FormValue == "") {
+			ew_AddMessage($gsFormError, str_replace("%s", $this->categoria->FldCaption(), $this->categoria->ReqErrMsg));
+		}
+
+		// Return validate result
+		$ValidateForm = ($gsFormError == "");
+
+		// Call Form_CustomValidate event
+		$sFormCustomError = "";
+		$ValidateForm = $ValidateForm && $this->Form_CustomValidate($sFormCustomError);
+		if ($sFormCustomError <> "") {
+			ew_AddMessage($gsFormError, $sFormCustomError);
+		}
+		return $ValidateForm;
+	}
+
+	// Add record
+	function AddRow($rsold = NULL) {
 		global $Language, $Security;
-		$DeleteRows = TRUE;
-		$sSql = $this->SQL();
 		$conn = &$this->Connection();
-		$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
-		$rs = $conn->Execute($sSql);
-		$conn->raiseErrorFn = '';
-		if ($rs === FALSE) {
-			return FALSE;
-		} elseif ($rs->EOF) {
-			$this->setFailureMessage($Language->Phrase("NoRecord")); // No record found
-			$rs->Close();
-			return FALSE;
+
+		// Load db values from rsold
+		$this->LoadDbValues($rsold);
+		if ($rsold) {
 		}
-		$rows = ($rs) ? $rs->GetRows() : array();
-		$conn->BeginTrans();
+		$rsnew = array();
 
-		// Clone old rows
-		$rsold = $rows;
-		if ($rs)
-			$rs->Close();
+		// id_pai
+		$this->id_pai->SetDbValueDef($rsnew, $this->id_pai->CurrentValue, NULL, FALSE);
 
-		// Call row deleting event
-		if ($DeleteRows) {
-			foreach ($rsold as $row) {
-				$DeleteRows = $this->Row_Deleting($row);
-				if (!$DeleteRows) break;
+		// categoria
+		$this->categoria->SetDbValueDef($rsnew, $this->categoria->CurrentValue, "", FALSE);
+
+		// Call Row Inserting event
+		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
+		$bInsertRow = $this->Row_Inserting($rs, $rsnew);
+		if ($bInsertRow) {
+			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+			$AddRow = $this->Insert($rsnew);
+			$conn->raiseErrorFn = '';
+			if ($AddRow) {
 			}
-		}
-		if ($DeleteRows) {
-			$sKey = "";
-			foreach ($rsold as $row) {
-				$sThisKey = "";
-				if ($sThisKey <> "") $sThisKey .= $GLOBALS["EW_COMPOSITE_KEY_SEPARATOR"];
-				$sThisKey .= $row['id_categoria'];
-				$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
-				$DeleteRows = $this->Delete($row); // Delete
-				$conn->raiseErrorFn = '';
-				if ($DeleteRows === FALSE)
-					break;
-				if ($sKey <> "") $sKey .= ", ";
-				$sKey .= $sThisKey;
-			}
-		}
-		if (!$DeleteRows) {
-
-			// Set up error message
+		} else {
 			if ($this->getSuccessMessage() <> "" || $this->getFailureMessage() <> "") {
 
 				// Use the message, do nothing
@@ -614,22 +671,17 @@ class ccategoria_delete extends ccategoria {
 				$this->setFailureMessage($this->CancelMessage);
 				$this->CancelMessage = "";
 			} else {
-				$this->setFailureMessage($Language->Phrase("DeleteCancelled"));
+				$this->setFailureMessage($Language->Phrase("InsertCancelled"));
 			}
+			$AddRow = FALSE;
 		}
-		if ($DeleteRows) {
-			$conn->CommitTrans(); // Commit the changes
-		} else {
-			$conn->RollbackTrans(); // Rollback changes
-		}
+		if ($AddRow) {
 
-		// Call Row Deleted event
-		if ($DeleteRows) {
-			foreach ($rsold as $row) {
-				$this->Row_Deleted($row);
-			}
+			// Call Row Inserted event
+			$rs = ($rsold == NULL) ? NULL : $rsold->fields;
+			$this->Row_Inserted($rs, $rsnew);
 		}
-		return $DeleteRows;
+		return $AddRow;
 	}
 
 	// Set up Breadcrumb
@@ -638,8 +690,8 @@ class ccategoria_delete extends ccategoria {
 		$Breadcrumb = new cBreadcrumb();
 		$url = substr(ew_CurrentUrl(), strrpos(ew_CurrentUrl(), "/")+1);
 		$Breadcrumb->Add("list", $this->TableVar, $this->AddMasterUrl("categorialist.php"), "", $this->TableVar, TRUE);
-		$PageId = "delete";
-		$Breadcrumb->Add("delete", $PageId, $url);
+		$PageId = "addopt";
+		$Breadcrumb->Add("addopt", $PageId, $url);
 	}
 
 	// Setup lookup filters of a field
@@ -647,6 +699,18 @@ class ccategoria_delete extends ccategoria {
 		global $gsLanguage;
 		$pageId = $pageId ?: $this->PageID;
 		switch ($fld->FldVar) {
+		case "x_id_pai":
+			$sSqlWrk = "";
+			$sSqlWrk = "SELECT `id_categoria` AS `LinkFld`, `categoria` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `categoria`";
+			$sWhereWrk = "";
+			$fld->LookupFilters = array();
+			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`id_categoria` IN ({filter_value})', "t0" => "3", "fn0" => "");
+			$sSqlWrk = "";
+			$this->Lookup_Selecting($this->id_pai, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			if ($sSqlWrk <> "")
+				$fld->LookupFilters["s"] .= $sSqlWrk;
+			break;
 		}
 	}
 
@@ -717,35 +781,68 @@ class ccategoria_delete extends ccategoria {
 		//$footer = "your footer";
 
 	}
+
+	// Custom validate event
+	// Form Custom Validate event
+	function Form_CustomValidate(&$CustomError) {
+
+		// Return error message in CustomError
+		return TRUE;
+	}
 }
 ?>
 <?php ew_Header(FALSE) ?>
 <?php
 
 // Create page object
-if (!isset($categoria_delete)) $categoria_delete = new ccategoria_delete();
+if (!isset($categoria_addopt)) $categoria_addopt = new ccategoria_addopt();
 
 // Page init
-$categoria_delete->Page_Init();
+$categoria_addopt->Page_Init();
 
 // Page main
-$categoria_delete->Page_Main();
+$categoria_addopt->Page_Main();
 
 // Global Page Rendering event (in userfn*.php)
 Page_Rendering();
 
 // Page Rendering event
-$categoria_delete->Page_Render();
+$categoria_addopt->Page_Render();
 ?>
-<?php include_once "header.php" ?>
 <script type="text/javascript">
 
 // Form object
-var CurrentPageID = EW_PAGE_ID = "delete";
-var CurrentForm = fcategoriadelete = new ew_Form("fcategoriadelete", "delete");
+var CurrentPageID = EW_PAGE_ID = "addopt";
+var CurrentForm = fcategoriaaddopt = new ew_Form("fcategoriaaddopt", "addopt");
+
+// Validate form
+fcategoriaaddopt.Validate = function() {
+	if (!this.ValidateRequired)
+		return true; // Ignore validation
+	var $ = jQuery, fobj = this.GetForm(), $fobj = $(fobj);
+	if ($fobj.find("#a_confirm").val() == "F")
+		return true;
+	var elm, felm, uelm, addcnt = 0;
+	var $k = $fobj.find("#" + this.FormKeyCountName); // Get key_count
+	var rowcnt = ($k[0]) ? parseInt($k.val(), 10) : 1;
+	var startcnt = (rowcnt == 0) ? 0 : 1; // Check rowcnt == 0 => Inline-Add
+	var gridinsert = $fobj.find("#a_list").val() == "gridinsert";
+	for (var i = startcnt; i <= rowcnt; i++) {
+		var infix = ($k[0]) ? String(i) : "";
+		$fobj.data("rowindex", infix);
+			elm = this.GetElements("x" + infix + "_categoria");
+			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
+				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $categoria->categoria->FldCaption(), $categoria->categoria->ReqErrMsg)) ?>");
+
+			// Fire Form_CustomValidate event
+			if (!this.Form_CustomValidate(fobj))
+				return false;
+	}
+	return true;
+}
 
 // Form_CustomValidate event
-fcategoriadelete.Form_CustomValidate = 
+fcategoriaaddopt.Form_CustomValidate = 
  function(fobj) { // DO NOT CHANGE THIS LINE!
 
  	// Your custom validation code here, return false if invalid.
@@ -753,11 +850,11 @@ fcategoriadelete.Form_CustomValidate =
  }
 
 // Use JavaScript validation or not
-fcategoriadelete.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
+fcategoriaaddopt.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-fcategoriadelete.Lists["x_id_pai"] = {"LinkField":"x_id_categoria","Ajax":true,"AutoFill":false,"DisplayFields":["x_categoria","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"categoria"};
-fcategoriadelete.Lists["x_id_pai"].Data = "<?php echo $categoria_delete->id_pai->LookupFilterQuery(FALSE, "delete") ?>";
+fcategoriaaddopt.Lists["x_id_pai"] = {"LinkField":"x_id_categoria","Ajax":true,"AutoFill":false,"DisplayFields":["x_categoria","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"categoria"};
+fcategoriaaddopt.Lists["x_id_pai"].Data = "<?php echo $categoria_addopt->id_pai->LookupFilterQuery(FALSE, "addopt") ?>";
 
 // Form object for search
 </script>
@@ -765,109 +862,43 @@ fcategoriadelete.Lists["x_id_pai"].Data = "<?php echo $categoria_delete->id_pai-
 
 // Write your client script here, no need to add script tags.
 </script>
-<?php $categoria_delete->ShowPageHeader(); ?>
 <?php
-$categoria_delete->ShowMessage();
+$categoria_addopt->ShowMessage();
 ?>
-<form name="fcategoriadelete" id="fcategoriadelete" class="form-inline ewForm ewDeleteForm" action="<?php echo ew_CurrentPage() ?>" method="post">
-<?php if ($categoria_delete->CheckToken) { ?>
-<input type="hidden" name="<?php echo EW_TOKEN_NAME ?>" value="<?php echo $categoria_delete->Token ?>">
+<form name="fcategoriaaddopt" id="fcategoriaaddopt" class="ewForm form-horizontal" action="categoriaaddopt.php" method="post">
+<?php if ($categoria_addopt->CheckToken) { ?>
+<input type="hidden" name="<?php echo EW_TOKEN_NAME ?>" value="<?php echo $categoria_addopt->Token ?>">
 <?php } ?>
 <input type="hidden" name="t" value="categoria">
-<input type="hidden" name="a_delete" id="a_delete" value="D">
-<?php foreach ($categoria_delete->RecKeys as $key) { ?>
-<?php $keyvalue = is_array($key) ? implode($EW_COMPOSITE_KEY_SEPARATOR, $key) : $key; ?>
-<input type="hidden" name="key_m[]" value="<?php echo ew_HtmlEncode($keyvalue) ?>">
-<?php } ?>
-<div class="box ewBox ewGrid">
-<div class="<?php if (ew_IsResponsiveLayout()) { ?>table-responsive <?php } ?>ewGridMiddlePanel">
-<table class="table ewTable">
-	<thead>
-	<tr class="ewTableHeader">
-<?php if ($categoria->id_categoria->Visible) { // id_categoria ?>
-		<th class="<?php echo $categoria->id_categoria->HeaderCellClass() ?>"><span id="elh_categoria_id_categoria" class="categoria_id_categoria"><?php echo $categoria->id_categoria->FldCaption() ?></span></th>
-<?php } ?>
+<input type="hidden" name="a_addopt" id="a_addopt" value="A">
 <?php if ($categoria->id_pai->Visible) { // id_pai ?>
-		<th class="<?php echo $categoria->id_pai->HeaderCellClass() ?>"><span id="elh_categoria_id_pai" class="categoria_id_pai"><?php echo $categoria->id_pai->FldCaption() ?></span></th>
+	<div class="form-group">
+		<label class="col-sm-2 control-label ewLabel" for="x_id_pai"><?php echo $categoria->id_pai->FldCaption() ?></label>
+		<div class="col-sm-10">
+<select data-table="categoria" data-field="x_id_pai" data-value-separator="<?php echo $categoria->id_pai->DisplayValueSeparatorAttribute() ?>" id="x_id_pai" name="x_id_pai"<?php echo $categoria->id_pai->EditAttributes() ?>>
+<?php echo $categoria->id_pai->SelectOptionListHtml("x_id_pai") ?>
+</select>
+</div>
+	</div>
 <?php } ?>
 <?php if ($categoria->categoria->Visible) { // categoria ?>
-		<th class="<?php echo $categoria->categoria->HeaderCellClass() ?>"><span id="elh_categoria_categoria" class="categoria_categoria"><?php echo $categoria->categoria->FldCaption() ?></span></th>
-<?php } ?>
-	</tr>
-	</thead>
-	<tbody>
-<?php
-$categoria_delete->RecCnt = 0;
-$i = 0;
-while (!$categoria_delete->Recordset->EOF) {
-	$categoria_delete->RecCnt++;
-	$categoria_delete->RowCnt++;
-
-	// Set row properties
-	$categoria->ResetAttrs();
-	$categoria->RowType = EW_ROWTYPE_VIEW; // View
-
-	// Get the field contents
-	$categoria_delete->LoadRowValues($categoria_delete->Recordset);
-
-	// Render row
-	$categoria_delete->RenderRow();
-?>
-	<tr<?php echo $categoria->RowAttributes() ?>>
-<?php if ($categoria->id_categoria->Visible) { // id_categoria ?>
-		<td<?php echo $categoria->id_categoria->CellAttributes() ?>>
-<span id="el<?php echo $categoria_delete->RowCnt ?>_categoria_id_categoria" class="categoria_id_categoria">
-<span<?php echo $categoria->id_categoria->ViewAttributes() ?>>
-<?php echo $categoria->id_categoria->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($categoria->id_pai->Visible) { // id_pai ?>
-		<td<?php echo $categoria->id_pai->CellAttributes() ?>>
-<span id="el<?php echo $categoria_delete->RowCnt ?>_categoria_id_pai" class="categoria_id_pai">
-<span<?php echo $categoria->id_pai->ViewAttributes() ?>>
-<?php echo $categoria->id_pai->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($categoria->categoria->Visible) { // categoria ?>
-		<td<?php echo $categoria->categoria->CellAttributes() ?>>
-<span id="el<?php echo $categoria_delete->RowCnt ?>_categoria_categoria" class="categoria_categoria">
-<span<?php echo $categoria->categoria->ViewAttributes() ?>>
-<?php echo $categoria->categoria->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-	</tr>
-<?php
-	$categoria_delete->Recordset->MoveNext();
-}
-$categoria_delete->Recordset->Close();
-?>
-</tbody>
-</table>
+	<div class="form-group">
+		<label class="col-sm-2 control-label ewLabel" for="x_categoria"><?php echo $categoria->categoria->FldCaption() ?><?php echo $Language->Phrase("FieldRequiredIndicator") ?></label>
+		<div class="col-sm-10">
+<input type="text" data-table="categoria" data-field="x_categoria" name="x_categoria" id="x_categoria" size="30" maxlength="140" placeholder="<?php echo ew_HtmlEncode($categoria->categoria->getPlaceHolder()) ?>" value="<?php echo $categoria->categoria->EditValue ?>"<?php echo $categoria->categoria->EditAttributes() ?>>
 </div>
-</div>
-<div>
-<button class="btn btn-primary ewButton" name="btnAction" id="btnAction" type="submit"><?php echo $Language->Phrase("DeleteBtn") ?></button>
-<button class="btn btn-default ewButton" name="btnCancel" id="btnCancel" type="button" data-href="<?php echo $categoria_delete->getReturnUrl() ?>"><?php echo $Language->Phrase("CancelBtn") ?></button>
-</div>
+	</div>
+<?php } ?>
 </form>
 <script type="text/javascript">
-fcategoriadelete.Init();
+fcategoriaaddopt.Init();
 </script>
-<?php
-$categoria_delete->ShowPageFooter();
-if (EW_DEBUG_ENABLED)
-	echo ew_DebugMsg();
-?>
 <script type="text/javascript">
 
 // Write your table-specific startup script here
 // document.write("page loaded");
 
 </script>
-<?php include_once "footer.php" ?>
 <?php
-$categoria_delete->Page_Terminate();
+$categoria_addopt->Page_Terminate();
 ?>

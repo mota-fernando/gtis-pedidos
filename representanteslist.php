@@ -417,7 +417,6 @@ class crepresentantes_list extends crepresentantes {
 		if ($this->IsAdd() || $this->IsCopy() || $this->IsGridAdd())
 			$this->id_representantes->Visible = FALSE;
 		$this->id_pessoa->SetVisibility();
-		$this->comissao->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -705,7 +704,6 @@ class crepresentantes_list extends crepresentantes {
 			$this->CurrentOrderType = @$_GET["ordertype"];
 			$this->UpdateSort($this->id_representantes); // id_representantes
 			$this->UpdateSort($this->id_pessoa); // id_pessoa
-			$this->UpdateSort($this->comissao); // comissao
 			$this->setStartRecordNumber(1); // Reset start position
 		}
 	}
@@ -734,9 +732,9 @@ class crepresentantes_list extends crepresentantes {
 			if ($this->Command == "resetsort") {
 				$sOrderBy = "";
 				$this->setSessionOrderBy($sOrderBy);
+				$this->setSessionOrderByList($sOrderBy);
 				$this->id_representantes->setSort("");
 				$this->id_pessoa->setSort("");
-				$this->comissao->setSort("");
 			}
 
 			// Reset start position
@@ -752,37 +750,31 @@ class crepresentantes_list extends crepresentantes {
 		// Add group option item
 		$item = &$this->ListOptions->Add($this->ListOptions->GroupOptionName);
 		$item->Body = "";
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 		$item->Visible = FALSE;
 
 		// "view"
 		$item = &$this->ListOptions->Add("view");
 		$item->CssClass = "text-nowrap";
 		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 
 		// "edit"
 		$item = &$this->ListOptions->Add("edit");
 		$item->CssClass = "text-nowrap";
 		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 
 		// "copy"
 		$item = &$this->ListOptions->Add("copy");
 		$item->CssClass = "text-nowrap";
 		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
-
-		// "delete"
-		$item = &$this->ListOptions->Add("delete");
-		$item->CssClass = "text-nowrap";
-		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 
 		// List actions
 		$item = &$this->ListOptions->Add("listactions");
 		$item->CssClass = "text-nowrap";
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 		$item->Visible = FALSE;
 		$item->ShowInButtonGroup = FALSE;
 		$item->ShowInDropDown = FALSE;
@@ -790,8 +782,9 @@ class crepresentantes_list extends crepresentantes {
 		// "checkbox"
 		$item = &$this->ListOptions->Add("checkbox");
 		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 		$item->Header = "<input type=\"checkbox\" name=\"key\" id=\"key\" onclick=\"ew_SelectAllKey(this);\">";
+		$item->MoveTo(0);
 		$item->ShowInDropDown = FALSE;
 		$item->ShowInButtonGroup = FALSE;
 
@@ -846,13 +839,6 @@ class crepresentantes_list extends crepresentantes {
 			$oListOpt->Body = "";
 		}
 
-		// "delete"
-		$oListOpt = &$this->ListOptions->Items["delete"];
-		if (TRUE)
-			$oListOpt->Body = "<a class=\"ewRowLink ewDelete\"" . "" . " title=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" href=\"" . ew_HtmlEncode($this->DeleteUrl) . "\">" . $Language->Phrase("DeleteLink") . "</a>";
-		else
-			$oListOpt->Body = "";
-
 		// Set up list action buttons
 		$oListOpt = &$this->ListOptions->GetItem("listactions");
 		if ($oListOpt && $this->Export == "" && $this->CurrentAction == "") {
@@ -903,6 +889,11 @@ class crepresentantes_list extends crepresentantes {
 		$item->Body = "<a class=\"ewAddEdit ewAdd\" title=\"" . $addcaption . "\" data-caption=\"" . $addcaption . "\" href=\"" . ew_HtmlEncode($this->AddUrl) . "\">" . $Language->Phrase("AddLink") . "</a>";
 		$item->Visible = ($this->AddUrl <> "");
 		$option = $options["action"];
+
+		// Add multi delete
+		$item = &$option->Add("multidelete");
+		$item->Body = "<a class=\"ewAction ewMultiDelete\" title=\"" . ew_HtmlTitle($Language->Phrase("DeleteSelectedLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("DeleteSelectedLink")) . "\" href=\"\" onclick=\"ew_SubmitAction(event,{f:document.frepresentanteslist,url:'" . $this->MultiDeleteUrl . "'});return false;\">" . $Language->Phrase("DeleteSelectedLink") . "</a>";
+		$item->Visible = (TRUE);
 
 		// Set up options default
 		foreach ($options as &$option) {
@@ -1066,6 +1057,9 @@ class crepresentantes_list extends crepresentantes {
 
 	function SetupListOptionsExt() {
 		global $Security, $Language;
+
+		// Hide detail items for dropdown if necessary
+		$this->ListOptions->HideDetailItemsForDropDown();
 	}
 
 	function RenderListOptionsExt() {
@@ -1120,7 +1114,7 @@ class crepresentantes_list extends crepresentantes {
 		if ($this->UseSelectLimit) {
 			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
 			if ($dbtype == "MSSQL") {
-				$rs = $conn->SelectLimit($sSql, $rowcnt, $offset, array("_hasOrderBy" => trim($this->getOrderBy()) || trim($this->getSessionOrderBy())));
+				$rs = $conn->SelectLimit($sSql, $rowcnt, $offset, array("_hasOrderBy" => trim($this->getOrderBy()) || trim($this->getSessionOrderByList())));
 			} else {
 				$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 			}
@@ -1169,6 +1163,11 @@ class crepresentantes_list extends crepresentantes {
 			return;
 		$this->id_representantes->setDbValue($row['id_representantes']);
 		$this->id_pessoa->setDbValue($row['id_pessoa']);
+		if (array_key_exists('EV__id_pessoa', $rs->fields)) {
+			$this->id_pessoa->VirtualValue = $rs->fields('EV__id_pessoa'); // Set up virtual field value
+		} else {
+			$this->id_pessoa->VirtualValue = ""; // Clear value
+		}
 		$this->comissao->setDbValue($row['comissao']);
 	}
 
@@ -1233,6 +1232,7 @@ class crepresentantes_list extends crepresentantes {
 		// id_pessoa
 		// comissao
 
+		$this->comissao->CellCssStyle = "white-space: nowrap;";
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
 		// id_representantes
@@ -1240,12 +1240,31 @@ class crepresentantes_list extends crepresentantes {
 		$this->id_representantes->ViewCustomAttributes = "";
 
 		// id_pessoa
-		$this->id_pessoa->ViewValue = $this->id_pessoa->CurrentValue;
+		if ($this->id_pessoa->VirtualValue <> "") {
+			$this->id_pessoa->ViewValue = $this->id_pessoa->VirtualValue;
+		} else {
+		if (strval($this->id_pessoa->CurrentValue) <> "") {
+			$sFilterWrk = "`id_pessoa`" . ew_SearchString("=", $this->id_pessoa->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_pessoa`, `nome_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `pessoa_fisica`";
+		$sWhereWrk = "";
+		$this->id_pessoa->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_pessoa, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_pessoa->ViewValue = $this->id_pessoa->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_pessoa->ViewValue = $this->id_pessoa->CurrentValue;
+			}
+		} else {
+			$this->id_pessoa->ViewValue = NULL;
+		}
+		}
 		$this->id_pessoa->ViewCustomAttributes = "";
-
-		// comissao
-		$this->comissao->ViewValue = $this->comissao->CurrentValue;
-		$this->comissao->ViewCustomAttributes = "";
 
 			// id_representantes
 			$this->id_representantes->LinkCustomAttributes = "";
@@ -1256,11 +1275,6 @@ class crepresentantes_list extends crepresentantes {
 			$this->id_pessoa->LinkCustomAttributes = "";
 			$this->id_pessoa->HrefValue = "";
 			$this->id_pessoa->TooltipValue = "";
-
-			// comissao
-			$this->comissao->LinkCustomAttributes = "";
-			$this->comissao->HrefValue = "";
-			$this->comissao->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -1614,8 +1628,32 @@ frepresentanteslist.Form_CustomValidate =
 frepresentanteslist.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-// Form object for search
+frepresentanteslist.Lists["x_id_pessoa"] = {"LinkField":"x_id_pessoa","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_pessoa","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"pessoa_fisica"};
+frepresentanteslist.Lists["x_id_pessoa"].Data = "<?php echo $representantes_list->id_pessoa->LookupFilterQuery(FALSE, "list") ?>";
 
+// Form object for search
+</script>
+<style type="text/css">
+.ewTablePreviewRow { /* main table preview row color */
+	background-color: #FFFFFF; /* preview row color */
+}
+.ewTablePreviewRow .ewGrid {
+	display: table;
+}
+</style>
+<div id="ewPreview" class="d-none"><!-- preview -->
+	<div class="nav-tabs-custom"><!-- .nav-tabs-custom -->
+		<ul class="nav nav-tabs" role="tablist"></ul>
+		<div class="tab-content"><!-- .tab-content -->
+			<div class="tab-pane fade"></div>
+		</div><!-- /.tab-content -->
+	</div><!-- /.nav-tabs-custom -->
+</div><!-- /preview -->
+<script type="text/javascript" src="phpjs/ewpreview.js"></script>
+<script type="text/javascript">
+var EW_PREVIEW_PLACEMENT = EW_CSS_FLIP ? "left" : "right";
+var EW_PREVIEW_SINGLE_ROW = false;
+var EW_PREVIEW_OVERLAY = false;
 </script>
 <script type="text/javascript">
 
@@ -1662,6 +1700,66 @@ $representantes_list->ShowMessage();
 ?>
 <?php if ($representantes_list->TotalRecs > 0 || $representantes->CurrentAction <> "") { ?>
 <div class="box ewBox ewGrid<?php if ($representantes_list->IsAddOrEdit()) { ?> ewGridAddEdit<?php } ?> representantes">
+<?php if ($representantes->Export == "") { ?>
+<div class="box-header ewGridUpperPanel">
+<?php if ($representantes->CurrentAction <> "gridadd" && $representantes->CurrentAction <> "gridedit") { ?>
+<form name="ewPagerForm" class="form-inline ewForm ewPagerForm" action="<?php echo ew_CurrentPage() ?>">
+<?php if (!isset($representantes_list->Pager)) $representantes_list->Pager = new cPrevNextPager($representantes_list->StartRec, $representantes_list->DisplayRecs, $representantes_list->TotalRecs, $representantes_list->AutoHidePager) ?>
+<?php if ($representantes_list->Pager->RecordCount > 0 && $representantes_list->Pager->Visible) { ?>
+<div class="ewPager">
+<span><?php echo $Language->Phrase("Page") ?>&nbsp;</span>
+<div class="ewPrevNext"><div class="input-group">
+<div class="input-group-btn">
+<!--first page button-->
+	<?php if ($representantes_list->Pager->FirstButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerFirst") ?>" href="<?php echo $representantes_list->PageUrl() ?>start=<?php echo $representantes_list->Pager->FirstButton->Start ?>"><span class="icon-first ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerFirst") ?>"><span class="icon-first ewIcon"></span></a>
+	<?php } ?>
+<!--previous page button-->
+	<?php if ($representantes_list->Pager->PrevButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerPrevious") ?>" href="<?php echo $representantes_list->PageUrl() ?>start=<?php echo $representantes_list->Pager->PrevButton->Start ?>"><span class="icon-prev ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerPrevious") ?>"><span class="icon-prev ewIcon"></span></a>
+	<?php } ?>
+</div>
+<!--current page number-->
+	<input class="form-control input-sm" type="text" name="<?php echo EW_TABLE_PAGE_NO ?>" value="<?php echo $representantes_list->Pager->CurrentPage ?>">
+<div class="input-group-btn">
+<!--next page button-->
+	<?php if ($representantes_list->Pager->NextButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerNext") ?>" href="<?php echo $representantes_list->PageUrl() ?>start=<?php echo $representantes_list->Pager->NextButton->Start ?>"><span class="icon-next ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerNext") ?>"><span class="icon-next ewIcon"></span></a>
+	<?php } ?>
+<!--last page button-->
+	<?php if ($representantes_list->Pager->LastButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerLast") ?>" href="<?php echo $representantes_list->PageUrl() ?>start=<?php echo $representantes_list->Pager->LastButton->Start ?>"><span class="icon-last ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerLast") ?>"><span class="icon-last ewIcon"></span></a>
+	<?php } ?>
+</div>
+</div>
+</div>
+<span>&nbsp;<?php echo $Language->Phrase("of") ?>&nbsp;<?php echo $representantes_list->Pager->PageCount ?></span>
+</div>
+<?php } ?>
+<?php if ($representantes_list->Pager->RecordCount > 0) { ?>
+<div class="ewPager ewRec">
+	<span><?php echo $Language->Phrase("Record") ?>&nbsp;<?php echo $representantes_list->Pager->FromIndex ?>&nbsp;<?php echo $Language->Phrase("To") ?>&nbsp;<?php echo $representantes_list->Pager->ToIndex ?>&nbsp;<?php echo $Language->Phrase("Of") ?>&nbsp;<?php echo $representantes_list->Pager->RecordCount ?></span>
+</div>
+<?php } ?>
+</form>
+<?php } ?>
+<div class="ewListOtherOptions">
+<?php
+	foreach ($representantes_list->OtherOptions as &$option)
+		$option->Render("body");
+?>
+</div>
+<div class="clearfix"></div>
+</div>
+<?php } ?>
 <form name="frepresentanteslist" id="frepresentanteslist" class="form-inline ewForm ewListForm" action="<?php echo ew_CurrentPage() ?>" method="post">
 <?php if ($representantes_list->CheckToken) { ?>
 <input type="hidden" name="<?php echo EW_TOKEN_NAME ?>" value="<?php echo $representantes_list->Token ?>">
@@ -1699,15 +1797,6 @@ $representantes_list->ListOptions->Render("header", "left");
 	<?php } else { ?>
 		<th data-name="id_pessoa" class="<?php echo $representantes->id_pessoa->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $representantes->SortUrl($representantes->id_pessoa) ?>',1);"><div id="elh_representantes_id_pessoa" class="representantes_id_pessoa">
 			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $representantes->id_pessoa->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($representantes->id_pessoa->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($representantes->id_pessoa->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($representantes->comissao->Visible) { // comissao ?>
-	<?php if ($representantes->SortUrl($representantes->comissao) == "") { ?>
-		<th data-name="comissao" class="<?php echo $representantes->comissao->HeaderCellClass() ?>"><div id="elh_representantes_comissao" class="representantes_comissao"><div class="ewTableHeaderCaption"><?php echo $representantes->comissao->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="comissao" class="<?php echo $representantes->comissao->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $representantes->SortUrl($representantes->comissao) ?>',1);"><div id="elh_representantes_comissao" class="representantes_comissao">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $representantes->comissao->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($representantes->comissao->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($representantes->comissao->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
 		</div></div></th>
 	<?php } ?>
 <?php } ?>
@@ -1789,14 +1878,6 @@ $representantes_list->ListOptions->Render("body", "left", $representantes_list->
 <span id="el<?php echo $representantes_list->RowCnt ?>_representantes_id_pessoa" class="representantes_id_pessoa">
 <span<?php echo $representantes->id_pessoa->ViewAttributes() ?>>
 <?php echo $representantes->id_pessoa->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($representantes->comissao->Visible) { // comissao ?>
-		<td data-name="comissao"<?php echo $representantes->comissao->CellAttributes() ?>>
-<span id="el<?php echo $representantes_list->RowCnt ?>_representantes_comissao" class="representantes_comissao">
-<span<?php echo $representantes->comissao->ViewAttributes() ?>>
-<?php echo $representantes->comissao->ListViewValue() ?></span>
 </span>
 </td>
 	<?php } ?>

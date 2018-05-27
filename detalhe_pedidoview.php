@@ -343,12 +343,59 @@ class cdetalhe_pedido_view extends cdetalhe_pedido {
 
 		// Is modal
 		$this->IsModal = (@$_GET["modal"] == "1" || @$_POST["modal"] == "1");
+
+		// Get export parameters
+		$custom = "";
+		if (@$_GET["export"] <> "") {
+			$this->Export = $_GET["export"];
+			$custom = @$_GET["custom"];
+		} elseif (@$_POST["export"] <> "") {
+			$this->Export = $_POST["export"];
+			$custom = @$_POST["custom"];
+		} elseif (ew_IsPost()) {
+			if (@$_POST["exporttype"] <> "")
+				$this->Export = $_POST["exporttype"];
+			$custom = @$_POST["custom"];
+		} elseif (@$_GET["cmd"] == "json") {
+			$this->Export = $_GET["cmd"];
+		} else {
+			$this->setExportReturnUrl(ew_CurrentUrl());
+		}
+		$gsExportFile = $this->TableVar; // Get export file, used in header
+		if (@$_GET["id_detalhe"] <> "") {
+			if ($gsExportFile <> "") $gsExportFile .= "_";
+			$gsExportFile .= $_GET["id_detalhe"];
+		}
+
+		// Get custom export parameters
+		if ($this->Export <> "" && $custom <> "") {
+			$this->CustomExport = $this->Export;
+			$this->Export = "print";
+		}
+		$gsCustomExport = $this->CustomExport;
+		$gsExport = $this->Export; // Get export parameter, used in header
+
+		// Update Export URLs
+		if (defined("EW_USE_PHPEXCEL"))
+			$this->ExportExcelCustom = FALSE;
+		if ($this->ExportExcelCustom)
+			$this->ExportExcelUrl .= "&amp;custom=1";
+		if (defined("EW_USE_PHPWORD"))
+			$this->ExportWordCustom = FALSE;
+		if ($this->ExportWordCustom)
+			$this->ExportWordUrl .= "&amp;custom=1";
+		if ($this->ExportPdfCustom)
+			$this->ExportPdfUrl .= "&amp;custom=1";
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
+
+		// Setup export options
+		$this->SetupExportOptions();
 		$this->numero_pedido->SetVisibility();
 		$this->id_produto->SetVisibility();
+		$this->desconto->SetVisibility();
+		$this->preco->SetVisibility();
 		$this->quantidade->SetVisibility();
-		$this->custo->SetVisibility();
-		$this->id_desconto->SetVisibility();
+		$this->subtotal->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -436,6 +483,8 @@ class cdetalhe_pedido_view extends cdetalhe_pedido {
 	var $StopRec;
 	var $TotalRecs = 0;
 	var $RecRange = 10;
+	var $Pager;
+	var $AutoHidePager = EW_AUTO_HIDE_PAGER;
 	var $RecCnt;
 	var $RecKey = array();
 	var $IsModal = FALSE;
@@ -466,18 +515,54 @@ class cdetalhe_pedido_view extends cdetalhe_pedido {
 				$this->id_detalhe->setFormValue($_POST["id_detalhe"]);
 				$this->RecKey["id_detalhe"] = $this->id_detalhe->FormValue;
 			} else {
-				$sReturnUrl = "detalhe_pedidolist.php"; // Return to list
+				$bLoadCurrentRecord = TRUE;
 			}
 
 			// Get action
 			$this->CurrentAction = "I"; // Display form
 			switch ($this->CurrentAction) {
 				case "I": // Get a record to display
-					if (!$this->LoadRow()) { // Load record based on key
+					$this->StartRec = 1; // Initialize start position
+					if ($this->Recordset = $this->LoadRecordset()) // Load records
+						$this->TotalRecs = $this->Recordset->RecordCount(); // Get record count
+					if ($this->TotalRecs <= 0) { // No record found
+						if ($this->getSuccessMessage() == "" && $this->getFailureMessage() == "")
+							$this->setFailureMessage($Language->Phrase("NoRecord")); // Set no record message
+						$this->Page_Terminate("detalhe_pedidolist.php"); // Return to list page
+					} elseif ($bLoadCurrentRecord) { // Load current record position
+						$this->SetupStartRec(); // Set up start record position
+
+						// Point to current record
+						if (intval($this->StartRec) <= intval($this->TotalRecs)) {
+							$bMatchRecord = TRUE;
+							$this->Recordset->Move($this->StartRec-1);
+						}
+					} else { // Match key values
+						while (!$this->Recordset->EOF) {
+							if (strval($this->id_detalhe->CurrentValue) == strval($this->Recordset->fields('id_detalhe'))) {
+								$this->setStartRecordNumber($this->StartRec); // Save record position
+								$bMatchRecord = TRUE;
+								break;
+							} else {
+								$this->StartRec++;
+								$this->Recordset->MoveNext();
+							}
+						}
+					}
+					if (!$bMatchRecord) {
 						if ($this->getSuccessMessage() == "" && $this->getFailureMessage() == "")
 							$this->setFailureMessage($Language->Phrase("NoRecord")); // Set no record message
 						$sReturnUrl = "detalhe_pedidolist.php"; // No matching record, return to list
+					} else {
+						$this->LoadRowValues($this->Recordset); // Load row values
 					}
+			}
+
+			// Export data only
+			if ($this->CustomExport == "" && in_array($this->Export, array_keys($EW_EXPORT))) {
+				$this->ExportData();
+				$this->Page_Terminate(); // Terminate response
+				exit();
 			}
 		} else {
 			$sReturnUrl = "detalhe_pedidolist.php"; // Not page request, return to list
@@ -574,6 +659,32 @@ class cdetalhe_pedido_view extends cdetalhe_pedido {
 		}
 	}
 
+	// Load recordset
+	function LoadRecordset($offset = -1, $rowcnt = -1) {
+
+		// Load List page SQL
+		$sSql = $this->ListSQL();
+		$conn = &$this->Connection();
+
+		// Load recordset
+		$dbtype = ew_GetConnectionType($this->DBID);
+		if ($this->UseSelectLimit) {
+			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+			if ($dbtype == "MSSQL") {
+				$rs = $conn->SelectLimit($sSql, $rowcnt, $offset, array("_hasOrderBy" => trim($this->getOrderBy()) || trim($this->getSessionOrderBy())));
+			} else {
+				$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
+			}
+			$conn->raiseErrorFn = '';
+		} else {
+			$rs = ew_LoadRecordset($sSql, $conn);
+		}
+
+		// Call Recordset Selected event
+		$this->Recordset_Selected($rs);
+		return $rs;
+	}
+
 	// Load row based on key values
 	function LoadRow() {
 		global $Security, $Language;
@@ -610,9 +721,10 @@ class cdetalhe_pedido_view extends cdetalhe_pedido {
 		$this->id_detalhe->setDbValue($row['id_detalhe']);
 		$this->numero_pedido->setDbValue($row['numero_pedido']);
 		$this->id_produto->setDbValue($row['id_produto']);
+		$this->desconto->setDbValue($row['desconto']);
+		$this->preco->setDbValue($row['preco']);
 		$this->quantidade->setDbValue($row['quantidade']);
-		$this->custo->setDbValue($row['custo']);
-		$this->id_desconto->setDbValue($row['id_desconto']);
+		$this->subtotal->setDbValue($row['subtotal']);
 	}
 
 	// Return a row with default values
@@ -621,9 +733,10 @@ class cdetalhe_pedido_view extends cdetalhe_pedido {
 		$row['id_detalhe'] = NULL;
 		$row['numero_pedido'] = NULL;
 		$row['id_produto'] = NULL;
+		$row['desconto'] = NULL;
+		$row['preco'] = NULL;
 		$row['quantidade'] = NULL;
-		$row['custo'] = NULL;
-		$row['id_desconto'] = NULL;
+		$row['subtotal'] = NULL;
 		return $row;
 	}
 
@@ -635,9 +748,10 @@ class cdetalhe_pedido_view extends cdetalhe_pedido {
 		$this->id_detalhe->DbValue = $row['id_detalhe'];
 		$this->numero_pedido->DbValue = $row['numero_pedido'];
 		$this->id_produto->DbValue = $row['id_produto'];
+		$this->desconto->DbValue = $row['desconto'];
+		$this->preco->DbValue = $row['preco'];
 		$this->quantidade->DbValue = $row['quantidade'];
-		$this->custo->DbValue = $row['custo'];
-		$this->id_desconto->DbValue = $row['id_desconto'];
+		$this->subtotal->DbValue = $row['subtotal'];
 	}
 
 	// Render row values based on field settings
@@ -653,8 +767,8 @@ class cdetalhe_pedido_view extends cdetalhe_pedido {
 		$this->SetupOtherOptions();
 
 		// Convert decimal values if posted back
-		if ($this->custo->FormValue == $this->custo->CurrentValue && is_numeric(ew_StrToFloat($this->custo->CurrentValue)))
-			$this->custo->CurrentValue = ew_StrToFloat($this->custo->CurrentValue);
+		if ($this->subtotal->FormValue == $this->subtotal->CurrentValue && is_numeric(ew_StrToFloat($this->subtotal->CurrentValue)))
+			$this->subtotal->CurrentValue = ew_StrToFloat($this->subtotal->CurrentValue);
 
 		// Call Row_Rendering event
 		$this->Row_Rendering();
@@ -663,9 +777,10 @@ class cdetalhe_pedido_view extends cdetalhe_pedido {
 		// id_detalhe
 		// numero_pedido
 		// id_produto
+		// desconto
+		// preco
 		// quantidade
-		// custo
-		// id_desconto
+		// subtotal
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -700,36 +815,59 @@ class cdetalhe_pedido_view extends cdetalhe_pedido {
 		}
 		$this->id_produto->ViewCustomAttributes = "";
 
-		// quantidade
-		$this->quantidade->ViewValue = $this->quantidade->CurrentValue;
-		$this->quantidade->ViewCustomAttributes = "";
-
-		// custo
-		$this->custo->ViewValue = $this->custo->CurrentValue;
-		$this->custo->ViewCustomAttributes = "";
-
-		// id_desconto
-		if (strval($this->id_desconto->CurrentValue) <> "") {
-			$sFilterWrk = "`id_desconto`" . ew_SearchString("=", $this->id_desconto->CurrentValue, EW_DATATYPE_NUMBER, "");
-		$sSqlWrk = "SELECT `id_desconto`, `porcentagem` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `desconto`";
+		// desconto
+		if (strval($this->desconto->CurrentValue) <> "") {
+			$sFilterWrk = "`porcentagem`" . ew_SearchString("=", $this->desconto->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `porcentagem`, `porcentagem` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `desconto`";
 		$sWhereWrk = "";
-		$this->id_desconto->LookupFilters = array();
+		$this->desconto->LookupFilters = array();
 		ew_AddFilter($sWhereWrk, $sFilterWrk);
-		$this->Lookup_Selecting($this->id_desconto, $sWhereWrk); // Call Lookup Selecting
+		$this->Lookup_Selecting($this->desconto, $sWhereWrk); // Call Lookup Selecting
 		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
 			$rswrk = Conn()->Execute($sSqlWrk);
 			if ($rswrk && !$rswrk->EOF) { // Lookup values found
 				$arwrk = array();
 				$arwrk[1] = $rswrk->fields('DispFld');
-				$this->id_desconto->ViewValue = $this->id_desconto->DisplayValue($arwrk);
+				$this->desconto->ViewValue = $this->desconto->DisplayValue($arwrk);
 				$rswrk->Close();
 			} else {
-				$this->id_desconto->ViewValue = $this->id_desconto->CurrentValue;
+				$this->desconto->ViewValue = $this->desconto->CurrentValue;
 			}
 		} else {
-			$this->id_desconto->ViewValue = NULL;
+			$this->desconto->ViewValue = NULL;
 		}
-		$this->id_desconto->ViewCustomAttributes = "";
+		$this->desconto->ViewCustomAttributes = "";
+
+		// preco
+		if (strval($this->preco->CurrentValue) <> "") {
+			$sFilterWrk = "`preco_produto`" . ew_SearchString("=", $this->preco->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `preco_produto`, `preco_produto` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `produtos`";
+		$sWhereWrk = "";
+		$this->preco->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->preco, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = ew_FormatCurrency($rswrk->fields('DispFld'), 2, -1, -1, -1);
+				$this->preco->ViewValue = $this->preco->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->preco->ViewValue = $this->preco->CurrentValue;
+			}
+		} else {
+			$this->preco->ViewValue = NULL;
+		}
+		$this->preco->ViewCustomAttributes = "";
+
+		// quantidade
+		$this->quantidade->ViewValue = $this->quantidade->CurrentValue;
+		$this->quantidade->ViewCustomAttributes = "";
+
+		// subtotal
+		$this->subtotal->ViewValue = $this->subtotal->CurrentValue;
+		$this->subtotal->ViewCustomAttributes = "";
 
 			// numero_pedido
 			$this->numero_pedido->LinkCustomAttributes = "";
@@ -741,25 +879,167 @@ class cdetalhe_pedido_view extends cdetalhe_pedido {
 			$this->id_produto->HrefValue = "";
 			$this->id_produto->TooltipValue = "";
 
+			// desconto
+			$this->desconto->LinkCustomAttributes = "";
+			$this->desconto->HrefValue = "";
+			$this->desconto->TooltipValue = "";
+
+			// preco
+			$this->preco->LinkCustomAttributes = "";
+			$this->preco->HrefValue = "";
+			$this->preco->TooltipValue = "";
+
 			// quantidade
 			$this->quantidade->LinkCustomAttributes = "";
 			$this->quantidade->HrefValue = "";
 			$this->quantidade->TooltipValue = "";
 
-			// custo
-			$this->custo->LinkCustomAttributes = "";
-			$this->custo->HrefValue = "";
-			$this->custo->TooltipValue = "";
-
-			// id_desconto
-			$this->id_desconto->LinkCustomAttributes = "";
-			$this->id_desconto->HrefValue = "";
-			$this->id_desconto->TooltipValue = "";
+			// subtotal
+			$this->subtotal->LinkCustomAttributes = "";
+			$this->subtotal->HrefValue = "";
+			$this->subtotal->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
 		if ($this->RowType <> EW_ROWTYPE_AGGREGATEINIT)
 			$this->Row_Rendered();
+	}
+
+	// Set up export options
+	function SetupExportOptions() {
+		global $Language;
+
+		// Printer friendly
+		$item = &$this->ExportOptions->Add("print");
+		$item->Body = "<a href=\"" . $this->ExportPrintUrl . "\" class=\"ewExportLink ewPrint\" title=\"" . ew_HtmlEncode($Language->Phrase("PrinterFriendlyText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("PrinterFriendlyText")) . "\">" . $Language->Phrase("PrinterFriendly") . "</a>";
+		$item->Visible = TRUE;
+
+		// Export to Excel
+		$item = &$this->ExportOptions->Add("excel");
+		$item->Body = "<a href=\"" . $this->ExportExcelUrl . "\" class=\"ewExportLink ewExcel\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToExcelText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToExcelText")) . "\">" . $Language->Phrase("ExportToExcel") . "</a>";
+		$item->Visible = TRUE;
+
+		// Export to Word
+		$item = &$this->ExportOptions->Add("word");
+		$item->Body = "<a href=\"" . $this->ExportWordUrl . "\" class=\"ewExportLink ewWord\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToWordText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToWordText")) . "\">" . $Language->Phrase("ExportToWord") . "</a>";
+		$item->Visible = FALSE;
+
+		// Export to Html
+		$item = &$this->ExportOptions->Add("html");
+		$item->Body = "<a href=\"" . $this->ExportHtmlUrl . "\" class=\"ewExportLink ewHtml\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToHtmlText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToHtmlText")) . "\">" . $Language->Phrase("ExportToHtml") . "</a>";
+		$item->Visible = FALSE;
+
+		// Export to Xml
+		$item = &$this->ExportOptions->Add("xml");
+		$item->Body = "<a href=\"" . $this->ExportXmlUrl . "\" class=\"ewExportLink ewXml\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToXmlText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToXmlText")) . "\">" . $Language->Phrase("ExportToXml") . "</a>";
+		$item->Visible = FALSE;
+
+		// Export to Csv
+		$item = &$this->ExportOptions->Add("csv");
+		$item->Body = "<a href=\"" . $this->ExportCsvUrl . "\" class=\"ewExportLink ewCsv\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToCsvText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToCsvText")) . "\">" . $Language->Phrase("ExportToCsv") . "</a>";
+		$item->Visible = FALSE;
+
+		// Export to Pdf
+		$item = &$this->ExportOptions->Add("pdf");
+		$item->Body = "<a href=\"" . $this->ExportPdfUrl . "\" class=\"ewExportLink ewPdf\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToPDFText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToPDFText")) . "\">" . $Language->Phrase("ExportToPDF") . "</a>";
+		$item->Visible = TRUE;
+
+		// Export to Email
+		$item = &$this->ExportOptions->Add("email");
+		$url = "";
+		$item->Body = "<button id=\"emf_detalhe_pedido\" class=\"ewExportLink ewEmail\" title=\"" . $Language->Phrase("ExportToEmailText") . "\" data-caption=\"" . $Language->Phrase("ExportToEmailText") . "\" onclick=\"ew_EmailDialogShow({lnk:'emf_detalhe_pedido',hdr:ewLanguage.Phrase('ExportToEmailText'),f:document.fdetalhe_pedidoview,key:" . ew_ArrayToJsonAttr($this->RecKey) . ",sel:false" . $url . "});\">" . $Language->Phrase("ExportToEmail") . "</button>";
+		$item->Visible = FALSE;
+
+		// Drop down button for export
+		$this->ExportOptions->UseButtonGroup = TRUE;
+		$this->ExportOptions->UseImageAndText = TRUE;
+		$this->ExportOptions->UseDropDownButton = FALSE;
+		if ($this->ExportOptions->UseButtonGroup && ew_IsMobile())
+			$this->ExportOptions->UseDropDownButton = TRUE;
+		$this->ExportOptions->DropDownButtonPhrase = $Language->Phrase("ButtonExport");
+
+		// Add group option item
+		$item = &$this->ExportOptions->Add($this->ExportOptions->GroupOptionName);
+		$item->Body = "";
+		$item->Visible = FALSE;
+
+		// Hide options for export
+		if ($this->Export <> "")
+			$this->ExportOptions->HideAllOptions();
+	}
+
+	// Export data in HTML/CSV/Word/Excel/XML/Email/PDF format
+	function ExportData() {
+		$utf8 = (strtolower(EW_CHARSET) == "utf-8");
+		$bSelectLimit = FALSE;
+
+		// Load recordset
+		if ($bSelectLimit) {
+			$this->TotalRecs = $this->ListRecordCount();
+		} else {
+			if (!$this->Recordset)
+				$this->Recordset = $this->LoadRecordset();
+			$rs = &$this->Recordset;
+			if ($rs)
+				$this->TotalRecs = $rs->RecordCount();
+		}
+		$this->StartRec = 1;
+		$this->SetupStartRec(); // Set up start record position
+
+		// Set the last record to display
+		if ($this->DisplayRecs <= 0) {
+			$this->StopRec = $this->TotalRecs;
+		} else {
+			$this->StopRec = $this->StartRec + $this->DisplayRecs - 1;
+		}
+		if (!$rs) {
+			header("Content-Type:"); // Remove header
+			header("Content-Disposition:");
+			$this->ShowMessage();
+			return;
+		}
+		$this->ExportDoc = ew_ExportDocument($this, "v");
+		$Doc = &$this->ExportDoc;
+		if ($bSelectLimit) {
+			$this->StartRec = 1;
+			$this->StopRec = $this->DisplayRecs <= 0 ? $this->TotalRecs : $this->DisplayRecs;
+		} else {
+
+			//$this->StartRec = $this->StartRec;
+			//$this->StopRec = $this->StopRec;
+
+		}
+
+		// Call Page Exporting server event
+		$this->ExportDoc->ExportCustom = !$this->Page_Exporting();
+		$ParentTable = "";
+		$sHeader = $this->PageHeader;
+		$this->Page_DataRendering($sHeader);
+		$Doc->Text .= $sHeader;
+		$this->ExportDocument($Doc, $rs, $this->StartRec, $this->StopRec, "view");
+		$sFooter = $this->PageFooter;
+		$this->Page_DataRendered($sFooter);
+		$Doc->Text .= $sFooter;
+
+		// Close recordset
+		$rs->Close();
+
+		// Call Page Exported server event
+		$this->Page_Exported();
+
+		// Export header and footer
+		$Doc->ExportHeaderAndFooter();
+
+		// Clean output buffer
+		if (!EW_DEBUG_ENABLED && ob_get_length())
+			ob_end_clean();
+
+		// Write debug message if enabled
+		if (EW_DEBUG_ENABLED && $this->Export <> "pdf")
+			echo ew_DebugMsg();
+
+		// Output data
+		$Doc->Export();
 	}
 
 	// Set up master/detail based on QueryString
@@ -957,6 +1237,7 @@ Page_Rendering();
 $detalhe_pedido_view->Page_Render();
 ?>
 <?php include_once "header.php" ?>
+<?php if ($detalhe_pedido->Export == "") { ?>
 <script type="text/javascript">
 
 // Form object
@@ -975,10 +1256,12 @@ fdetalhe_pedidoview.Form_CustomValidate =
 fdetalhe_pedidoview.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-fdetalhe_pedidoview.Lists["x_id_produto"] = {"LinkField":"x_id_produto","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_produto","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"produtos"};
+fdetalhe_pedidoview.Lists["x_id_produto"] = {"LinkField":"x_id_produto","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_produto","","",""],"ParentFields":[],"ChildFields":["x_preco"],"FilterFields":[],"Options":[],"Template":"","LinkTable":"produtos"};
 fdetalhe_pedidoview.Lists["x_id_produto"].Data = "<?php echo $detalhe_pedido_view->id_produto->LookupFilterQuery(FALSE, "view") ?>";
-fdetalhe_pedidoview.Lists["x_id_desconto"] = {"LinkField":"x_id_desconto","Ajax":true,"AutoFill":false,"DisplayFields":["x_porcentagem","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"desconto"};
-fdetalhe_pedidoview.Lists["x_id_desconto"].Data = "<?php echo $detalhe_pedido_view->id_desconto->LookupFilterQuery(FALSE, "view") ?>";
+fdetalhe_pedidoview.Lists["x_desconto"] = {"LinkField":"x_porcentagem","Ajax":true,"AutoFill":false,"DisplayFields":["x_porcentagem","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"desconto"};
+fdetalhe_pedidoview.Lists["x_desconto"].Data = "<?php echo $detalhe_pedido_view->desconto->LookupFilterQuery(FALSE, "view") ?>";
+fdetalhe_pedidoview.Lists["x_preco"] = {"LinkField":"x_preco_produto","Ajax":true,"AutoFill":false,"DisplayFields":["x_preco_produto","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"produtos"};
+fdetalhe_pedidoview.Lists["x_preco"].Data = "<?php echo $detalhe_pedido_view->preco->LookupFilterQuery(FALSE, "view") ?>";
 
 // Form object for search
 </script>
@@ -986,6 +1269,8 @@ fdetalhe_pedidoview.Lists["x_id_desconto"].Data = "<?php echo $detalhe_pedido_vi
 
 // Write your client script here, no need to add script tags.
 </script>
+<?php } ?>
+<?php if ($detalhe_pedido->Export == "") { ?>
 <div class="ewToolbar">
 <?php $detalhe_pedido_view->ExportOptions->Render("body") ?>
 <?php
@@ -994,10 +1279,58 @@ fdetalhe_pedidoview.Lists["x_id_desconto"].Data = "<?php echo $detalhe_pedido_vi
 ?>
 <div class="clearfix"></div>
 </div>
+<?php } ?>
 <?php $detalhe_pedido_view->ShowPageHeader(); ?>
 <?php
 $detalhe_pedido_view->ShowMessage();
 ?>
+<?php if (!$detalhe_pedido_view->IsModal) { ?>
+<?php if ($detalhe_pedido->Export == "") { ?>
+<form name="ewPagerForm" class="form-inline ewForm ewPagerForm" action="<?php echo ew_CurrentPage() ?>">
+<?php if (!isset($detalhe_pedido_view->Pager)) $detalhe_pedido_view->Pager = new cPrevNextPager($detalhe_pedido_view->StartRec, $detalhe_pedido_view->DisplayRecs, $detalhe_pedido_view->TotalRecs, $detalhe_pedido_view->AutoHidePager) ?>
+<?php if ($detalhe_pedido_view->Pager->RecordCount > 0 && $detalhe_pedido_view->Pager->Visible) { ?>
+<div class="ewPager">
+<span><?php echo $Language->Phrase("Page") ?>&nbsp;</span>
+<div class="ewPrevNext"><div class="input-group">
+<div class="input-group-btn">
+<!--first page button-->
+	<?php if ($detalhe_pedido_view->Pager->FirstButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerFirst") ?>" href="<?php echo $detalhe_pedido_view->PageUrl() ?>start=<?php echo $detalhe_pedido_view->Pager->FirstButton->Start ?>"><span class="icon-first ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerFirst") ?>"><span class="icon-first ewIcon"></span></a>
+	<?php } ?>
+<!--previous page button-->
+	<?php if ($detalhe_pedido_view->Pager->PrevButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerPrevious") ?>" href="<?php echo $detalhe_pedido_view->PageUrl() ?>start=<?php echo $detalhe_pedido_view->Pager->PrevButton->Start ?>"><span class="icon-prev ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerPrevious") ?>"><span class="icon-prev ewIcon"></span></a>
+	<?php } ?>
+</div>
+<!--current page number-->
+	<input class="form-control input-sm" type="text" name="<?php echo EW_TABLE_PAGE_NO ?>" value="<?php echo $detalhe_pedido_view->Pager->CurrentPage ?>">
+<div class="input-group-btn">
+<!--next page button-->
+	<?php if ($detalhe_pedido_view->Pager->NextButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerNext") ?>" href="<?php echo $detalhe_pedido_view->PageUrl() ?>start=<?php echo $detalhe_pedido_view->Pager->NextButton->Start ?>"><span class="icon-next ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerNext") ?>"><span class="icon-next ewIcon"></span></a>
+	<?php } ?>
+<!--last page button-->
+	<?php if ($detalhe_pedido_view->Pager->LastButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerLast") ?>" href="<?php echo $detalhe_pedido_view->PageUrl() ?>start=<?php echo $detalhe_pedido_view->Pager->LastButton->Start ?>"><span class="icon-last ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerLast") ?>"><span class="icon-last ewIcon"></span></a>
+	<?php } ?>
+</div>
+</div>
+</div>
+<span>&nbsp;<?php echo $Language->Phrase("of") ?>&nbsp;<?php echo $detalhe_pedido_view->Pager->PageCount ?></span>
+</div>
+<?php } ?>
+<div class="clearfix"></div>
+</form>
+<?php } ?>
+<?php } ?>
 <form name="fdetalhe_pedidoview" id="fdetalhe_pedidoview" class="form-inline ewForm ewViewForm" action="<?php echo ew_CurrentPage() ?>" method="post">
 <?php if ($detalhe_pedido_view->CheckToken) { ?>
 <input type="hidden" name="<?php echo EW_TOKEN_NAME ?>" value="<?php echo $detalhe_pedido_view->Token ?>">
@@ -1027,6 +1360,28 @@ $detalhe_pedido_view->ShowMessage();
 </td>
 	</tr>
 <?php } ?>
+<?php if ($detalhe_pedido->desconto->Visible) { // desconto ?>
+	<tr id="r_desconto">
+		<td class="col-sm-2"><span id="elh_detalhe_pedido_desconto"><?php echo $detalhe_pedido->desconto->FldCaption() ?></span></td>
+		<td data-name="desconto"<?php echo $detalhe_pedido->desconto->CellAttributes() ?>>
+<span id="el_detalhe_pedido_desconto">
+<span<?php echo $detalhe_pedido->desconto->ViewAttributes() ?>>
+<?php echo $detalhe_pedido->desconto->ViewValue ?></span>
+</span>
+</td>
+	</tr>
+<?php } ?>
+<?php if ($detalhe_pedido->preco->Visible) { // preco ?>
+	<tr id="r_preco">
+		<td class="col-sm-2"><span id="elh_detalhe_pedido_preco"><?php echo $detalhe_pedido->preco->FldCaption() ?></span></td>
+		<td data-name="preco"<?php echo $detalhe_pedido->preco->CellAttributes() ?>>
+<span id="el_detalhe_pedido_preco">
+<span<?php echo $detalhe_pedido->preco->ViewAttributes() ?>>
+<?php echo $detalhe_pedido->preco->ViewValue ?></span>
+</span>
+</td>
+	</tr>
+<?php } ?>
 <?php if ($detalhe_pedido->quantidade->Visible) { // quantidade ?>
 	<tr id="r_quantidade">
 		<td class="col-sm-2"><span id="elh_detalhe_pedido_quantidade"><?php echo $detalhe_pedido->quantidade->FldCaption() ?></span></td>
@@ -1038,44 +1393,82 @@ $detalhe_pedido_view->ShowMessage();
 </td>
 	</tr>
 <?php } ?>
-<?php if ($detalhe_pedido->custo->Visible) { // custo ?>
-	<tr id="r_custo">
-		<td class="col-sm-2"><span id="elh_detalhe_pedido_custo"><?php echo $detalhe_pedido->custo->FldCaption() ?></span></td>
-		<td data-name="custo"<?php echo $detalhe_pedido->custo->CellAttributes() ?>>
-<span id="el_detalhe_pedido_custo">
-<span<?php echo $detalhe_pedido->custo->ViewAttributes() ?>>
-<?php echo $detalhe_pedido->custo->ViewValue ?></span>
-</span>
-</td>
-	</tr>
-<?php } ?>
-<?php if ($detalhe_pedido->id_desconto->Visible) { // id_desconto ?>
-	<tr id="r_id_desconto">
-		<td class="col-sm-2"><span id="elh_detalhe_pedido_id_desconto"><?php echo $detalhe_pedido->id_desconto->FldCaption() ?></span></td>
-		<td data-name="id_desconto"<?php echo $detalhe_pedido->id_desconto->CellAttributes() ?>>
-<span id="el_detalhe_pedido_id_desconto">
-<span<?php echo $detalhe_pedido->id_desconto->ViewAttributes() ?>>
-<?php echo $detalhe_pedido->id_desconto->ViewValue ?></span>
+<?php if ($detalhe_pedido->subtotal->Visible) { // subtotal ?>
+	<tr id="r_subtotal">
+		<td class="col-sm-2"><span id="elh_detalhe_pedido_subtotal"><?php echo $detalhe_pedido->subtotal->FldCaption() ?></span></td>
+		<td data-name="subtotal"<?php echo $detalhe_pedido->subtotal->CellAttributes() ?>>
+<span id="el_detalhe_pedido_subtotal">
+<span<?php echo $detalhe_pedido->subtotal->ViewAttributes() ?>>
+<?php echo $detalhe_pedido->subtotal->ViewValue ?></span>
 </span>
 </td>
 	</tr>
 <?php } ?>
 </table>
+<?php if (!$detalhe_pedido_view->IsModal) { ?>
+<?php if ($detalhe_pedido->Export == "") { ?>
+<?php if (!isset($detalhe_pedido_view->Pager)) $detalhe_pedido_view->Pager = new cPrevNextPager($detalhe_pedido_view->StartRec, $detalhe_pedido_view->DisplayRecs, $detalhe_pedido_view->TotalRecs, $detalhe_pedido_view->AutoHidePager) ?>
+<?php if ($detalhe_pedido_view->Pager->RecordCount > 0 && $detalhe_pedido_view->Pager->Visible) { ?>
+<div class="ewPager">
+<span><?php echo $Language->Phrase("Page") ?>&nbsp;</span>
+<div class="ewPrevNext"><div class="input-group">
+<div class="input-group-btn">
+<!--first page button-->
+	<?php if ($detalhe_pedido_view->Pager->FirstButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerFirst") ?>" href="<?php echo $detalhe_pedido_view->PageUrl() ?>start=<?php echo $detalhe_pedido_view->Pager->FirstButton->Start ?>"><span class="icon-first ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerFirst") ?>"><span class="icon-first ewIcon"></span></a>
+	<?php } ?>
+<!--previous page button-->
+	<?php if ($detalhe_pedido_view->Pager->PrevButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerPrevious") ?>" href="<?php echo $detalhe_pedido_view->PageUrl() ?>start=<?php echo $detalhe_pedido_view->Pager->PrevButton->Start ?>"><span class="icon-prev ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerPrevious") ?>"><span class="icon-prev ewIcon"></span></a>
+	<?php } ?>
+</div>
+<!--current page number-->
+	<input class="form-control input-sm" type="text" name="<?php echo EW_TABLE_PAGE_NO ?>" value="<?php echo $detalhe_pedido_view->Pager->CurrentPage ?>">
+<div class="input-group-btn">
+<!--next page button-->
+	<?php if ($detalhe_pedido_view->Pager->NextButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerNext") ?>" href="<?php echo $detalhe_pedido_view->PageUrl() ?>start=<?php echo $detalhe_pedido_view->Pager->NextButton->Start ?>"><span class="icon-next ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerNext") ?>"><span class="icon-next ewIcon"></span></a>
+	<?php } ?>
+<!--last page button-->
+	<?php if ($detalhe_pedido_view->Pager->LastButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerLast") ?>" href="<?php echo $detalhe_pedido_view->PageUrl() ?>start=<?php echo $detalhe_pedido_view->Pager->LastButton->Start ?>"><span class="icon-last ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerLast") ?>"><span class="icon-last ewIcon"></span></a>
+	<?php } ?>
+</div>
+</div>
+</div>
+<span>&nbsp;<?php echo $Language->Phrase("of") ?>&nbsp;<?php echo $detalhe_pedido_view->Pager->PageCount ?></span>
+</div>
+<?php } ?>
+<div class="clearfix"></div>
+<?php } ?>
+<?php } ?>
 </form>
+<?php if ($detalhe_pedido->Export == "") { ?>
 <script type="text/javascript">
 fdetalhe_pedidoview.Init();
 </script>
+<?php } ?>
 <?php
 $detalhe_pedido_view->ShowPageFooter();
 if (EW_DEBUG_ENABLED)
 	echo ew_DebugMsg();
 ?>
+<?php if ($detalhe_pedido->Export == "") { ?>
 <script type="text/javascript">
 
 // Write your table-specific startup script here
 // document.write("page loaded");
 
 </script>
+<?php } ?>
 <?php include_once "footer.php" ?>
 <?php
 $detalhe_pedido_view->Page_Terminate();

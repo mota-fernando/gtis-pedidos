@@ -4,7 +4,7 @@
 $RootMenu = new cMenu("RootMenu", TRUE);
 $RootMenu->AddMenuItem(8, "mi_pedidos", $Language->MenuPhrase("8", "MenuText"), "pedidoslist.php", -1, "", TRUE, FALSE, FALSE, "fa-list-alt");
 $RootMenu->AddMenuItem(21, "mci_Cate1logo", $Language->MenuPhrase("21", "MenuText"), "", -1, "", TRUE, FALSE, TRUE, "glyphicon-hdd");
-$RootMenu->AddMenuItem(22, "mi_categoria", $Language->MenuPhrase("22", "MenuText"), "categorialist.php", 21, "", TRUE, FALSE, FALSE, "fa-tags");
+$RootMenu->AddMenuItem(10015, "mi_categoria", $Language->MenuPhrase("10015", "MenuText"), "categorialist.php", 21, "", TRUE, FALSE, FALSE, "fa-tags");
 $RootMenu->AddMenuItem(7, "mi_marcas", $Language->MenuPhrase("7", "MenuText"), "marcaslist.php", 21, "", TRUE, FALSE, FALSE, "glyphicon-registration-mark ");
 $RootMenu->AddMenuItem(11, "mi_produtos", $Language->MenuPhrase("11", "MenuText"), "produtoslist.php", 21, "", TRUE, FALSE, FALSE, "fa-paperclip");
 $RootMenu->AddMenuItem(5, "mi_empresas", $Language->MenuPhrase("5", "MenuText"), "empresaslist.php", 21, "", TRUE, FALSE, FALSE, "glyphicon-tower");

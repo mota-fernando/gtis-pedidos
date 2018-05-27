@@ -287,8 +287,8 @@ class cpedidos_add extends cpedidos {
 		// Create form object
 		$objForm = new cFormObj();
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
-		$this->tipo_pedido->SetVisibility();
 		$this->numero->SetVisibility();
+		$this->tipo_pedido->SetVisibility();
 		$this->fecha_data->SetVisibility();
 		$this->fecha_hora->SetVisibility();
 		$this->id_fornecedor->SetVisibility();
@@ -527,9 +527,9 @@ class cpedidos_add extends cpedidos {
 	function LoadDefaultValues() {
 		$this->id_pedidos->CurrentValue = NULL;
 		$this->id_pedidos->OldValue = $this->id_pedidos->CurrentValue;
-		$this->tipo_pedido->CurrentValue = "C";
 		$this->numero->CurrentValue = NULL;
 		$this->numero->OldValue = $this->numero->CurrentValue;
+		$this->tipo_pedido->CurrentValue = "C";
 		$this->fecha_data->CurrentValue = NULL;
 		$this->fecha_data->OldValue = $this->fecha_data->CurrentValue;
 		$this->fecha_hora->CurrentValue = NULL;
@@ -555,11 +555,11 @@ class cpedidos_add extends cpedidos {
 
 		// Load from form
 		global $objForm;
-		if (!$this->tipo_pedido->FldIsDetailKey) {
-			$this->tipo_pedido->setFormValue($objForm->GetValue("x_tipo_pedido"));
-		}
 		if (!$this->numero->FldIsDetailKey) {
 			$this->numero->setFormValue($objForm->GetValue("x_numero"));
+		}
+		if (!$this->tipo_pedido->FldIsDetailKey) {
+			$this->tipo_pedido->setFormValue($objForm->GetValue("x_tipo_pedido"));
 		}
 		if (!$this->fecha_data->FldIsDetailKey) {
 			$this->fecha_data->setFormValue($objForm->GetValue("x_fecha_data"));
@@ -598,8 +598,8 @@ class cpedidos_add extends cpedidos {
 	// Restore form values
 	function RestoreFormValues() {
 		global $objForm;
-		$this->tipo_pedido->CurrentValue = $this->tipo_pedido->FormValue;
 		$this->numero->CurrentValue = $this->numero->FormValue;
+		$this->tipo_pedido->CurrentValue = $this->tipo_pedido->FormValue;
 		$this->fecha_data->CurrentValue = $this->fecha_data->FormValue;
 		$this->fecha_data->CurrentValue = ew_UnFormatDateTime($this->fecha_data->CurrentValue, 0);
 		$this->fecha_hora->CurrentValue = $this->fecha_hora->FormValue;
@@ -648,8 +648,8 @@ class cpedidos_add extends cpedidos {
 		if (!$rs || $rs->EOF)
 			return;
 		$this->id_pedidos->setDbValue($row['id_pedidos']);
-		$this->tipo_pedido->setDbValue($row['tipo_pedido']);
 		$this->numero->setDbValue($row['numero']);
+		$this->tipo_pedido->setDbValue($row['tipo_pedido']);
 		$this->fecha_data->setDbValue($row['fecha_data']);
 		$this->fecha_hora->setDbValue($row['fecha_hora']);
 		$this->id_fornecedor->setDbValue($row['id_fornecedor']);
@@ -667,8 +667,8 @@ class cpedidos_add extends cpedidos {
 		$this->LoadDefaultValues();
 		$row = array();
 		$row['id_pedidos'] = $this->id_pedidos->CurrentValue;
-		$row['tipo_pedido'] = $this->tipo_pedido->CurrentValue;
 		$row['numero'] = $this->numero->CurrentValue;
+		$row['tipo_pedido'] = $this->tipo_pedido->CurrentValue;
 		$row['fecha_data'] = $this->fecha_data->CurrentValue;
 		$row['fecha_hora'] = $this->fecha_hora->CurrentValue;
 		$row['id_fornecedor'] = $this->id_fornecedor->CurrentValue;
@@ -688,8 +688,8 @@ class cpedidos_add extends cpedidos {
 			return;
 		$row = is_array($rs) ? $rs : $rs->fields;
 		$this->id_pedidos->DbValue = $row['id_pedidos'];
-		$this->tipo_pedido->DbValue = $row['tipo_pedido'];
 		$this->numero->DbValue = $row['numero'];
+		$this->tipo_pedido->DbValue = $row['tipo_pedido'];
 		$this->fecha_data->DbValue = $row['fecha_data'];
 		$this->fecha_hora->DbValue = $row['fecha_hora'];
 		$this->id_fornecedor->DbValue = $row['id_fornecedor'];
@@ -735,8 +735,8 @@ class cpedidos_add extends cpedidos {
 
 		// Common render codes for all row types
 		// id_pedidos
-		// tipo_pedido
 		// numero
+		// tipo_pedido
 		// fecha_data
 		// fecha_hora
 		// id_fornecedor
@@ -750,9 +750,9 @@ class cpedidos_add extends cpedidos {
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
-		// id_pedidos
-		$this->id_pedidos->ViewValue = $this->id_pedidos->CurrentValue;
-		$this->id_pedidos->ViewCustomAttributes = "";
+		// numero
+		$this->numero->ViewValue = $this->numero->CurrentValue;
+		$this->numero->ViewCustomAttributes = "";
 
 		// tipo_pedido
 		if (strval($this->tipo_pedido->CurrentValue) <> "") {
@@ -761,10 +761,6 @@ class cpedidos_add extends cpedidos {
 			$this->tipo_pedido->ViewValue = NULL;
 		}
 		$this->tipo_pedido->ViewCustomAttributes = "";
-
-		// numero
-		$this->numero->ViewValue = $this->numero->CurrentValue;
-		$this->numero->ViewCustomAttributes = "";
 
 		// fecha_data
 		$this->fecha_data->ViewValue = $this->fecha_data->CurrentValue;
@@ -825,7 +821,7 @@ class cpedidos_add extends cpedidos {
 		// id_prazos
 		if (strval($this->id_prazos->CurrentValue) <> "") {
 			$sFilterWrk = "`id_prazos`" . ew_SearchString("=", $this->id_prazos->CurrentValue, EW_DATATYPE_NUMBER, "");
-		$sSqlWrk = "SELECT `id_prazos`, `prazo_em_dias` AS `DispFld`, `parcelas` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `prazos`";
+		$sSqlWrk = "SELECT `id_prazos`, `prazo_em_dias` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `prazos`";
 		$sWhereWrk = "";
 		$this->id_prazos->LookupFilters = array();
 		ew_AddFilter($sWhereWrk, $sFilterWrk);
@@ -835,7 +831,6 @@ class cpedidos_add extends cpedidos {
 			if ($rswrk && !$rswrk->EOF) { // Lookup values found
 				$arwrk = array();
 				$arwrk[1] = $rswrk->fields('DispFld');
-				$arwrk[2] = $rswrk->fields('Disp2Fld');
 				$this->id_prazos->ViewValue = $this->id_prazos->DisplayValue($arwrk);
 				$rswrk->Close();
 			} else {
@@ -882,7 +877,6 @@ class cpedidos_add extends cpedidos {
 		$this->comissao_representante->ViewCustomAttributes = "";
 
 		// id_cliente
-		$this->id_cliente->ViewValue = $this->id_cliente->CurrentValue;
 		if (strval($this->id_cliente->CurrentValue) <> "") {
 			$sFilterWrk = "`id_perfil`" . ew_SearchString("=", $this->id_cliente->CurrentValue, EW_DATATYPE_NUMBER, "");
 		$sSqlWrk = "SELECT `id_perfil`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `empresas`";
@@ -913,15 +907,15 @@ class cpedidos_add extends cpedidos {
 		}
 		$this->status->ViewCustomAttributes = "";
 
-			// tipo_pedido
-			$this->tipo_pedido->LinkCustomAttributes = "";
-			$this->tipo_pedido->HrefValue = "";
-			$this->tipo_pedido->TooltipValue = "";
-
 			// numero
 			$this->numero->LinkCustomAttributes = "";
 			$this->numero->HrefValue = "";
 			$this->numero->TooltipValue = "";
+
+			// tipo_pedido
+			$this->tipo_pedido->LinkCustomAttributes = "";
+			$this->tipo_pedido->HrefValue = "";
+			$this->tipo_pedido->TooltipValue = "";
 
 			// fecha_data
 			$this->fecha_data->LinkCustomAttributes = "";
@@ -974,16 +968,16 @@ class cpedidos_add extends cpedidos {
 			$this->status->TooltipValue = "";
 		} elseif ($this->RowType == EW_ROWTYPE_ADD) { // Add row
 
-			// tipo_pedido
-			$this->tipo_pedido->EditAttrs["class"] = "form-control";
-			$this->tipo_pedido->EditCustomAttributes = "";
-			$this->tipo_pedido->EditValue = $this->tipo_pedido->Options(TRUE);
-
 			// numero
 			$this->numero->EditAttrs["class"] = "form-control";
 			$this->numero->EditCustomAttributes = "";
 			$this->numero->EditValue = ew_HtmlEncode($this->numero->CurrentValue);
 			$this->numero->PlaceHolder = ew_RemoveHtml($this->numero->FldCaption());
+
+			// tipo_pedido
+			$this->tipo_pedido->EditAttrs["class"] = "form-control";
+			$this->tipo_pedido->EditCustomAttributes = "";
+			$this->tipo_pedido->EditValue = $this->tipo_pedido->Options(TRUE);
 
 			// fecha_data
 			// fecha_hora
@@ -1034,7 +1028,7 @@ class cpedidos_add extends cpedidos {
 			} else {
 				$sFilterWrk = "`id_prazos`" . ew_SearchString("=", $this->id_prazos->CurrentValue, EW_DATATYPE_NUMBER, "");
 			}
-			$sSqlWrk = "SELECT `id_prazos`, `prazo_em_dias` AS `DispFld`, `parcelas` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `prazos`";
+			$sSqlWrk = "SELECT `id_prazos`, `prazo_em_dias` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `prazos`";
 			$sWhereWrk = "";
 			$this->id_prazos->LookupFilters = array();
 			ew_AddFilter($sWhereWrk, $sFilterWrk);
@@ -1078,42 +1072,35 @@ class cpedidos_add extends cpedidos {
 			// id_cliente
 			$this->id_cliente->EditAttrs["class"] = "form-control";
 			$this->id_cliente->EditCustomAttributes = "";
-			$this->id_cliente->EditValue = ew_HtmlEncode($this->id_cliente->CurrentValue);
-			if (strval($this->id_cliente->CurrentValue) <> "") {
+			if (trim(strval($this->id_cliente->CurrentValue)) == "") {
+				$sFilterWrk = "0=1";
+			} else {
 				$sFilterWrk = "`id_perfil`" . ew_SearchString("=", $this->id_cliente->CurrentValue, EW_DATATYPE_NUMBER, "");
-			$sSqlWrk = "SELECT `id_perfil`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `empresas`";
+			}
+			$sSqlWrk = "SELECT `id_perfil`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `empresas`";
 			$sWhereWrk = "";
 			$this->id_cliente->LookupFilters = array();
 			ew_AddFilter($sWhereWrk, $sFilterWrk);
 			$this->Lookup_Selecting($this->id_cliente, $sWhereWrk); // Call Lookup Selecting
 			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-				$rswrk = Conn()->Execute($sSqlWrk);
-				if ($rswrk && !$rswrk->EOF) { // Lookup values found
-					$arwrk = array();
-					$arwrk[1] = ew_HtmlEncode($rswrk->fields('DispFld'));
-					$this->id_cliente->EditValue = $this->id_cliente->DisplayValue($arwrk);
-					$rswrk->Close();
-				} else {
-					$this->id_cliente->EditValue = ew_HtmlEncode($this->id_cliente->CurrentValue);
-				}
-			} else {
-				$this->id_cliente->EditValue = NULL;
-			}
-			$this->id_cliente->PlaceHolder = ew_RemoveHtml($this->id_cliente->FldCaption());
+			$rswrk = Conn()->Execute($sSqlWrk);
+			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
+			if ($rswrk) $rswrk->Close();
+			$this->id_cliente->EditValue = $arwrk;
 
 			// status
 			$this->status->EditCustomAttributes = "";
 			$this->status->EditValue = $this->status->Options(FALSE);
 
 			// Add refer script
-			// tipo_pedido
-
-			$this->tipo_pedido->LinkCustomAttributes = "";
-			$this->tipo_pedido->HrefValue = "";
-
 			// numero
+
 			$this->numero->LinkCustomAttributes = "";
 			$this->numero->HrefValue = "";
+
+			// tipo_pedido
+			$this->tipo_pedido->LinkCustomAttributes = "";
+			$this->tipo_pedido->HrefValue = "";
 
 			// fecha_data
 			$this->fecha_data->LinkCustomAttributes = "";
@@ -1173,17 +1160,14 @@ class cpedidos_add extends cpedidos {
 		// Check if validation required
 		if (!EW_SERVER_VALIDATE)
 			return ($gsFormError == "");
-		if (!$this->tipo_pedido->FldIsDetailKey && !is_null($this->tipo_pedido->FormValue) && $this->tipo_pedido->FormValue == "") {
-			ew_AddMessage($gsFormError, str_replace("%s", $this->tipo_pedido->FldCaption(), $this->tipo_pedido->ReqErrMsg));
-		}
 		if (!$this->numero->FldIsDetailKey && !is_null($this->numero->FormValue) && $this->numero->FormValue == "") {
 			ew_AddMessage($gsFormError, str_replace("%s", $this->numero->FldCaption(), $this->numero->ReqErrMsg));
 		}
 		if (!ew_CheckInteger($this->numero->FormValue)) {
 			ew_AddMessage($gsFormError, $this->numero->FldErrMsg());
 		}
-		if (!ew_CheckInteger($this->id_cliente->FormValue)) {
-			ew_AddMessage($gsFormError, $this->id_cliente->FldErrMsg());
+		if (!$this->tipo_pedido->FldIsDetailKey && !is_null($this->tipo_pedido->FormValue) && $this->tipo_pedido->FormValue == "") {
+			ew_AddMessage($gsFormError, str_replace("%s", $this->tipo_pedido->FldCaption(), $this->tipo_pedido->ReqErrMsg));
 		}
 		if ($this->status->FormValue == "") {
 			ew_AddMessage($gsFormError, str_replace("%s", $this->status->FldCaption(), $this->status->ReqErrMsg));
@@ -1223,11 +1207,11 @@ class cpedidos_add extends cpedidos {
 		}
 		$rsnew = array();
 
-		// tipo_pedido
-		$this->tipo_pedido->SetDbValueDef($rsnew, $this->tipo_pedido->CurrentValue, NULL, strval($this->tipo_pedido->CurrentValue) == "");
-
 		// numero
 		$this->numero->SetDbValueDef($rsnew, $this->numero->CurrentValue, NULL, FALSE);
+
+		// tipo_pedido
+		$this->tipo_pedido->SetDbValueDef($rsnew, $this->tipo_pedido->CurrentValue, NULL, strval($this->tipo_pedido->CurrentValue) == "");
 
 		// fecha_data
 		$this->fecha_data->SetDbValueDef($rsnew, ew_CurrentDate(), NULL);
@@ -1386,7 +1370,7 @@ class cpedidos_add extends cpedidos {
 			break;
 		case "x_id_prazos":
 			$sSqlWrk = "";
-			$sSqlWrk = "SELECT `id_prazos` AS `LinkFld`, `prazo_em_dias` AS `DispFld`, `parcelas` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `prazos`";
+			$sSqlWrk = "SELECT `id_prazos` AS `LinkFld`, `prazo_em_dias` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `prazos`";
 			$sWhereWrk = "";
 			$fld->LookupFilters = array();
 			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`id_prazos` IN ({filter_value})', "t0" => "3", "fn0" => "");
@@ -1411,7 +1395,7 @@ class cpedidos_add extends cpedidos {
 		case "x_id_cliente":
 			$sSqlWrk = "";
 			$sSqlWrk = "SELECT `id_perfil` AS `LinkFld`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `empresas`";
-			$sWhereWrk = "{filter}";
+			$sWhereWrk = "";
 			$fld->LookupFilters = array();
 			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`id_perfil` IN ({filter_value})', "t0" => "3", "fn0" => "");
 			$sSqlWrk = "";
@@ -1428,18 +1412,6 @@ class cpedidos_add extends cpedidos {
 		global $gsLanguage;
 		$pageId = $pageId ?: $this->PageID;
 		switch ($fld->FldVar) {
-		case "x_id_cliente":
-			$sSqlWrk = "";
-			$sSqlWrk = "SELECT `id_perfil`, `razao_social` AS `DispFld` FROM `empresas`";
-			$sWhereWrk = "`razao_social` LIKE '{query_value}%'";
-			$fld->LookupFilters = array();
-			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "");
-			$sSqlWrk = "";
-			$this->Lookup_Selecting($this->id_cliente, $sWhereWrk); // Call Lookup Selecting
-			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			if ($sSqlWrk <> "")
-				$fld->LookupFilters["s"] .= $sSqlWrk;
-			break;
 		}
 	}
 
@@ -1551,18 +1523,15 @@ fpedidosadd.Validate = function() {
 	for (var i = startcnt; i <= rowcnt; i++) {
 		var infix = ($k[0]) ? String(i) : "";
 		$fobj.data("rowindex", infix);
-			elm = this.GetElements("x" + infix + "_tipo_pedido");
-			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
-				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $pedidos->tipo_pedido->FldCaption(), $pedidos->tipo_pedido->ReqErrMsg)) ?>");
 			elm = this.GetElements("x" + infix + "_numero");
 			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
 				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $pedidos->numero->FldCaption(), $pedidos->numero->ReqErrMsg)) ?>");
 			elm = this.GetElements("x" + infix + "_numero");
 			if (elm && !ew_CheckInteger(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($pedidos->numero->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_id_cliente");
-			if (elm && !ew_CheckInteger(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($pedidos->id_cliente->FldErrMsg()) ?>");
+			elm = this.GetElements("x" + infix + "_tipo_pedido");
+			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
+				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $pedidos->tipo_pedido->FldCaption(), $pedidos->tipo_pedido->ReqErrMsg)) ?>");
 			elm = this.GetElements("x" + infix + "_status");
 			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
 				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $pedidos->status->FldCaption(), $pedidos->status->ReqErrMsg)) ?>");
@@ -1601,7 +1570,7 @@ fpedidosadd.Lists["x_id_fornecedor"] = {"LinkField":"x_id_perfil","Ajax":true,"A
 fpedidosadd.Lists["x_id_fornecedor"].Data = "<?php echo $pedidos_add->id_fornecedor->LookupFilterQuery(FALSE, "add") ?>";
 fpedidosadd.Lists["x_id_transportadora"] = {"LinkField":"x_id_transportadora","Ajax":true,"AutoFill":false,"DisplayFields":["x_transportadora","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"tranportadora"};
 fpedidosadd.Lists["x_id_transportadora"].Data = "<?php echo $pedidos_add->id_transportadora->LookupFilterQuery(FALSE, "add") ?>";
-fpedidosadd.Lists["x_id_prazos"] = {"LinkField":"x_id_prazos","Ajax":true,"AutoFill":false,"DisplayFields":["x_prazo_em_dias","x_parcelas","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"prazos"};
+fpedidosadd.Lists["x_id_prazos"] = {"LinkField":"x_id_prazos","Ajax":true,"AutoFill":false,"DisplayFields":["x_prazo_em_dias","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"prazos"};
 fpedidosadd.Lists["x_id_prazos"].Data = "<?php echo $pedidos_add->id_prazos->LookupFilterQuery(FALSE, "add") ?>";
 fpedidosadd.Lists["x_id_representante"] = {"LinkField":"x_id_representantes","Ajax":true,"AutoFill":false,"DisplayFields":["x_id_pessoa","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"representantes"};
 fpedidosadd.Lists["x_id_representante"].Data = "<?php echo $pedidos_add->id_representante->LookupFilterQuery(FALSE, "add") ?>";
@@ -1609,7 +1578,6 @@ fpedidosadd.Lists["x_comissao_representante"] = {"LinkField":"","Ajax":null,"Aut
 fpedidosadd.Lists["x_comissao_representante"].Options = <?php echo json_encode($pedidos_add->comissao_representante->Options()) ?>;
 fpedidosadd.Lists["x_id_cliente"] = {"LinkField":"x_id_perfil","Ajax":true,"AutoFill":false,"DisplayFields":["x_razao_social","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"empresas"};
 fpedidosadd.Lists["x_id_cliente"].Data = "<?php echo $pedidos_add->id_cliente->LookupFilterQuery(FALSE, "add") ?>";
-fpedidosadd.AutoSuggests["x_id_cliente"] = <?php echo json_encode(array("data" => "ajax=autosuggest&" . $pedidos_add->id_cliente->LookupFilterQuery(TRUE, "add"))) ?>;
 fpedidosadd.Lists["x_status"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
 fpedidosadd.Lists["x_status"].Options = <?php echo json_encode($pedidos_add->status->Options()) ?>;
 
@@ -1631,6 +1599,16 @@ $pedidos_add->ShowMessage();
 <input type="hidden" name="a_add" id="a_add" value="A">
 <input type="hidden" name="modal" value="<?php echo intval($pedidos_add->IsModal) ?>">
 <div class="ewAddDiv"><!-- page* -->
+<?php if ($pedidos->numero->Visible) { // numero ?>
+	<div id="r_numero" class="form-group">
+		<label id="elh_pedidos_numero" for="x_numero" class="<?php echo $pedidos_add->LeftColumnClass ?>"><?php echo $pedidos->numero->FldCaption() ?><?php echo $Language->Phrase("FieldRequiredIndicator") ?></label>
+		<div class="<?php echo $pedidos_add->RightColumnClass ?>"><div<?php echo $pedidos->numero->CellAttributes() ?>>
+<span id="el_pedidos_numero">
+<input type="text" data-table="pedidos" data-field="x_numero" name="x_numero" id="x_numero" size="30" placeholder="<?php echo ew_HtmlEncode($pedidos->numero->getPlaceHolder()) ?>" value="<?php echo $pedidos->numero->EditValue ?>"<?php echo $pedidos->numero->EditAttributes() ?>>
+</span>
+<?php echo $pedidos->numero->CustomMsg ?></div></div>
+	</div>
+<?php } ?>
 <?php if ($pedidos->tipo_pedido->Visible) { // tipo_pedido ?>
 	<div id="r_tipo_pedido" class="form-group">
 		<label id="elh_pedidos_tipo_pedido" for="x_tipo_pedido" class="<?php echo $pedidos_add->LeftColumnClass ?>"><?php echo $pedidos->tipo_pedido->FldCaption() ?><?php echo $Language->Phrase("FieldRequiredIndicator") ?></label>
@@ -1641,16 +1619,6 @@ $pedidos_add->ShowMessage();
 </select>
 </span>
 <?php echo $pedidos->tipo_pedido->CustomMsg ?></div></div>
-	</div>
-<?php } ?>
-<?php if ($pedidos->numero->Visible) { // numero ?>
-	<div id="r_numero" class="form-group">
-		<label id="elh_pedidos_numero" for="x_numero" class="<?php echo $pedidos_add->LeftColumnClass ?>"><?php echo $pedidos->numero->FldCaption() ?><?php echo $Language->Phrase("FieldRequiredIndicator") ?></label>
-		<div class="<?php echo $pedidos_add->RightColumnClass ?>"><div<?php echo $pedidos->numero->CellAttributes() ?>>
-<span id="el_pedidos_numero">
-<input type="text" data-table="pedidos" data-field="x_numero" name="x_numero" id="x_numero" size="30" placeholder="<?php echo ew_HtmlEncode($pedidos->numero->getPlaceHolder()) ?>" value="<?php echo $pedidos->numero->EditValue ?>"<?php echo $pedidos->numero->EditAttributes() ?>>
-</span>
-<?php echo $pedidos->numero->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
 <?php if ($pedidos->id_fornecedor->Visible) { // id_fornecedor ?>
@@ -1729,21 +1697,12 @@ $pedidos_add->ShowMessage();
 <?php } ?>
 <?php if ($pedidos->id_cliente->Visible) { // id_cliente ?>
 	<div id="r_id_cliente" class="form-group">
-		<label id="elh_pedidos_id_cliente" class="<?php echo $pedidos_add->LeftColumnClass ?>"><?php echo $pedidos->id_cliente->FldCaption() ?></label>
+		<label id="elh_pedidos_id_cliente" for="x_id_cliente" class="<?php echo $pedidos_add->LeftColumnClass ?>"><?php echo $pedidos->id_cliente->FldCaption() ?></label>
 		<div class="<?php echo $pedidos_add->RightColumnClass ?>"><div<?php echo $pedidos->id_cliente->CellAttributes() ?>>
 <span id="el_pedidos_id_cliente">
-<?php
-$wrkonchange = trim(" " . @$pedidos->id_cliente->EditAttrs["onchange"]);
-if ($wrkonchange <> "") $wrkonchange = " onchange=\"" . ew_JsEncode2($wrkonchange) . "\"";
-$pedidos->id_cliente->EditAttrs["onchange"] = "";
-?>
-<span id="as_x_id_cliente" style="white-space: nowrap; z-index: 8880">
-	<input type="text" name="sv_x_id_cliente" id="sv_x_id_cliente" value="<?php echo $pedidos->id_cliente->EditValue ?>" size="30" placeholder="<?php echo ew_HtmlEncode($pedidos->id_cliente->getPlaceHolder()) ?>" data-placeholder="<?php echo ew_HtmlEncode($pedidos->id_cliente->getPlaceHolder()) ?>"<?php echo $pedidos->id_cliente->EditAttributes() ?>>
-</span>
-<input type="hidden" data-table="pedidos" data-field="x_id_cliente" data-value-separator="<?php echo $pedidos->id_cliente->DisplayValueSeparatorAttribute() ?>" name="x_id_cliente" id="x_id_cliente" value="<?php echo ew_HtmlEncode($pedidos->id_cliente->CurrentValue) ?>"<?php echo $wrkonchange ?>>
-<script type="text/javascript">
-fpedidosadd.CreateAutoSuggest({"id":"x_id_cliente","forceSelect":true});
-</script>
+<select data-table="pedidos" data-field="x_id_cliente" data-value-separator="<?php echo $pedidos->id_cliente->DisplayValueSeparatorAttribute() ?>" id="x_id_cliente" name="x_id_cliente"<?php echo $pedidos->id_cliente->EditAttributes() ?>>
+<?php echo $pedidos->id_cliente->SelectOptionListHtml("x_id_cliente") ?>
+</select>
 <button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $pedidos->id_cliente->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_cliente',url:'empresasaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_cliente"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $pedidos->id_cliente->FldCaption() ?></span></button>
 </span>
 <?php echo $pedidos->id_cliente->CustomMsg ?></div></div>

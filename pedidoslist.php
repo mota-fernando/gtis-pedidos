@@ -303,7 +303,7 @@ class cpedidos_list extends cpedidos {
 		$this->ExportXmlUrl = $this->PageUrl() . "export=xml";
 		$this->ExportCsvUrl = $this->PageUrl() . "export=csv";
 		$this->ExportPdfUrl = $this->PageUrl() . "export=pdf";
-		$this->AddUrl = "pedidosadd.php?" . EW_TABLE_SHOW_DETAIL . "=";
+		$this->AddUrl = "pedidosadd.php?" . EW_TABLE_SHOW_DETAIL . "=detalhe_pedido";
 		$this->InlineAddUrl = $this->PageUrl() . "a=add";
 		$this->GridAddUrl = $this->PageUrl() . "a=gridadd";
 		$this->GridEditUrl = $this->PageUrl() . "a=gridedit";
@@ -414,23 +414,12 @@ class cpedidos_list extends cpedidos {
 
 		// Setup export options
 		$this->SetupExportOptions();
-		$this->id_pedidos->SetVisibility();
-		if ($this->IsAdd() || $this->IsCopy() || $this->IsGridAdd())
-			$this->id_pedidos->Visible = FALSE;
-		$this->tipo_pedido->SetVisibility();
 		$this->numero->SetVisibility();
+		$this->tipo_pedido->SetVisibility();
 		$this->fecha_data->SetVisibility();
 		if ($this->IsAddOrEdit())
 			$this->fecha_data->Visible = FALSE;
-		$this->fecha_hora->SetVisibility();
-		if ($this->IsAddOrEdit())
-			$this->fecha_hora->Visible = FALSE;
 		$this->id_fornecedor->SetVisibility();
-		$this->id_transportadora->SetVisibility();
-		$this->id_prazos->SetVisibility();
-		$this->comentarios->SetVisibility();
-		$this->id_representante->SetVisibility();
-		$this->comissao_representante->SetVisibility();
 		$this->id_cliente->SetVisibility();
 		$this->status->SetVisibility();
 
@@ -735,17 +724,10 @@ class cpedidos_list extends cpedidos {
 		if (@$_GET["order"] <> "") {
 			$this->CurrentOrder = @$_GET["order"];
 			$this->CurrentOrderType = @$_GET["ordertype"];
-			$this->UpdateSort($this->id_pedidos); // id_pedidos
-			$this->UpdateSort($this->tipo_pedido); // tipo_pedido
 			$this->UpdateSort($this->numero); // numero
+			$this->UpdateSort($this->tipo_pedido); // tipo_pedido
 			$this->UpdateSort($this->fecha_data); // fecha_data
-			$this->UpdateSort($this->fecha_hora); // fecha_hora
 			$this->UpdateSort($this->id_fornecedor); // id_fornecedor
-			$this->UpdateSort($this->id_transportadora); // id_transportadora
-			$this->UpdateSort($this->id_prazos); // id_prazos
-			$this->UpdateSort($this->comentarios); // comentarios
-			$this->UpdateSort($this->id_representante); // id_representante
-			$this->UpdateSort($this->comissao_representante); // comissao_representante
 			$this->UpdateSort($this->id_cliente); // id_cliente
 			$this->UpdateSort($this->status); // status
 			$this->setStartRecordNumber(1); // Reset start position
@@ -776,17 +758,10 @@ class cpedidos_list extends cpedidos {
 			if ($this->Command == "resetsort") {
 				$sOrderBy = "";
 				$this->setSessionOrderBy($sOrderBy);
-				$this->id_pedidos->setSort("");
-				$this->tipo_pedido->setSort("");
 				$this->numero->setSort("");
+				$this->tipo_pedido->setSort("");
 				$this->fecha_data->setSort("");
-				$this->fecha_hora->setSort("");
 				$this->id_fornecedor->setSort("");
-				$this->id_transportadora->setSort("");
-				$this->id_prazos->setSort("");
-				$this->comentarios->setSort("");
-				$this->id_representante->setSort("");
-				$this->comissao_representante->setSort("");
 				$this->id_cliente->setSort("");
 				$this->status->setSort("");
 			}
@@ -804,32 +779,26 @@ class cpedidos_list extends cpedidos {
 		// Add group option item
 		$item = &$this->ListOptions->Add($this->ListOptions->GroupOptionName);
 		$item->Body = "";
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 		$item->Visible = FALSE;
 
 		// "view"
 		$item = &$this->ListOptions->Add("view");
 		$item->CssClass = "text-nowrap";
 		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 
 		// "edit"
 		$item = &$this->ListOptions->Add("edit");
 		$item->CssClass = "text-nowrap";
 		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
-
-		// "delete"
-		$item = &$this->ListOptions->Add("delete");
-		$item->CssClass = "text-nowrap";
-		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 
 		// "detail_detalhe_pedido"
 		$item = &$this->ListOptions->Add("detail_detalhe_pedido");
 		$item->CssClass = "text-nowrap";
 		$item->Visible = TRUE && !$this->ShowMultipleDetails;
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 		$item->ShowInButtonGroup = FALSE;
 		if (!isset($GLOBALS["detalhe_pedido_grid"])) $GLOBALS["detalhe_pedido_grid"] = new cdetalhe_pedido_grid;
 
@@ -838,7 +807,7 @@ class cpedidos_list extends cpedidos {
 			$item = &$this->ListOptions->Add("details");
 			$item->CssClass = "text-nowrap";
 			$item->Visible = $this->ShowMultipleDetails;
-			$item->OnLeft = FALSE;
+			$item->OnLeft = TRUE;
 			$item->ShowInButtonGroup = FALSE;
 		}
 
@@ -850,7 +819,7 @@ class cpedidos_list extends cpedidos {
 		// List actions
 		$item = &$this->ListOptions->Add("listactions");
 		$item->CssClass = "text-nowrap";
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 		$item->Visible = FALSE;
 		$item->ShowInButtonGroup = FALSE;
 		$item->ShowInDropDown = FALSE;
@@ -858,8 +827,9 @@ class cpedidos_list extends cpedidos {
 		// "checkbox"
 		$item = &$this->ListOptions->Add("checkbox");
 		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 		$item->Header = "<input type=\"checkbox\" name=\"key\" id=\"key\" onclick=\"ew_SelectAllKey(this);\">";
+		$item->MoveTo(0);
 		$item->ShowInDropDown = FALSE;
 		$item->ShowInButtonGroup = FALSE;
 
@@ -904,13 +874,6 @@ class cpedidos_list extends cpedidos {
 		} else {
 			$oListOpt->Body = "";
 		}
-
-		// "delete"
-		$oListOpt = &$this->ListOptions->Items["delete"];
-		if (TRUE)
-			$oListOpt->Body = "<a class=\"ewRowLink ewDelete\"" . "" . " title=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" href=\"" . ew_HtmlEncode($this->DeleteUrl) . "\">" . $Language->Phrase("DeleteLink") . "</a>";
-		else
-			$oListOpt->Body = "";
 
 		// Set up list action buttons
 		$oListOpt = &$this->ListOptions->GetItem("listactions");
@@ -1046,6 +1009,11 @@ class cpedidos_list extends cpedidos {
 			}
 		}
 		$option = $options["action"];
+
+		// Add multi delete
+		$item = &$option->Add("multidelete");
+		$item->Body = "<a class=\"ewAction ewMultiDelete\" title=\"" . ew_HtmlTitle($Language->Phrase("DeleteSelectedLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("DeleteSelectedLink")) . "\" href=\"\" onclick=\"ew_SubmitAction(event,{f:document.fpedidoslist,url:'" . $this->MultiDeleteUrl . "'});return false;\">" . $Language->Phrase("DeleteSelectedLink") . "</a>";
+		$item->Visible = (TRUE);
 
 		// Set up options default
 		foreach ($options as &$option) {
@@ -1209,10 +1177,77 @@ class cpedidos_list extends cpedidos {
 
 	function SetupListOptionsExt() {
 		global $Security, $Language;
+
+		// Hide detail items for dropdown if necessary
+		$this->ListOptions->HideDetailItemsForDropDown();
 	}
 
 	function RenderListOptionsExt() {
 		global $Security, $Language;
+		$links = "";
+		$btngrps = "";
+		$sSqlWrk = "`numero_pedido`=" . ew_AdjustSql($this->numero->CurrentValue, $this->DBID) . "";
+
+		// Column "detail_detalhe_pedido"
+		if ($this->DetailPages->Items["detalhe_pedido"]->Visible) {
+			$link = "";
+			$option = &$this->ListOptions->Items["detail_detalhe_pedido"];
+			$url = "detalhe_pedidopreview.php?t=pedidos&f=" . ew_Encrypt($sSqlWrk);
+			$btngrp = "<div data-table=\"detalhe_pedido\" data-url=\"" . $url . "\">";
+			if (TRUE) {
+				$label = $Language->TablePhrase("detalhe_pedido", "TblCaption");
+				$label .= "&nbsp;" . ew_JsEncode2(str_replace("%c", $this->detalhe_pedido_Count, $Language->Phrase("DetailCount")));
+				$link = "<li class=\"nav-item\"><a class=\"nav-link\" href=\"#\" data-toggle=\"tab\" data-table=\"detalhe_pedido\" data-url=\"" . $url . "\">" . $label . "</a></li>";
+				$links .= $link;
+				$detaillnk = ew_JsEncode3("detalhe_pedidolist.php?" . EW_TABLE_SHOW_MASTER . "=pedidos&fk_numero=" . urlencode(strval($this->numero->CurrentValue)) . "");
+				$btngrp .= "<a href=\"javascript:void(0);\" class=\"ewLinkSeparator\" title=\"" . $Language->TablePhrase("detalhe_pedido", "TblCaption") . "\" onclick=\"window.location='" . $detaillnk . "'\">" . $Language->Phrase("MasterDetailListLink") . "</a>";
+			}
+			if ($GLOBALS["detalhe_pedido_grid"]->DetailView) {
+				$caption = $Language->Phrase("MasterDetailViewLink");
+				$url = $this->GetViewUrl(EW_TABLE_SHOW_DETAIL . "=detalhe_pedido");
+				$btngrp .= "<a href=\"javascript:void(0);\" class=\"ewLinkSeparator\" title=\"" . ew_HtmlTitle($caption) . "\" onclick=\"window.location='" . ew_HtmlEncode($url) . "'\">" . $caption . "</a>";
+			}
+			if ($GLOBALS["detalhe_pedido_grid"]->DetailEdit) {
+				$caption = $Language->Phrase("MasterDetailEditLink");
+				$url = $this->GetEditUrl(EW_TABLE_SHOW_DETAIL . "=detalhe_pedido");
+				$btngrp .= "<a href=\"javascript:void(0);\" class=\"ewLinkSeparator\" title=\"" . ew_HtmlTitle($caption) . "\" onclick=\"window.location='" . ew_HtmlEncode($url) . "'\">" . $caption . "</a>";
+			}
+			$btngrp .= "</div>";
+			if ($link <> "") {
+				$btngrps .= $btngrp;
+				$option->Body .= "<div class=\"d-none ewPreview\">" . $link . $btngrp . "</div>";
+			}
+		}
+
+		// Hide detail items if necessary
+		$this->ListOptions->HideDetailItemsForDropDown();
+
+		// Column "preview"
+		$option = &$this->ListOptions->GetItem("preview");
+		if (!$option) { // Add preview column
+			$option = &$this->ListOptions->Add("preview");
+			$option->OnLeft = TRUE;
+			if ($option->OnLeft) {
+				$option->MoveTo($this->ListOptions->ItemPos("checkbox") + 1);
+			} else {
+				$option->MoveTo($this->ListOptions->ItemPos("checkbox"));
+			}
+			$option->Visible = !($this->Export <> "" || $this->CurrentAction == "gridadd" || $this->CurrentAction == "gridedit");
+			$option->ShowInDropDown = FALSE;
+			$option->ShowInButtonGroup = FALSE;
+		}
+		if ($option) {
+			$option->Body = "<span class=\"ewPreviewRowBtn ewPointer ewIcon fa fa-expand text-success\"></span>";
+			$option->Body .= "<div class=\"d-none ewPreview\">" . $links . $btngrps . "</div>";
+			if ($option->Visible) $option->Visible = $links <> "";
+		}
+
+		// Column "details" (Multiple details)
+		$option = &$this->ListOptions->GetItem("details");
+		if ($option) {
+			$option->Body .= "<div class=\"d-none ewPreview\">" . $links . $btngrps . "</div>";
+			if ($option->Visible) $option->Visible = $links <> "";
+		}
 	}
 
 	// Set up starting record parameters
@@ -1311,8 +1346,8 @@ class cpedidos_list extends cpedidos {
 		if (!$rs || $rs->EOF)
 			return;
 		$this->id_pedidos->setDbValue($row['id_pedidos']);
-		$this->tipo_pedido->setDbValue($row['tipo_pedido']);
 		$this->numero->setDbValue($row['numero']);
+		$this->tipo_pedido->setDbValue($row['tipo_pedido']);
 		$this->fecha_data->setDbValue($row['fecha_data']);
 		$this->fecha_hora->setDbValue($row['fecha_hora']);
 		$this->id_fornecedor->setDbValue($row['id_fornecedor']);
@@ -1335,8 +1370,8 @@ class cpedidos_list extends cpedidos {
 	function NewRow() {
 		$row = array();
 		$row['id_pedidos'] = NULL;
-		$row['tipo_pedido'] = NULL;
 		$row['numero'] = NULL;
+		$row['tipo_pedido'] = NULL;
 		$row['fecha_data'] = NULL;
 		$row['fecha_hora'] = NULL;
 		$row['id_fornecedor'] = NULL;
@@ -1356,8 +1391,8 @@ class cpedidos_list extends cpedidos {
 			return;
 		$row = is_array($rs) ? $rs : $rs->fields;
 		$this->id_pedidos->DbValue = $row['id_pedidos'];
-		$this->tipo_pedido->DbValue = $row['tipo_pedido'];
 		$this->numero->DbValue = $row['numero'];
+		$this->tipo_pedido->DbValue = $row['tipo_pedido'];
 		$this->fecha_data->DbValue = $row['fecha_data'];
 		$this->fecha_hora->DbValue = $row['fecha_hora'];
 		$this->id_fornecedor->DbValue = $row['id_fornecedor'];
@@ -1409,8 +1444,8 @@ class cpedidos_list extends cpedidos {
 
 		// Common render codes for all row types
 		// id_pedidos
-		// tipo_pedido
 		// numero
+		// tipo_pedido
 		// fecha_data
 		// fecha_hora
 		// id_fornecedor
@@ -1424,9 +1459,9 @@ class cpedidos_list extends cpedidos {
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
-		// id_pedidos
-		$this->id_pedidos->ViewValue = $this->id_pedidos->CurrentValue;
-		$this->id_pedidos->ViewCustomAttributes = "";
+		// numero
+		$this->numero->ViewValue = $this->numero->CurrentValue;
+		$this->numero->ViewCustomAttributes = "";
 
 		// tipo_pedido
 		if (strval($this->tipo_pedido->CurrentValue) <> "") {
@@ -1435,10 +1470,6 @@ class cpedidos_list extends cpedidos {
 			$this->tipo_pedido->ViewValue = NULL;
 		}
 		$this->tipo_pedido->ViewCustomAttributes = "";
-
-		// numero
-		$this->numero->ViewValue = $this->numero->CurrentValue;
-		$this->numero->ViewCustomAttributes = "";
 
 		// fecha_data
 		$this->fecha_data->ViewValue = $this->fecha_data->CurrentValue;
@@ -1499,7 +1530,7 @@ class cpedidos_list extends cpedidos {
 		// id_prazos
 		if (strval($this->id_prazos->CurrentValue) <> "") {
 			$sFilterWrk = "`id_prazos`" . ew_SearchString("=", $this->id_prazos->CurrentValue, EW_DATATYPE_NUMBER, "");
-		$sSqlWrk = "SELECT `id_prazos`, `prazo_em_dias` AS `DispFld`, `parcelas` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `prazos`";
+		$sSqlWrk = "SELECT `id_prazos`, `prazo_em_dias` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `prazos`";
 		$sWhereWrk = "";
 		$this->id_prazos->LookupFilters = array();
 		ew_AddFilter($sWhereWrk, $sFilterWrk);
@@ -1509,7 +1540,6 @@ class cpedidos_list extends cpedidos {
 			if ($rswrk && !$rswrk->EOF) { // Lookup values found
 				$arwrk = array();
 				$arwrk[1] = $rswrk->fields('DispFld');
-				$arwrk[2] = $rswrk->fields('Disp2Fld');
 				$this->id_prazos->ViewValue = $this->id_prazos->DisplayValue($arwrk);
 				$rswrk->Close();
 			} else {
@@ -1556,7 +1586,6 @@ class cpedidos_list extends cpedidos {
 		$this->comissao_representante->ViewCustomAttributes = "";
 
 		// id_cliente
-		$this->id_cliente->ViewValue = $this->id_cliente->CurrentValue;
 		if (strval($this->id_cliente->CurrentValue) <> "") {
 			$sFilterWrk = "`id_perfil`" . ew_SearchString("=", $this->id_cliente->CurrentValue, EW_DATATYPE_NUMBER, "");
 		$sSqlWrk = "SELECT `id_perfil`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `empresas`";
@@ -1587,60 +1616,25 @@ class cpedidos_list extends cpedidos {
 		}
 		$this->status->ViewCustomAttributes = "";
 
-			// id_pedidos
-			$this->id_pedidos->LinkCustomAttributes = "";
-			$this->id_pedidos->HrefValue = "";
-			$this->id_pedidos->TooltipValue = "";
+			// numero
+			$this->numero->LinkCustomAttributes = "";
+			$this->numero->HrefValue = "";
+			$this->numero->TooltipValue = "";
 
 			// tipo_pedido
 			$this->tipo_pedido->LinkCustomAttributes = "";
 			$this->tipo_pedido->HrefValue = "";
 			$this->tipo_pedido->TooltipValue = "";
 
-			// numero
-			$this->numero->LinkCustomAttributes = "";
-			$this->numero->HrefValue = "";
-			$this->numero->TooltipValue = "";
-
 			// fecha_data
 			$this->fecha_data->LinkCustomAttributes = "";
 			$this->fecha_data->HrefValue = "";
 			$this->fecha_data->TooltipValue = "";
 
-			// fecha_hora
-			$this->fecha_hora->LinkCustomAttributes = "";
-			$this->fecha_hora->HrefValue = "";
-			$this->fecha_hora->TooltipValue = "";
-
 			// id_fornecedor
 			$this->id_fornecedor->LinkCustomAttributes = "";
 			$this->id_fornecedor->HrefValue = "";
 			$this->id_fornecedor->TooltipValue = "";
-
-			// id_transportadora
-			$this->id_transportadora->LinkCustomAttributes = "";
-			$this->id_transportadora->HrefValue = "";
-			$this->id_transportadora->TooltipValue = "";
-
-			// id_prazos
-			$this->id_prazos->LinkCustomAttributes = "";
-			$this->id_prazos->HrefValue = "";
-			$this->id_prazos->TooltipValue = "";
-
-			// comentarios
-			$this->comentarios->LinkCustomAttributes = "";
-			$this->comentarios->HrefValue = "";
-			$this->comentarios->TooltipValue = "";
-
-			// id_representante
-			$this->id_representante->LinkCustomAttributes = "";
-			$this->id_representante->HrefValue = "";
-			$this->id_representante->TooltipValue = "";
-
-			// comissao_representante
-			$this->comissao_representante->LinkCustomAttributes = "";
-			$this->comissao_representante->HrefValue = "";
-			$this->comissao_representante->TooltipValue = "";
 
 			// id_cliente
 			$this->id_cliente->LinkCustomAttributes = "";
@@ -2008,21 +2002,34 @@ fpedidoslist.Lists["x_tipo_pedido"] = {"LinkField":"","Ajax":null,"AutoFill":fal
 fpedidoslist.Lists["x_tipo_pedido"].Options = <?php echo json_encode($pedidos_list->tipo_pedido->Options()) ?>;
 fpedidoslist.Lists["x_id_fornecedor"] = {"LinkField":"x_id_perfil","Ajax":true,"AutoFill":false,"DisplayFields":["x_razao_social","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"empresas"};
 fpedidoslist.Lists["x_id_fornecedor"].Data = "<?php echo $pedidos_list->id_fornecedor->LookupFilterQuery(FALSE, "list") ?>";
-fpedidoslist.Lists["x_id_transportadora"] = {"LinkField":"x_id_transportadora","Ajax":true,"AutoFill":false,"DisplayFields":["x_transportadora","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"tranportadora"};
-fpedidoslist.Lists["x_id_transportadora"].Data = "<?php echo $pedidos_list->id_transportadora->LookupFilterQuery(FALSE, "list") ?>";
-fpedidoslist.Lists["x_id_prazos"] = {"LinkField":"x_id_prazos","Ajax":true,"AutoFill":false,"DisplayFields":["x_prazo_em_dias","x_parcelas","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"prazos"};
-fpedidoslist.Lists["x_id_prazos"].Data = "<?php echo $pedidos_list->id_prazos->LookupFilterQuery(FALSE, "list") ?>";
-fpedidoslist.Lists["x_id_representante"] = {"LinkField":"x_id_representantes","Ajax":true,"AutoFill":false,"DisplayFields":["x_id_pessoa","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"representantes"};
-fpedidoslist.Lists["x_id_representante"].Data = "<?php echo $pedidos_list->id_representante->LookupFilterQuery(FALSE, "list") ?>";
-fpedidoslist.Lists["x_comissao_representante"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
-fpedidoslist.Lists["x_comissao_representante"].Options = <?php echo json_encode($pedidos_list->comissao_representante->Options()) ?>;
 fpedidoslist.Lists["x_id_cliente"] = {"LinkField":"x_id_perfil","Ajax":true,"AutoFill":false,"DisplayFields":["x_razao_social","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"empresas"};
 fpedidoslist.Lists["x_id_cliente"].Data = "<?php echo $pedidos_list->id_cliente->LookupFilterQuery(FALSE, "list") ?>";
-fpedidoslist.AutoSuggests["x_id_cliente"] = <?php echo json_encode(array("data" => "ajax=autosuggest&" . $pedidos_list->id_cliente->LookupFilterQuery(TRUE, "list"))) ?>;
 fpedidoslist.Lists["x_status"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
 fpedidoslist.Lists["x_status"].Options = <?php echo json_encode($pedidos_list->status->Options()) ?>;
 
 // Form object for search
+</script>
+<style type="text/css">
+.ewTablePreviewRow { /* main table preview row color */
+	background-color: #FFFFFF; /* preview row color */
+}
+.ewTablePreviewRow .ewGrid {
+	display: table;
+}
+</style>
+<div id="ewPreview" class="d-none"><!-- preview -->
+	<div class="nav-tabs-custom"><!-- .nav-tabs-custom -->
+		<ul class="nav nav-tabs" role="tablist"></ul>
+		<div class="tab-content"><!-- .tab-content -->
+			<div class="tab-pane fade"></div>
+		</div><!-- /.tab-content -->
+	</div><!-- /.nav-tabs-custom -->
+</div><!-- /preview -->
+<script type="text/javascript" src="phpjs/ewpreview.js"></script>
+<script type="text/javascript">
+var EW_PREVIEW_PLACEMENT = EW_CSS_FLIP ? "left" : "right";
+var EW_PREVIEW_SINGLE_ROW = false;
+var EW_PREVIEW_OVERLAY = false;
 </script>
 <script type="text/javascript">
 
@@ -2069,6 +2076,66 @@ $pedidos_list->ShowMessage();
 ?>
 <?php if ($pedidos_list->TotalRecs > 0 || $pedidos->CurrentAction <> "") { ?>
 <div class="box ewBox ewGrid<?php if ($pedidos_list->IsAddOrEdit()) { ?> ewGridAddEdit<?php } ?> pedidos">
+<?php if ($pedidos->Export == "") { ?>
+<div class="box-header ewGridUpperPanel">
+<?php if ($pedidos->CurrentAction <> "gridadd" && $pedidos->CurrentAction <> "gridedit") { ?>
+<form name="ewPagerForm" class="form-inline ewForm ewPagerForm" action="<?php echo ew_CurrentPage() ?>">
+<?php if (!isset($pedidos_list->Pager)) $pedidos_list->Pager = new cPrevNextPager($pedidos_list->StartRec, $pedidos_list->DisplayRecs, $pedidos_list->TotalRecs, $pedidos_list->AutoHidePager) ?>
+<?php if ($pedidos_list->Pager->RecordCount > 0 && $pedidos_list->Pager->Visible) { ?>
+<div class="ewPager">
+<span><?php echo $Language->Phrase("Page") ?>&nbsp;</span>
+<div class="ewPrevNext"><div class="input-group">
+<div class="input-group-btn">
+<!--first page button-->
+	<?php if ($pedidos_list->Pager->FirstButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerFirst") ?>" href="<?php echo $pedidos_list->PageUrl() ?>start=<?php echo $pedidos_list->Pager->FirstButton->Start ?>"><span class="icon-first ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerFirst") ?>"><span class="icon-first ewIcon"></span></a>
+	<?php } ?>
+<!--previous page button-->
+	<?php if ($pedidos_list->Pager->PrevButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerPrevious") ?>" href="<?php echo $pedidos_list->PageUrl() ?>start=<?php echo $pedidos_list->Pager->PrevButton->Start ?>"><span class="icon-prev ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerPrevious") ?>"><span class="icon-prev ewIcon"></span></a>
+	<?php } ?>
+</div>
+<!--current page number-->
+	<input class="form-control input-sm" type="text" name="<?php echo EW_TABLE_PAGE_NO ?>" value="<?php echo $pedidos_list->Pager->CurrentPage ?>">
+<div class="input-group-btn">
+<!--next page button-->
+	<?php if ($pedidos_list->Pager->NextButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerNext") ?>" href="<?php echo $pedidos_list->PageUrl() ?>start=<?php echo $pedidos_list->Pager->NextButton->Start ?>"><span class="icon-next ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerNext") ?>"><span class="icon-next ewIcon"></span></a>
+	<?php } ?>
+<!--last page button-->
+	<?php if ($pedidos_list->Pager->LastButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerLast") ?>" href="<?php echo $pedidos_list->PageUrl() ?>start=<?php echo $pedidos_list->Pager->LastButton->Start ?>"><span class="icon-last ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerLast") ?>"><span class="icon-last ewIcon"></span></a>
+	<?php } ?>
+</div>
+</div>
+</div>
+<span>&nbsp;<?php echo $Language->Phrase("of") ?>&nbsp;<?php echo $pedidos_list->Pager->PageCount ?></span>
+</div>
+<?php } ?>
+<?php if ($pedidos_list->Pager->RecordCount > 0) { ?>
+<div class="ewPager ewRec">
+	<span><?php echo $Language->Phrase("Record") ?>&nbsp;<?php echo $pedidos_list->Pager->FromIndex ?>&nbsp;<?php echo $Language->Phrase("To") ?>&nbsp;<?php echo $pedidos_list->Pager->ToIndex ?>&nbsp;<?php echo $Language->Phrase("Of") ?>&nbsp;<?php echo $pedidos_list->Pager->RecordCount ?></span>
+</div>
+<?php } ?>
+</form>
+<?php } ?>
+<div class="ewListOtherOptions">
+<?php
+	foreach ($pedidos_list->OtherOptions as &$option)
+		$option->Render("body");
+?>
+</div>
+<div class="clearfix"></div>
+</div>
+<?php } ?>
 <form name="fpedidoslist" id="fpedidoslist" class="form-inline ewForm ewListForm" action="<?php echo ew_CurrentPage() ?>" method="post">
 <?php if ($pedidos_list->CheckToken) { ?>
 <input type="hidden" name="<?php echo EW_TOKEN_NAME ?>" value="<?php echo $pedidos_list->Token ?>">
@@ -2091,12 +2158,12 @@ $pedidos_list->RenderListOptions();
 // Render list options (header, left)
 $pedidos_list->ListOptions->Render("header", "left");
 ?>
-<?php if ($pedidos->id_pedidos->Visible) { // id_pedidos ?>
-	<?php if ($pedidos->SortUrl($pedidos->id_pedidos) == "") { ?>
-		<th data-name="id_pedidos" class="<?php echo $pedidos->id_pedidos->HeaderCellClass() ?>"><div id="elh_pedidos_id_pedidos" class="pedidos_id_pedidos"><div class="ewTableHeaderCaption"><?php echo $pedidos->id_pedidos->FldCaption() ?></div></div></th>
+<?php if ($pedidos->numero->Visible) { // numero ?>
+	<?php if ($pedidos->SortUrl($pedidos->numero) == "") { ?>
+		<th data-name="numero" class="<?php echo $pedidos->numero->HeaderCellClass() ?>"><div id="elh_pedidos_numero" class="pedidos_numero"><div class="ewTableHeaderCaption"><?php echo $pedidos->numero->FldCaption() ?></div></div></th>
 	<?php } else { ?>
-		<th data-name="id_pedidos" class="<?php echo $pedidos->id_pedidos->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $pedidos->SortUrl($pedidos->id_pedidos) ?>',1);"><div id="elh_pedidos_id_pedidos" class="pedidos_id_pedidos">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $pedidos->id_pedidos->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($pedidos->id_pedidos->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($pedidos->id_pedidos->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
+		<th data-name="numero" class="<?php echo $pedidos->numero->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $pedidos->SortUrl($pedidos->numero) ?>',1);"><div id="elh_pedidos_numero" class="pedidos_numero">
+			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $pedidos->numero->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($pedidos->numero->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($pedidos->numero->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
 		</div></div></th>
 	<?php } ?>
 <?php } ?>
@@ -2109,15 +2176,6 @@ $pedidos_list->ListOptions->Render("header", "left");
 		</div></div></th>
 	<?php } ?>
 <?php } ?>
-<?php if ($pedidos->numero->Visible) { // numero ?>
-	<?php if ($pedidos->SortUrl($pedidos->numero) == "") { ?>
-		<th data-name="numero" class="<?php echo $pedidos->numero->HeaderCellClass() ?>"><div id="elh_pedidos_numero" class="pedidos_numero"><div class="ewTableHeaderCaption"><?php echo $pedidos->numero->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="numero" class="<?php echo $pedidos->numero->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $pedidos->SortUrl($pedidos->numero) ?>',1);"><div id="elh_pedidos_numero" class="pedidos_numero">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $pedidos->numero->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($pedidos->numero->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($pedidos->numero->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
 <?php if ($pedidos->fecha_data->Visible) { // fecha_data ?>
 	<?php if ($pedidos->SortUrl($pedidos->fecha_data) == "") { ?>
 		<th data-name="fecha_data" class="<?php echo $pedidos->fecha_data->HeaderCellClass() ?>"><div id="elh_pedidos_fecha_data" class="pedidos_fecha_data"><div class="ewTableHeaderCaption"><?php echo $pedidos->fecha_data->FldCaption() ?></div></div></th>
@@ -2127,66 +2185,12 @@ $pedidos_list->ListOptions->Render("header", "left");
 		</div></div></th>
 	<?php } ?>
 <?php } ?>
-<?php if ($pedidos->fecha_hora->Visible) { // fecha_hora ?>
-	<?php if ($pedidos->SortUrl($pedidos->fecha_hora) == "") { ?>
-		<th data-name="fecha_hora" class="<?php echo $pedidos->fecha_hora->HeaderCellClass() ?>"><div id="elh_pedidos_fecha_hora" class="pedidos_fecha_hora"><div class="ewTableHeaderCaption"><?php echo $pedidos->fecha_hora->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="fecha_hora" class="<?php echo $pedidos->fecha_hora->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $pedidos->SortUrl($pedidos->fecha_hora) ?>',1);"><div id="elh_pedidos_fecha_hora" class="pedidos_fecha_hora">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $pedidos->fecha_hora->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($pedidos->fecha_hora->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($pedidos->fecha_hora->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
 <?php if ($pedidos->id_fornecedor->Visible) { // id_fornecedor ?>
 	<?php if ($pedidos->SortUrl($pedidos->id_fornecedor) == "") { ?>
 		<th data-name="id_fornecedor" class="<?php echo $pedidos->id_fornecedor->HeaderCellClass() ?>"><div id="elh_pedidos_id_fornecedor" class="pedidos_id_fornecedor"><div class="ewTableHeaderCaption"><?php echo $pedidos->id_fornecedor->FldCaption() ?></div></div></th>
 	<?php } else { ?>
 		<th data-name="id_fornecedor" class="<?php echo $pedidos->id_fornecedor->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $pedidos->SortUrl($pedidos->id_fornecedor) ?>',1);"><div id="elh_pedidos_id_fornecedor" class="pedidos_id_fornecedor">
 			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $pedidos->id_fornecedor->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($pedidos->id_fornecedor->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($pedidos->id_fornecedor->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($pedidos->id_transportadora->Visible) { // id_transportadora ?>
-	<?php if ($pedidos->SortUrl($pedidos->id_transportadora) == "") { ?>
-		<th data-name="id_transportadora" class="<?php echo $pedidos->id_transportadora->HeaderCellClass() ?>"><div id="elh_pedidos_id_transportadora" class="pedidos_id_transportadora"><div class="ewTableHeaderCaption"><?php echo $pedidos->id_transportadora->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="id_transportadora" class="<?php echo $pedidos->id_transportadora->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $pedidos->SortUrl($pedidos->id_transportadora) ?>',1);"><div id="elh_pedidos_id_transportadora" class="pedidos_id_transportadora">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $pedidos->id_transportadora->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($pedidos->id_transportadora->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($pedidos->id_transportadora->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($pedidos->id_prazos->Visible) { // id_prazos ?>
-	<?php if ($pedidos->SortUrl($pedidos->id_prazos) == "") { ?>
-		<th data-name="id_prazos" class="<?php echo $pedidos->id_prazos->HeaderCellClass() ?>"><div id="elh_pedidos_id_prazos" class="pedidos_id_prazos"><div class="ewTableHeaderCaption"><?php echo $pedidos->id_prazos->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="id_prazos" class="<?php echo $pedidos->id_prazos->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $pedidos->SortUrl($pedidos->id_prazos) ?>',1);"><div id="elh_pedidos_id_prazos" class="pedidos_id_prazos">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $pedidos->id_prazos->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($pedidos->id_prazos->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($pedidos->id_prazos->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($pedidos->comentarios->Visible) { // comentarios ?>
-	<?php if ($pedidos->SortUrl($pedidos->comentarios) == "") { ?>
-		<th data-name="comentarios" class="<?php echo $pedidos->comentarios->HeaderCellClass() ?>"><div id="elh_pedidos_comentarios" class="pedidos_comentarios"><div class="ewTableHeaderCaption"><?php echo $pedidos->comentarios->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="comentarios" class="<?php echo $pedidos->comentarios->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $pedidos->SortUrl($pedidos->comentarios) ?>',1);"><div id="elh_pedidos_comentarios" class="pedidos_comentarios">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $pedidos->comentarios->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($pedidos->comentarios->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($pedidos->comentarios->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($pedidos->id_representante->Visible) { // id_representante ?>
-	<?php if ($pedidos->SortUrl($pedidos->id_representante) == "") { ?>
-		<th data-name="id_representante" class="<?php echo $pedidos->id_representante->HeaderCellClass() ?>"><div id="elh_pedidos_id_representante" class="pedidos_id_representante"><div class="ewTableHeaderCaption"><?php echo $pedidos->id_representante->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="id_representante" class="<?php echo $pedidos->id_representante->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $pedidos->SortUrl($pedidos->id_representante) ?>',1);"><div id="elh_pedidos_id_representante" class="pedidos_id_representante">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $pedidos->id_representante->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($pedidos->id_representante->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($pedidos->id_representante->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($pedidos->comissao_representante->Visible) { // comissao_representante ?>
-	<?php if ($pedidos->SortUrl($pedidos->comissao_representante) == "") { ?>
-		<th data-name="comissao_representante" class="<?php echo $pedidos->comissao_representante->HeaderCellClass() ?>"><div id="elh_pedidos_comissao_representante" class="pedidos_comissao_representante"><div class="ewTableHeaderCaption"><?php echo $pedidos->comissao_representante->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="comissao_representante" class="<?php echo $pedidos->comissao_representante->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $pedidos->SortUrl($pedidos->comissao_representante) ?>',1);"><div id="elh_pedidos_comissao_representante" class="pedidos_comissao_representante">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $pedidos->comissao_representante->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($pedidos->comissao_representante->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($pedidos->comissao_representante->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
 		</div></div></th>
 	<?php } ?>
 <?php } ?>
@@ -2273,11 +2277,11 @@ while ($pedidos_list->RecCnt < $pedidos_list->StopRec) {
 // Render list options (body, left)
 $pedidos_list->ListOptions->Render("body", "left", $pedidos_list->RowCnt);
 ?>
-	<?php if ($pedidos->id_pedidos->Visible) { // id_pedidos ?>
-		<td data-name="id_pedidos"<?php echo $pedidos->id_pedidos->CellAttributes() ?>>
-<span id="el<?php echo $pedidos_list->RowCnt ?>_pedidos_id_pedidos" class="pedidos_id_pedidos">
-<span<?php echo $pedidos->id_pedidos->ViewAttributes() ?>>
-<?php echo $pedidos->id_pedidos->ListViewValue() ?></span>
+	<?php if ($pedidos->numero->Visible) { // numero ?>
+		<td data-name="numero"<?php echo $pedidos->numero->CellAttributes() ?>>
+<span id="el<?php echo $pedidos_list->RowCnt ?>_pedidos_numero" class="pedidos_numero">
+<span<?php echo $pedidos->numero->ViewAttributes() ?>>
+<?php echo $pedidos->numero->ListViewValue() ?></span>
 </span>
 </td>
 	<?php } ?>
@@ -2289,14 +2293,6 @@ $pedidos_list->ListOptions->Render("body", "left", $pedidos_list->RowCnt);
 </span>
 </td>
 	<?php } ?>
-	<?php if ($pedidos->numero->Visible) { // numero ?>
-		<td data-name="numero"<?php echo $pedidos->numero->CellAttributes() ?>>
-<span id="el<?php echo $pedidos_list->RowCnt ?>_pedidos_numero" class="pedidos_numero">
-<span<?php echo $pedidos->numero->ViewAttributes() ?>>
-<?php echo $pedidos->numero->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
 	<?php if ($pedidos->fecha_data->Visible) { // fecha_data ?>
 		<td data-name="fecha_data"<?php echo $pedidos->fecha_data->CellAttributes() ?>>
 <span id="el<?php echo $pedidos_list->RowCnt ?>_pedidos_fecha_data" class="pedidos_fecha_data">
@@ -2305,59 +2301,11 @@ $pedidos_list->ListOptions->Render("body", "left", $pedidos_list->RowCnt);
 </span>
 </td>
 	<?php } ?>
-	<?php if ($pedidos->fecha_hora->Visible) { // fecha_hora ?>
-		<td data-name="fecha_hora"<?php echo $pedidos->fecha_hora->CellAttributes() ?>>
-<span id="el<?php echo $pedidos_list->RowCnt ?>_pedidos_fecha_hora" class="pedidos_fecha_hora">
-<span<?php echo $pedidos->fecha_hora->ViewAttributes() ?>>
-<?php echo $pedidos->fecha_hora->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
 	<?php if ($pedidos->id_fornecedor->Visible) { // id_fornecedor ?>
 		<td data-name="id_fornecedor"<?php echo $pedidos->id_fornecedor->CellAttributes() ?>>
 <span id="el<?php echo $pedidos_list->RowCnt ?>_pedidos_id_fornecedor" class="pedidos_id_fornecedor">
 <span<?php echo $pedidos->id_fornecedor->ViewAttributes() ?>>
 <?php echo $pedidos->id_fornecedor->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($pedidos->id_transportadora->Visible) { // id_transportadora ?>
-		<td data-name="id_transportadora"<?php echo $pedidos->id_transportadora->CellAttributes() ?>>
-<span id="el<?php echo $pedidos_list->RowCnt ?>_pedidos_id_transportadora" class="pedidos_id_transportadora">
-<span<?php echo $pedidos->id_transportadora->ViewAttributes() ?>>
-<?php echo $pedidos->id_transportadora->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($pedidos->id_prazos->Visible) { // id_prazos ?>
-		<td data-name="id_prazos"<?php echo $pedidos->id_prazos->CellAttributes() ?>>
-<span id="el<?php echo $pedidos_list->RowCnt ?>_pedidos_id_prazos" class="pedidos_id_prazos">
-<span<?php echo $pedidos->id_prazos->ViewAttributes() ?>>
-<?php echo $pedidos->id_prazos->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($pedidos->comentarios->Visible) { // comentarios ?>
-		<td data-name="comentarios"<?php echo $pedidos->comentarios->CellAttributes() ?>>
-<span id="el<?php echo $pedidos_list->RowCnt ?>_pedidos_comentarios" class="pedidos_comentarios">
-<span<?php echo $pedidos->comentarios->ViewAttributes() ?>>
-<?php echo $pedidos->comentarios->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($pedidos->id_representante->Visible) { // id_representante ?>
-		<td data-name="id_representante"<?php echo $pedidos->id_representante->CellAttributes() ?>>
-<span id="el<?php echo $pedidos_list->RowCnt ?>_pedidos_id_representante" class="pedidos_id_representante">
-<span<?php echo $pedidos->id_representante->ViewAttributes() ?>>
-<?php echo $pedidos->id_representante->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($pedidos->comissao_representante->Visible) { // comissao_representante ?>
-		<td data-name="comissao_representante"<?php echo $pedidos->comissao_representante->CellAttributes() ?>>
-<span id="el<?php echo $pedidos_list->RowCnt ?>_pedidos_comissao_representante" class="pedidos_comissao_representante">
-<span<?php echo $pedidos->comissao_representante->ViewAttributes() ?>>
-<?php echo $pedidos->comissao_representante->ListViewValue() ?></span>
 </span>
 </td>
 	<?php } ?>

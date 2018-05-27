@@ -1,0 +1,13 @@
+date/time	script	user	action	table	field	key value	old value	new value
+2018/05/25 05:10:19	/sistema_pedidos_fm/pedidosadd.php	-1	A	pedidos	numero	3		34
+2018/05/25 05:10:19	/sistema_pedidos_fm/pedidosadd.php	-1	A	pedidos	tipo_pedido	3		C
+2018/05/25 05:10:19	/sistema_pedidos_fm/pedidosadd.php	-1	A	pedidos	fecha_data	3		2018-05-25
+2018/05/25 05:10:19	/sistema_pedidos_fm/pedidosadd.php	-1	A	pedidos	fecha_hora	3		05:10:19
+2018/05/25 05:10:19	/sistema_pedidos_fm/pedidosadd.php	-1	A	pedidos	id_fornecedor	3		1
+2018/05/25 05:10:19	/sistema_pedidos_fm/pedidosadd.php	-1	A	pedidos	id_transportadora	3		
+2018/05/25 05:10:19	/sistema_pedidos_fm/pedidosadd.php	-1	A	pedidos	id_prazos	3		
+2018/05/25 05:10:19	/sistema_pedidos_fm/pedidosadd.php	-1	A	pedidos	comentarios	3		
+2018/05/25 05:10:19	/sistema_pedidos_fm/pedidosadd.php	-1	A	pedidos	id_representante	3		
+2018/05/25 05:10:19	/sistema_pedidos_fm/pedidosadd.php	-1	A	pedidos	comissao_representante	3		N
+2018/05/25 05:10:19	/sistema_pedidos_fm/pedidosadd.php	-1	A	pedidos	status	3		0
+2018/05/25 05:10:19	/sistema_pedidos_fm/pedidosadd.php	-1	A	pedidos	id_pedidos	3		3

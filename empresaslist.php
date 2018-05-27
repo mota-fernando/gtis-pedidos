@@ -424,10 +424,6 @@ class cempresas_list extends cempresas {
 		$this->id_endereco->SetVisibility();
 		$this->endereco_numero->SetVisibility();
 		$this->nome_fantasia->SetVisibility();
-		$this->cnpj->SetVisibility();
-		$this->ie->SetVisibility();
-		$this->celular->SetVisibility();
-		$this->whatsapp->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -1099,10 +1095,6 @@ class cempresas_list extends cempresas {
 			$this->UpdateSort($this->id_endereco); // id_endereco
 			$this->UpdateSort($this->endereco_numero); // endereco_numero
 			$this->UpdateSort($this->nome_fantasia); // nome_fantasia
-			$this->UpdateSort($this->cnpj); // cnpj
-			$this->UpdateSort($this->ie); // ie
-			$this->UpdateSort($this->celular); // celular
-			$this->UpdateSort($this->whatsapp); // whatsapp
 			$this->setStartRecordNumber(1); // Reset start position
 		}
 	}
@@ -1145,10 +1137,6 @@ class cempresas_list extends cempresas {
 				$this->id_endereco->setSort("");
 				$this->endereco_numero->setSort("");
 				$this->nome_fantasia->setSort("");
-				$this->cnpj->setSort("");
-				$this->ie->setSort("");
-				$this->celular->setSort("");
-				$this->whatsapp->setSort("");
 			}
 
 			// Reset start position
@@ -1164,37 +1152,31 @@ class cempresas_list extends cempresas {
 		// Add group option item
 		$item = &$this->ListOptions->Add($this->ListOptions->GroupOptionName);
 		$item->Body = "";
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 		$item->Visible = FALSE;
 
 		// "view"
 		$item = &$this->ListOptions->Add("view");
 		$item->CssClass = "text-nowrap";
 		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 
 		// "edit"
 		$item = &$this->ListOptions->Add("edit");
 		$item->CssClass = "text-nowrap";
 		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 
 		// "copy"
 		$item = &$this->ListOptions->Add("copy");
 		$item->CssClass = "text-nowrap";
 		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
-
-		// "delete"
-		$item = &$this->ListOptions->Add("delete");
-		$item->CssClass = "text-nowrap";
-		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 
 		// List actions
 		$item = &$this->ListOptions->Add("listactions");
 		$item->CssClass = "text-nowrap";
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 		$item->Visible = FALSE;
 		$item->ShowInButtonGroup = FALSE;
 		$item->ShowInDropDown = FALSE;
@@ -1202,8 +1184,9 @@ class cempresas_list extends cempresas {
 		// "checkbox"
 		$item = &$this->ListOptions->Add("checkbox");
 		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 		$item->Header = "<input type=\"checkbox\" name=\"key\" id=\"key\" onclick=\"ew_SelectAllKey(this);\">";
+		$item->MoveTo(0);
 		$item->ShowInDropDown = FALSE;
 		$item->ShowInButtonGroup = FALSE;
 
@@ -1258,13 +1241,6 @@ class cempresas_list extends cempresas {
 			$oListOpt->Body = "";
 		}
 
-		// "delete"
-		$oListOpt = &$this->ListOptions->Items["delete"];
-		if (TRUE)
-			$oListOpt->Body = "<a class=\"ewRowLink ewDelete\"" . "" . " title=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" href=\"" . ew_HtmlEncode($this->DeleteUrl) . "\">" . $Language->Phrase("DeleteLink") . "</a>";
-		else
-			$oListOpt->Body = "";
-
 		// Set up list action buttons
 		$oListOpt = &$this->ListOptions->GetItem("listactions");
 		if ($oListOpt && $this->Export == "" && $this->CurrentAction == "") {
@@ -1315,6 +1291,11 @@ class cempresas_list extends cempresas {
 		$item->Body = "<a class=\"ewAddEdit ewAdd\" title=\"" . $addcaption . "\" data-caption=\"" . $addcaption . "\" href=\"" . ew_HtmlEncode($this->AddUrl) . "\">" . $Language->Phrase("AddLink") . "</a>";
 		$item->Visible = ($this->AddUrl <> "");
 		$option = $options["action"];
+
+		// Add multi delete
+		$item = &$option->Add("multidelete");
+		$item->Body = "<a class=\"ewAction ewMultiDelete\" title=\"" . ew_HtmlTitle($Language->Phrase("DeleteSelectedLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("DeleteSelectedLink")) . "\" href=\"\" onclick=\"ew_SubmitAction(event,{f:document.fempresaslist,url:'" . $this->MultiDeleteUrl . "'});return false;\">" . $Language->Phrase("DeleteSelectedLink") . "</a>";
+		$item->Visible = (TRUE);
 
 		// Set up options default
 		foreach ($options as &$option) {
@@ -1489,6 +1470,9 @@ class cempresas_list extends cempresas {
 
 	function SetupListOptionsExt() {
 		global $Security, $Language;
+
+		// Hide detail items for dropdown if necessary
+		$this->ListOptions->HideDetailItemsForDropDown();
 	}
 
 	function RenderListOptionsExt() {
@@ -1865,26 +1849,6 @@ class cempresas_list extends cempresas {
 			$this->nome_fantasia->LinkCustomAttributes = "";
 			$this->nome_fantasia->HrefValue = "";
 			$this->nome_fantasia->TooltipValue = "";
-
-			// cnpj
-			$this->cnpj->LinkCustomAttributes = "";
-			$this->cnpj->HrefValue = "";
-			$this->cnpj->TooltipValue = "";
-
-			// ie
-			$this->ie->LinkCustomAttributes = "";
-			$this->ie->HrefValue = "";
-			$this->ie->TooltipValue = "";
-
-			// celular
-			$this->celular->LinkCustomAttributes = "";
-			$this->celular->HrefValue = "";
-			$this->celular->TooltipValue = "";
-
-			// whatsapp
-			$this->whatsapp->LinkCustomAttributes = "";
-			$this->whatsapp->HrefValue = "";
-			$this->whatsapp->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -2247,6 +2211,28 @@ fempresaslist.Lists["x_id_endereco"].Data = "<?php echo $empresas_list->id_ender
 // Form object for search
 var CurrentSearchForm = fempresaslistsrch = new ew_Form("fempresaslistsrch");
 </script>
+<style type="text/css">
+.ewTablePreviewRow { /* main table preview row color */
+	background-color: #FFFFFF; /* preview row color */
+}
+.ewTablePreviewRow .ewGrid {
+	display: table;
+}
+</style>
+<div id="ewPreview" class="d-none"><!-- preview -->
+	<div class="nav-tabs-custom"><!-- .nav-tabs-custom -->
+		<ul class="nav nav-tabs" role="tablist"></ul>
+		<div class="tab-content"><!-- .tab-content -->
+			<div class="tab-pane fade"></div>
+		</div><!-- /.tab-content -->
+	</div><!-- /.nav-tabs-custom -->
+</div><!-- /preview -->
+<script type="text/javascript" src="phpjs/ewpreview.js"></script>
+<script type="text/javascript">
+var EW_PREVIEW_PLACEMENT = EW_CSS_FLIP ? "left" : "right";
+var EW_PREVIEW_SINGLE_ROW = false;
+var EW_PREVIEW_OVERLAY = false;
+</script>
 <script type="text/javascript">
 
 // Write your client script here, no need to add script tags.
@@ -2325,6 +2311,66 @@ $empresas_list->ShowMessage();
 ?>
 <?php if ($empresas_list->TotalRecs > 0 || $empresas->CurrentAction <> "") { ?>
 <div class="box ewBox ewGrid<?php if ($empresas_list->IsAddOrEdit()) { ?> ewGridAddEdit<?php } ?> empresas">
+<?php if ($empresas->Export == "") { ?>
+<div class="box-header ewGridUpperPanel">
+<?php if ($empresas->CurrentAction <> "gridadd" && $empresas->CurrentAction <> "gridedit") { ?>
+<form name="ewPagerForm" class="form-inline ewForm ewPagerForm" action="<?php echo ew_CurrentPage() ?>">
+<?php if (!isset($empresas_list->Pager)) $empresas_list->Pager = new cPrevNextPager($empresas_list->StartRec, $empresas_list->DisplayRecs, $empresas_list->TotalRecs, $empresas_list->AutoHidePager) ?>
+<?php if ($empresas_list->Pager->RecordCount > 0 && $empresas_list->Pager->Visible) { ?>
+<div class="ewPager">
+<span><?php echo $Language->Phrase("Page") ?>&nbsp;</span>
+<div class="ewPrevNext"><div class="input-group">
+<div class="input-group-btn">
+<!--first page button-->
+	<?php if ($empresas_list->Pager->FirstButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerFirst") ?>" href="<?php echo $empresas_list->PageUrl() ?>start=<?php echo $empresas_list->Pager->FirstButton->Start ?>"><span class="icon-first ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerFirst") ?>"><span class="icon-first ewIcon"></span></a>
+	<?php } ?>
+<!--previous page button-->
+	<?php if ($empresas_list->Pager->PrevButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerPrevious") ?>" href="<?php echo $empresas_list->PageUrl() ?>start=<?php echo $empresas_list->Pager->PrevButton->Start ?>"><span class="icon-prev ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerPrevious") ?>"><span class="icon-prev ewIcon"></span></a>
+	<?php } ?>
+</div>
+<!--current page number-->
+	<input class="form-control input-sm" type="text" name="<?php echo EW_TABLE_PAGE_NO ?>" value="<?php echo $empresas_list->Pager->CurrentPage ?>">
+<div class="input-group-btn">
+<!--next page button-->
+	<?php if ($empresas_list->Pager->NextButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerNext") ?>" href="<?php echo $empresas_list->PageUrl() ?>start=<?php echo $empresas_list->Pager->NextButton->Start ?>"><span class="icon-next ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerNext") ?>"><span class="icon-next ewIcon"></span></a>
+	<?php } ?>
+<!--last page button-->
+	<?php if ($empresas_list->Pager->LastButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerLast") ?>" href="<?php echo $empresas_list->PageUrl() ?>start=<?php echo $empresas_list->Pager->LastButton->Start ?>"><span class="icon-last ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerLast") ?>"><span class="icon-last ewIcon"></span></a>
+	<?php } ?>
+</div>
+</div>
+</div>
+<span>&nbsp;<?php echo $Language->Phrase("of") ?>&nbsp;<?php echo $empresas_list->Pager->PageCount ?></span>
+</div>
+<?php } ?>
+<?php if ($empresas_list->Pager->RecordCount > 0) { ?>
+<div class="ewPager ewRec">
+	<span><?php echo $Language->Phrase("Record") ?>&nbsp;<?php echo $empresas_list->Pager->FromIndex ?>&nbsp;<?php echo $Language->Phrase("To") ?>&nbsp;<?php echo $empresas_list->Pager->ToIndex ?>&nbsp;<?php echo $Language->Phrase("Of") ?>&nbsp;<?php echo $empresas_list->Pager->RecordCount ?></span>
+</div>
+<?php } ?>
+</form>
+<?php } ?>
+<div class="ewListOtherOptions">
+<?php
+	foreach ($empresas_list->OtherOptions as &$option)
+		$option->Render("body");
+?>
+</div>
+<div class="clearfix"></div>
+</div>
+<?php } ?>
 <form name="fempresaslist" id="fempresaslist" class="form-inline ewForm ewListForm" action="<?php echo ew_CurrentPage() ?>" method="post">
 <?php if ($empresas_list->CheckToken) { ?>
 <input type="hidden" name="<?php echo EW_TOKEN_NAME ?>" value="<?php echo $empresas_list->Token ?>">
@@ -2425,42 +2471,6 @@ $empresas_list->ListOptions->Render("header", "left");
 	<?php } else { ?>
 		<th data-name="nome_fantasia" class="<?php echo $empresas->nome_fantasia->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $empresas->SortUrl($empresas->nome_fantasia) ?>',1);"><div id="elh_empresas_nome_fantasia" class="empresas_nome_fantasia">
 			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $empresas->nome_fantasia->FldCaption() ?><?php echo $Language->Phrase("SrchLegend") ?></span><span class="ewTableHeaderSort"><?php if ($empresas->nome_fantasia->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($empresas->nome_fantasia->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($empresas->cnpj->Visible) { // cnpj ?>
-	<?php if ($empresas->SortUrl($empresas->cnpj) == "") { ?>
-		<th data-name="cnpj" class="<?php echo $empresas->cnpj->HeaderCellClass() ?>"><div id="elh_empresas_cnpj" class="empresas_cnpj"><div class="ewTableHeaderCaption"><?php echo $empresas->cnpj->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="cnpj" class="<?php echo $empresas->cnpj->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $empresas->SortUrl($empresas->cnpj) ?>',1);"><div id="elh_empresas_cnpj" class="empresas_cnpj">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $empresas->cnpj->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($empresas->cnpj->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($empresas->cnpj->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($empresas->ie->Visible) { // ie ?>
-	<?php if ($empresas->SortUrl($empresas->ie) == "") { ?>
-		<th data-name="ie" class="<?php echo $empresas->ie->HeaderCellClass() ?>"><div id="elh_empresas_ie" class="empresas_ie"><div class="ewTableHeaderCaption"><?php echo $empresas->ie->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="ie" class="<?php echo $empresas->ie->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $empresas->SortUrl($empresas->ie) ?>',1);"><div id="elh_empresas_ie" class="empresas_ie">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $empresas->ie->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($empresas->ie->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($empresas->ie->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($empresas->celular->Visible) { // celular ?>
-	<?php if ($empresas->SortUrl($empresas->celular) == "") { ?>
-		<th data-name="celular" class="<?php echo $empresas->celular->HeaderCellClass() ?>"><div id="elh_empresas_celular" class="empresas_celular"><div class="ewTableHeaderCaption"><?php echo $empresas->celular->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="celular" class="<?php echo $empresas->celular->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $empresas->SortUrl($empresas->celular) ?>',1);"><div id="elh_empresas_celular" class="empresas_celular">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $empresas->celular->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($empresas->celular->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($empresas->celular->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($empresas->whatsapp->Visible) { // whatsapp ?>
-	<?php if ($empresas->SortUrl($empresas->whatsapp) == "") { ?>
-		<th data-name="whatsapp" class="<?php echo $empresas->whatsapp->HeaderCellClass() ?>"><div id="elh_empresas_whatsapp" class="empresas_whatsapp"><div class="ewTableHeaderCaption"><?php echo $empresas->whatsapp->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="whatsapp" class="<?php echo $empresas->whatsapp->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $empresas->SortUrl($empresas->whatsapp) ?>',1);"><div id="elh_empresas_whatsapp" class="empresas_whatsapp">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $empresas->whatsapp->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($empresas->whatsapp->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($empresas->whatsapp->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
 		</div></div></th>
 	<?php } ?>
 <?php } ?>
@@ -2598,38 +2608,6 @@ $empresas_list->ListOptions->Render("body", "left", $empresas_list->RowCnt);
 <span id="el<?php echo $empresas_list->RowCnt ?>_empresas_nome_fantasia" class="empresas_nome_fantasia">
 <span<?php echo $empresas->nome_fantasia->ViewAttributes() ?>>
 <?php echo $empresas->nome_fantasia->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($empresas->cnpj->Visible) { // cnpj ?>
-		<td data-name="cnpj"<?php echo $empresas->cnpj->CellAttributes() ?>>
-<span id="el<?php echo $empresas_list->RowCnt ?>_empresas_cnpj" class="empresas_cnpj">
-<span<?php echo $empresas->cnpj->ViewAttributes() ?>>
-<?php echo $empresas->cnpj->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($empresas->ie->Visible) { // ie ?>
-		<td data-name="ie"<?php echo $empresas->ie->CellAttributes() ?>>
-<span id="el<?php echo $empresas_list->RowCnt ?>_empresas_ie" class="empresas_ie">
-<span<?php echo $empresas->ie->ViewAttributes() ?>>
-<?php echo $empresas->ie->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($empresas->celular->Visible) { // celular ?>
-		<td data-name="celular"<?php echo $empresas->celular->CellAttributes() ?>>
-<span id="el<?php echo $empresas_list->RowCnt ?>_empresas_celular" class="empresas_celular">
-<span<?php echo $empresas->celular->ViewAttributes() ?>>
-<?php echo $empresas->celular->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($empresas->whatsapp->Visible) { // whatsapp ?>
-		<td data-name="whatsapp"<?php echo $empresas->whatsapp->CellAttributes() ?>>
-<span id="el<?php echo $empresas_list->RowCnt ?>_empresas_whatsapp" class="empresas_whatsapp">
-<span<?php echo $empresas->whatsapp->ViewAttributes() ?>>
-<?php echo $empresas->whatsapp->ListViewValue() ?></span>
 </span>
 </td>
 	<?php } ?>

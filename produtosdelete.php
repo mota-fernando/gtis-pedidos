@@ -286,16 +286,9 @@ class cprodutos_delete extends cprodutos {
 		$this->codigo_produto->SetVisibility();
 		$this->nome_produto->SetVisibility();
 		$this->modelo_produto->SetVisibility();
+		$this->id_departamento_produto->SetVisibility();
 		$this->id_marca_produto->SetVisibility();
-		$this->status_produto->SetVisibility();
-		$this->unidade_medida_produto->SetVisibility();
-		$this->unidades->SetVisibility();
-		$this->peso_produto->SetVisibility();
-		$this->data_adicionado->SetVisibility();
-		$this->hora_adicionado->SetVisibility();
 		$this->preco_produto->SetVisibility();
-		$this->descricao->SetVisibility();
-		$this->ipi->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -554,9 +547,6 @@ class cprodutos_delete extends cprodutos {
 		// nome_produto
 		// modelo_produto
 		// id_departamento_produto
-
-		$this->id_departamento_produto->CellCssStyle = "white-space: nowrap;";
-
 		// id_marca_produto
 		// status_produto
 		// unidade_medida_produto
@@ -585,6 +575,29 @@ class cprodutos_delete extends cprodutos {
 		// modelo_produto
 		$this->modelo_produto->ViewValue = $this->modelo_produto->CurrentValue;
 		$this->modelo_produto->ViewCustomAttributes = "";
+
+		// id_departamento_produto
+		if (strval($this->id_departamento_produto->CurrentValue) <> "") {
+			$sFilterWrk = "`id_categoria`" . ew_SearchString("=", $this->id_departamento_produto->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_categoria`, `categoria` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `categoria`";
+		$sWhereWrk = "";
+		$this->id_departamento_produto->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_departamento_produto, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_departamento_produto->ViewValue = $this->id_departamento_produto->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_departamento_produto->ViewValue = $this->id_departamento_produto->CurrentValue;
+			}
+		} else {
+			$this->id_departamento_produto->ViewValue = NULL;
+		}
+		$this->id_departamento_produto->ViewCustomAttributes = "";
 
 		// id_marca_produto
 		if (strval($this->id_marca_produto->CurrentValue) <> "") {
@@ -641,6 +654,7 @@ class cprodutos_delete extends cprodutos {
 
 		// preco_produto
 		$this->preco_produto->ViewValue = $this->preco_produto->CurrentValue;
+		$this->preco_produto->ViewValue = ew_FormatCurrency($this->preco_produto->ViewValue, 2, -1, -1, -1);
 		$this->preco_produto->ViewCustomAttributes = "";
 
 		// descricao
@@ -671,55 +685,20 @@ class cprodutos_delete extends cprodutos {
 			$this->modelo_produto->HrefValue = "";
 			$this->modelo_produto->TooltipValue = "";
 
+			// id_departamento_produto
+			$this->id_departamento_produto->LinkCustomAttributes = "";
+			$this->id_departamento_produto->HrefValue = "";
+			$this->id_departamento_produto->TooltipValue = "";
+
 			// id_marca_produto
 			$this->id_marca_produto->LinkCustomAttributes = "";
 			$this->id_marca_produto->HrefValue = "";
 			$this->id_marca_produto->TooltipValue = "";
 
-			// status_produto
-			$this->status_produto->LinkCustomAttributes = "";
-			$this->status_produto->HrefValue = "";
-			$this->status_produto->TooltipValue = "";
-
-			// unidade_medida_produto
-			$this->unidade_medida_produto->LinkCustomAttributes = "";
-			$this->unidade_medida_produto->HrefValue = "";
-			$this->unidade_medida_produto->TooltipValue = "";
-
-			// unidades
-			$this->unidades->LinkCustomAttributes = "";
-			$this->unidades->HrefValue = "";
-			$this->unidades->TooltipValue = "";
-
-			// peso_produto
-			$this->peso_produto->LinkCustomAttributes = "";
-			$this->peso_produto->HrefValue = "";
-			$this->peso_produto->TooltipValue = "";
-
-			// data_adicionado
-			$this->data_adicionado->LinkCustomAttributes = "";
-			$this->data_adicionado->HrefValue = "";
-			$this->data_adicionado->TooltipValue = "";
-
-			// hora_adicionado
-			$this->hora_adicionado->LinkCustomAttributes = "";
-			$this->hora_adicionado->HrefValue = "";
-			$this->hora_adicionado->TooltipValue = "";
-
 			// preco_produto
 			$this->preco_produto->LinkCustomAttributes = "";
 			$this->preco_produto->HrefValue = "";
 			$this->preco_produto->TooltipValue = "";
-
-			// descricao
-			$this->descricao->LinkCustomAttributes = "";
-			$this->descricao->HrefValue = "";
-			$this->descricao->TooltipValue = "";
-
-			// ipi
-			$this->ipi->LinkCustomAttributes = "";
-			$this->ipi->HrefValue = "";
-			$this->ipi->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -927,10 +906,10 @@ fprodutosdelete.Form_CustomValidate =
 fprodutosdelete.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
+fprodutosdelete.Lists["x_id_departamento_produto"] = {"LinkField":"x_id_categoria","Ajax":true,"AutoFill":false,"DisplayFields":["x_categoria","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"categoria"};
+fprodutosdelete.Lists["x_id_departamento_produto"].Data = "<?php echo $produtos_delete->id_departamento_produto->LookupFilterQuery(FALSE, "delete") ?>";
 fprodutosdelete.Lists["x_id_marca_produto"] = {"LinkField":"x_id_marca","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_marca","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"marcas"};
 fprodutosdelete.Lists["x_id_marca_produto"].Data = "<?php echo $produtos_delete->id_marca_produto->LookupFilterQuery(FALSE, "delete") ?>";
-fprodutosdelete.Lists["x_status_produto"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
-fprodutosdelete.Lists["x_status_produto"].Options = <?php echo json_encode($produtos_delete->status_produto->Options()) ?>;
 
 // Form object for search
 </script>
@@ -969,35 +948,14 @@ $produtos_delete->ShowMessage();
 <?php if ($produtos->modelo_produto->Visible) { // modelo_produto ?>
 		<th class="<?php echo $produtos->modelo_produto->HeaderCellClass() ?>"><span id="elh_produtos_modelo_produto" class="produtos_modelo_produto"><?php echo $produtos->modelo_produto->FldCaption() ?></span></th>
 <?php } ?>
+<?php if ($produtos->id_departamento_produto->Visible) { // id_departamento_produto ?>
+		<th class="<?php echo $produtos->id_departamento_produto->HeaderCellClass() ?>"><span id="elh_produtos_id_departamento_produto" class="produtos_id_departamento_produto"><?php echo $produtos->id_departamento_produto->FldCaption() ?></span></th>
+<?php } ?>
 <?php if ($produtos->id_marca_produto->Visible) { // id_marca_produto ?>
 		<th class="<?php echo $produtos->id_marca_produto->HeaderCellClass() ?>"><span id="elh_produtos_id_marca_produto" class="produtos_id_marca_produto"><?php echo $produtos->id_marca_produto->FldCaption() ?></span></th>
 <?php } ?>
-<?php if ($produtos->status_produto->Visible) { // status_produto ?>
-		<th class="<?php echo $produtos->status_produto->HeaderCellClass() ?>"><span id="elh_produtos_status_produto" class="produtos_status_produto"><?php echo $produtos->status_produto->FldCaption() ?></span></th>
-<?php } ?>
-<?php if ($produtos->unidade_medida_produto->Visible) { // unidade_medida_produto ?>
-		<th class="<?php echo $produtos->unidade_medida_produto->HeaderCellClass() ?>"><span id="elh_produtos_unidade_medida_produto" class="produtos_unidade_medida_produto"><?php echo $produtos->unidade_medida_produto->FldCaption() ?></span></th>
-<?php } ?>
-<?php if ($produtos->unidades->Visible) { // unidades ?>
-		<th class="<?php echo $produtos->unidades->HeaderCellClass() ?>"><span id="elh_produtos_unidades" class="produtos_unidades"><?php echo $produtos->unidades->FldCaption() ?></span></th>
-<?php } ?>
-<?php if ($produtos->peso_produto->Visible) { // peso_produto ?>
-		<th class="<?php echo $produtos->peso_produto->HeaderCellClass() ?>"><span id="elh_produtos_peso_produto" class="produtos_peso_produto"><?php echo $produtos->peso_produto->FldCaption() ?></span></th>
-<?php } ?>
-<?php if ($produtos->data_adicionado->Visible) { // data_adicionado ?>
-		<th class="<?php echo $produtos->data_adicionado->HeaderCellClass() ?>"><span id="elh_produtos_data_adicionado" class="produtos_data_adicionado"><?php echo $produtos->data_adicionado->FldCaption() ?></span></th>
-<?php } ?>
-<?php if ($produtos->hora_adicionado->Visible) { // hora_adicionado ?>
-		<th class="<?php echo $produtos->hora_adicionado->HeaderCellClass() ?>"><span id="elh_produtos_hora_adicionado" class="produtos_hora_adicionado"><?php echo $produtos->hora_adicionado->FldCaption() ?></span></th>
-<?php } ?>
 <?php if ($produtos->preco_produto->Visible) { // preco_produto ?>
 		<th class="<?php echo $produtos->preco_produto->HeaderCellClass() ?>"><span id="elh_produtos_preco_produto" class="produtos_preco_produto"><?php echo $produtos->preco_produto->FldCaption() ?></span></th>
-<?php } ?>
-<?php if ($produtos->descricao->Visible) { // descricao ?>
-		<th class="<?php echo $produtos->descricao->HeaderCellClass() ?>"><span id="elh_produtos_descricao" class="produtos_descricao"><?php echo $produtos->descricao->FldCaption() ?></span></th>
-<?php } ?>
-<?php if ($produtos->ipi->Visible) { // ipi ?>
-		<th class="<?php echo $produtos->ipi->HeaderCellClass() ?>"><span id="elh_produtos_ipi" class="produtos_ipi"><?php echo $produtos->ipi->FldCaption() ?></span></th>
 <?php } ?>
 	</tr>
 	</thead>
@@ -1052,6 +1010,14 @@ while (!$produtos_delete->Recordset->EOF) {
 </span>
 </td>
 <?php } ?>
+<?php if ($produtos->id_departamento_produto->Visible) { // id_departamento_produto ?>
+		<td<?php echo $produtos->id_departamento_produto->CellAttributes() ?>>
+<span id="el<?php echo $produtos_delete->RowCnt ?>_produtos_id_departamento_produto" class="produtos_id_departamento_produto">
+<span<?php echo $produtos->id_departamento_produto->ViewAttributes() ?>>
+<?php echo $produtos->id_departamento_produto->ListViewValue() ?></span>
+</span>
+</td>
+<?php } ?>
 <?php if ($produtos->id_marca_produto->Visible) { // id_marca_produto ?>
 		<td<?php echo $produtos->id_marca_produto->CellAttributes() ?>>
 <span id="el<?php echo $produtos_delete->RowCnt ?>_produtos_id_marca_produto" class="produtos_id_marca_produto">
@@ -1060,75 +1026,11 @@ while (!$produtos_delete->Recordset->EOF) {
 </span>
 </td>
 <?php } ?>
-<?php if ($produtos->status_produto->Visible) { // status_produto ?>
-		<td<?php echo $produtos->status_produto->CellAttributes() ?>>
-<span id="el<?php echo $produtos_delete->RowCnt ?>_produtos_status_produto" class="produtos_status_produto">
-<span<?php echo $produtos->status_produto->ViewAttributes() ?>>
-<?php echo $produtos->status_produto->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($produtos->unidade_medida_produto->Visible) { // unidade_medida_produto ?>
-		<td<?php echo $produtos->unidade_medida_produto->CellAttributes() ?>>
-<span id="el<?php echo $produtos_delete->RowCnt ?>_produtos_unidade_medida_produto" class="produtos_unidade_medida_produto">
-<span<?php echo $produtos->unidade_medida_produto->ViewAttributes() ?>>
-<?php echo $produtos->unidade_medida_produto->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($produtos->unidades->Visible) { // unidades ?>
-		<td<?php echo $produtos->unidades->CellAttributes() ?>>
-<span id="el<?php echo $produtos_delete->RowCnt ?>_produtos_unidades" class="produtos_unidades">
-<span<?php echo $produtos->unidades->ViewAttributes() ?>>
-<?php echo $produtos->unidades->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($produtos->peso_produto->Visible) { // peso_produto ?>
-		<td<?php echo $produtos->peso_produto->CellAttributes() ?>>
-<span id="el<?php echo $produtos_delete->RowCnt ?>_produtos_peso_produto" class="produtos_peso_produto">
-<span<?php echo $produtos->peso_produto->ViewAttributes() ?>>
-<?php echo $produtos->peso_produto->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($produtos->data_adicionado->Visible) { // data_adicionado ?>
-		<td<?php echo $produtos->data_adicionado->CellAttributes() ?>>
-<span id="el<?php echo $produtos_delete->RowCnt ?>_produtos_data_adicionado" class="produtos_data_adicionado">
-<span<?php echo $produtos->data_adicionado->ViewAttributes() ?>>
-<?php echo $produtos->data_adicionado->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($produtos->hora_adicionado->Visible) { // hora_adicionado ?>
-		<td<?php echo $produtos->hora_adicionado->CellAttributes() ?>>
-<span id="el<?php echo $produtos_delete->RowCnt ?>_produtos_hora_adicionado" class="produtos_hora_adicionado">
-<span<?php echo $produtos->hora_adicionado->ViewAttributes() ?>>
-<?php echo $produtos->hora_adicionado->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
 <?php if ($produtos->preco_produto->Visible) { // preco_produto ?>
 		<td<?php echo $produtos->preco_produto->CellAttributes() ?>>
 <span id="el<?php echo $produtos_delete->RowCnt ?>_produtos_preco_produto" class="produtos_preco_produto">
 <span<?php echo $produtos->preco_produto->ViewAttributes() ?>>
 <?php echo $produtos->preco_produto->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($produtos->descricao->Visible) { // descricao ?>
-		<td<?php echo $produtos->descricao->CellAttributes() ?>>
-<span id="el<?php echo $produtos_delete->RowCnt ?>_produtos_descricao" class="produtos_descricao">
-<span<?php echo $produtos->descricao->ViewAttributes() ?>>
-<?php echo $produtos->descricao->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($produtos->ipi->Visible) { // ipi ?>
-		<td<?php echo $produtos->ipi->CellAttributes() ?>>
-<span id="el<?php echo $produtos_delete->RowCnt ?>_produtos_ipi" class="produtos_ipi">
-<span<?php echo $produtos->ipi->ViewAttributes() ?>>
-<?php echo $produtos->ipi->ListViewValue() ?></span>
 </span>
 </td>
 <?php } ?>

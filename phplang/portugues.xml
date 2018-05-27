@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<ew-language date="2018/5/24" version="14.0.0" id="pt-br" name="Portugues" desc="Portugues" author="Eder Villalba / Vinicius Bello ">
+<ew-language date="2018/5/25" version="14.0.0" id="pt-br" name="Portugues" desc="Portugues" author="Eder Villalba / Vinicius Bello ">
   <global>
     <phrase id="actiondeleted" value="Excluído" />
     <phrase id="actioninserted" value="Inserido" />
@@ -610,8 +610,8 @@
     <menu id="21">
       <phrase id="menutext" value="Catálogo" />
     </menu>
-    <menu id="22">
-      <phrase id="menutext" value="Categorias" />
+    <menu id="10015">
+      <phrase id="menutext" value="categoria" />
     </menu>
     <menu id="7">
       <phrase id="menutext" value="Marcas" />
@@ -623,7 +623,7 @@
       <phrase id="menutext" value="Empresas" />
     </menu>
     <menu id="6">
-      <phrase id="menutext" value="Pessoas Jurídicas" />
+      <phrase id="menutext" value="Endereços" />
     </menu>
     <menu id="9">
       <phrase id="menutext" value="Clientes Pessoa Física" />
@@ -693,6 +693,10 @@
       <field id="id_pedidos">
         <phrase id="fldcaption" value="id pedidos" />
       </field>
+      <field id="numero">
+        <phrase id="fldcaption" value="Número do Pedido" />
+        <phrase id="fldtitle" value="Número do Pedido" />
+      </field>
       <field id="tipo_pedido">
         <phrase id="fldcaption" value="Tipo de Pedido" />
         <phrase id="flderrmsg" value="Tipo não satisfeito" />
@@ -702,15 +706,11 @@
         <phrase id="fldtagvalue2" value="V" />
         <phrase id="fldtagcaption2" value="Venda" />
       </field>
-      <field id="numero">
-        <phrase id="fldcaption" value="Número do Pedido" />
-        <phrase id="fldtitle" value="Número do Pedido" />
-      </field>
       <field id="fecha_data">
-        <phrase id="fldcaption" value="fecha data" />
+        <phrase id="fldcaption" value="Data" />
       </field>
       <field id="fecha_hora">
-        <phrase id="fldcaption" value="fecha hora" />
+        <phrase id="fldcaption" value="Hora" />
       </field>
       <field id="id_fornecedor">
         <phrase id="fldcaption" value="Fornecedor" />
@@ -766,14 +766,17 @@
       <field id="id_produto">
         <phrase id="fldcaption" value="Produto" />
       </field>
+      <field id="desconto">
+        <phrase id="fldcaption" value="Desconto" />
+      </field>
+      <field id="preco">
+        <phrase id="fldcaption" value="Valor Unitário (R$)" />
+      </field>
       <field id="quantidade">
         <phrase id="fldcaption" value="Quantidade" />
       </field>
-      <field id="custo">
-        <phrase id="fldcaption" value="Custo" />
-      </field>
-      <field id="id_desconto">
-        <phrase id="fldcaption" value="Desconto" />
+      <field id="subtotal">
+        <phrase id="fldcaption" value="Subtotal" />
       </field>
     </table>
     <table id="pessoa_fisica">
@@ -934,6 +937,7 @@
       </field>
       <field id="preco_produto">
         <phrase id="fldcaption" value="Preço do produto" />
+        <phrase id="flderrmsg" value="Coloque o valor em moeda corrente" />
       </field>
       <field id="descricao">
         <phrase id="fldcaption" value="Descrição " />
@@ -1001,15 +1005,15 @@
       </field>
     </table>
     <table id="categoria">
-      <phrase id="tblcaption" value="Categorias" />
+      <phrase id="tblcaption" value="categoria" />
       <field id="id_categoria">
-        <phrase id="fldcaption" value="id categoria" />
+        <phrase id="fldcaption" value="Código" />
       </field>
       <field id="id_pai">
         <phrase id="fldcaption" value="Categoria Pai" />
       </field>
-      <field id="nome_categoria">
-        <phrase id="fldcaption" value="Nome Categoria" />
+      <field id="categoria">
+        <phrase id="fldcaption" value="categoria" />
       </field>
     </table>
   </project>

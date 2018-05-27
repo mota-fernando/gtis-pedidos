@@ -340,9 +340,57 @@ class cpedidos_view extends cpedidos {
 
 		// Is modal
 		$this->IsModal = (@$_GET["modal"] == "1" || @$_POST["modal"] == "1");
+
+		// Get export parameters
+		$custom = "";
+		if (@$_GET["export"] <> "") {
+			$this->Export = $_GET["export"];
+			$custom = @$_GET["custom"];
+		} elseif (@$_POST["export"] <> "") {
+			$this->Export = $_POST["export"];
+			$custom = @$_POST["custom"];
+		} elseif (ew_IsPost()) {
+			if (@$_POST["exporttype"] <> "")
+				$this->Export = $_POST["exporttype"];
+			$custom = @$_POST["custom"];
+		} elseif (@$_GET["cmd"] == "json") {
+			$this->Export = $_GET["cmd"];
+		} else {
+			$this->setExportReturnUrl(ew_CurrentUrl());
+		}
+		$gsExportFile = $this->TableVar; // Get export file, used in header
+		if (@$_GET["id_pedidos"] <> "") {
+			if ($gsExportFile <> "") $gsExportFile .= "_";
+			$gsExportFile .= $_GET["id_pedidos"];
+		}
+
+		// Get custom export parameters
+		if ($this->Export <> "" && $custom <> "") {
+			$this->CustomExport = $this->Export;
+			$this->Export = "print";
+		}
+		$gsCustomExport = $this->CustomExport;
+		$gsExport = $this->Export; // Get export parameter, used in header
+
+		// Update Export URLs
+		if (defined("EW_USE_PHPEXCEL"))
+			$this->ExportExcelCustom = FALSE;
+		if ($this->ExportExcelCustom)
+			$this->ExportExcelUrl .= "&amp;custom=1";
+		if (defined("EW_USE_PHPWORD"))
+			$this->ExportWordCustom = FALSE;
+		if ($this->ExportWordCustom)
+			$this->ExportWordUrl .= "&amp;custom=1";
+		if ($this->ExportPdfCustom)
+			$this->ExportPdfUrl .= "&amp;custom=1";
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
-		$this->tipo_pedido->SetVisibility();
+
+		// Setup export options
+		$this->SetupExportOptions();
 		$this->numero->SetVisibility();
+		$this->tipo_pedido->SetVisibility();
+		$this->fecha_data->SetVisibility();
+		$this->fecha_hora->SetVisibility();
 		$this->id_fornecedor->SetVisibility();
 		$this->id_transportadora->SetVisibility();
 		$this->id_prazos->SetVisibility();
@@ -438,6 +486,8 @@ class cpedidos_view extends cpedidos {
 	var $StopRec;
 	var $TotalRecs = 0;
 	var $RecRange = 10;
+	var $Pager;
+	var $AutoHidePager = EW_AUTO_HIDE_PAGER;
 	var $RecCnt;
 	var $RecKey = array();
 	var $IsModal = FALSE;
@@ -466,18 +516,54 @@ class cpedidos_view extends cpedidos {
 				$this->id_pedidos->setFormValue($_POST["id_pedidos"]);
 				$this->RecKey["id_pedidos"] = $this->id_pedidos->FormValue;
 			} else {
-				$sReturnUrl = "pedidoslist.php"; // Return to list
+				$bLoadCurrentRecord = TRUE;
 			}
 
 			// Get action
 			$this->CurrentAction = "I"; // Display form
 			switch ($this->CurrentAction) {
 				case "I": // Get a record to display
-					if (!$this->LoadRow()) { // Load record based on key
+					$this->StartRec = 1; // Initialize start position
+					if ($this->Recordset = $this->LoadRecordset()) // Load records
+						$this->TotalRecs = $this->Recordset->RecordCount(); // Get record count
+					if ($this->TotalRecs <= 0) { // No record found
+						if ($this->getSuccessMessage() == "" && $this->getFailureMessage() == "")
+							$this->setFailureMessage($Language->Phrase("NoRecord")); // Set no record message
+						$this->Page_Terminate("pedidoslist.php"); // Return to list page
+					} elseif ($bLoadCurrentRecord) { // Load current record position
+						$this->SetupStartRec(); // Set up start record position
+
+						// Point to current record
+						if (intval($this->StartRec) <= intval($this->TotalRecs)) {
+							$bMatchRecord = TRUE;
+							$this->Recordset->Move($this->StartRec-1);
+						}
+					} else { // Match key values
+						while (!$this->Recordset->EOF) {
+							if (strval($this->id_pedidos->CurrentValue) == strval($this->Recordset->fields('id_pedidos'))) {
+								$this->setStartRecordNumber($this->StartRec); // Save record position
+								$bMatchRecord = TRUE;
+								break;
+							} else {
+								$this->StartRec++;
+								$this->Recordset->MoveNext();
+							}
+						}
+					}
+					if (!$bMatchRecord) {
 						if ($this->getSuccessMessage() == "" && $this->getFailureMessage() == "")
 							$this->setFailureMessage($Language->Phrase("NoRecord")); // Set no record message
 						$sReturnUrl = "pedidoslist.php"; // No matching record, return to list
+					} else {
+						$this->LoadRowValues($this->Recordset); // Load row values
 					}
+			}
+
+			// Export data only
+			if ($this->CustomExport == "" && in_array($this->Export, array_keys($EW_EXPORT))) {
+				$this->ExportData();
+				$this->Page_Terminate(); // Terminate response
+				exit();
 			}
 		} else {
 			$sReturnUrl = "pedidoslist.php"; // Not page request, return to list
@@ -648,6 +734,32 @@ class cpedidos_view extends cpedidos {
 		}
 	}
 
+	// Load recordset
+	function LoadRecordset($offset = -1, $rowcnt = -1) {
+
+		// Load List page SQL
+		$sSql = $this->ListSQL();
+		$conn = &$this->Connection();
+
+		// Load recordset
+		$dbtype = ew_GetConnectionType($this->DBID);
+		if ($this->UseSelectLimit) {
+			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
+			if ($dbtype == "MSSQL") {
+				$rs = $conn->SelectLimit($sSql, $rowcnt, $offset, array("_hasOrderBy" => trim($this->getOrderBy()) || trim($this->getSessionOrderBy())));
+			} else {
+				$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
+			}
+			$conn->raiseErrorFn = '';
+		} else {
+			$rs = ew_LoadRecordset($sSql, $conn);
+		}
+
+		// Call Recordset Selected event
+		$this->Recordset_Selected($rs);
+		return $rs;
+	}
+
 	// Load row based on key values
 	function LoadRow() {
 		global $Security, $Language;
@@ -682,8 +794,8 @@ class cpedidos_view extends cpedidos {
 		if (!$rs || $rs->EOF)
 			return;
 		$this->id_pedidos->setDbValue($row['id_pedidos']);
-		$this->tipo_pedido->setDbValue($row['tipo_pedido']);
 		$this->numero->setDbValue($row['numero']);
+		$this->tipo_pedido->setDbValue($row['tipo_pedido']);
 		$this->fecha_data->setDbValue($row['fecha_data']);
 		$this->fecha_hora->setDbValue($row['fecha_hora']);
 		$this->id_fornecedor->setDbValue($row['id_fornecedor']);
@@ -706,8 +818,8 @@ class cpedidos_view extends cpedidos {
 	function NewRow() {
 		$row = array();
 		$row['id_pedidos'] = NULL;
-		$row['tipo_pedido'] = NULL;
 		$row['numero'] = NULL;
+		$row['tipo_pedido'] = NULL;
 		$row['fecha_data'] = NULL;
 		$row['fecha_hora'] = NULL;
 		$row['id_fornecedor'] = NULL;
@@ -727,8 +839,8 @@ class cpedidos_view extends cpedidos {
 			return;
 		$row = is_array($rs) ? $rs : $rs->fields;
 		$this->id_pedidos->DbValue = $row['id_pedidos'];
-		$this->tipo_pedido->DbValue = $row['tipo_pedido'];
 		$this->numero->DbValue = $row['numero'];
+		$this->tipo_pedido->DbValue = $row['tipo_pedido'];
 		$this->fecha_data->DbValue = $row['fecha_data'];
 		$this->fecha_hora->DbValue = $row['fecha_hora'];
 		$this->id_fornecedor->DbValue = $row['id_fornecedor'];
@@ -758,8 +870,8 @@ class cpedidos_view extends cpedidos {
 
 		// Common render codes for all row types
 		// id_pedidos
-		// tipo_pedido
 		// numero
+		// tipo_pedido
 		// fecha_data
 		// fecha_hora
 		// id_fornecedor
@@ -773,9 +885,9 @@ class cpedidos_view extends cpedidos {
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
-		// id_pedidos
-		$this->id_pedidos->ViewValue = $this->id_pedidos->CurrentValue;
-		$this->id_pedidos->ViewCustomAttributes = "";
+		// numero
+		$this->numero->ViewValue = $this->numero->CurrentValue;
+		$this->numero->ViewCustomAttributes = "";
 
 		// tipo_pedido
 		if (strval($this->tipo_pedido->CurrentValue) <> "") {
@@ -784,10 +896,6 @@ class cpedidos_view extends cpedidos {
 			$this->tipo_pedido->ViewValue = NULL;
 		}
 		$this->tipo_pedido->ViewCustomAttributes = "";
-
-		// numero
-		$this->numero->ViewValue = $this->numero->CurrentValue;
-		$this->numero->ViewCustomAttributes = "";
 
 		// fecha_data
 		$this->fecha_data->ViewValue = $this->fecha_data->CurrentValue;
@@ -848,7 +956,7 @@ class cpedidos_view extends cpedidos {
 		// id_prazos
 		if (strval($this->id_prazos->CurrentValue) <> "") {
 			$sFilterWrk = "`id_prazos`" . ew_SearchString("=", $this->id_prazos->CurrentValue, EW_DATATYPE_NUMBER, "");
-		$sSqlWrk = "SELECT `id_prazos`, `prazo_em_dias` AS `DispFld`, `parcelas` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `prazos`";
+		$sSqlWrk = "SELECT `id_prazos`, `prazo_em_dias` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `prazos`";
 		$sWhereWrk = "";
 		$this->id_prazos->LookupFilters = array();
 		ew_AddFilter($sWhereWrk, $sFilterWrk);
@@ -858,7 +966,6 @@ class cpedidos_view extends cpedidos {
 			if ($rswrk && !$rswrk->EOF) { // Lookup values found
 				$arwrk = array();
 				$arwrk[1] = $rswrk->fields('DispFld');
-				$arwrk[2] = $rswrk->fields('Disp2Fld');
 				$this->id_prazos->ViewValue = $this->id_prazos->DisplayValue($arwrk);
 				$rswrk->Close();
 			} else {
@@ -905,7 +1012,6 @@ class cpedidos_view extends cpedidos {
 		$this->comissao_representante->ViewCustomAttributes = "";
 
 		// id_cliente
-		$this->id_cliente->ViewValue = $this->id_cliente->CurrentValue;
 		if (strval($this->id_cliente->CurrentValue) <> "") {
 			$sFilterWrk = "`id_perfil`" . ew_SearchString("=", $this->id_cliente->CurrentValue, EW_DATATYPE_NUMBER, "");
 		$sSqlWrk = "SELECT `id_perfil`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `empresas`";
@@ -936,15 +1042,25 @@ class cpedidos_view extends cpedidos {
 		}
 		$this->status->ViewCustomAttributes = "";
 
+			// numero
+			$this->numero->LinkCustomAttributes = "";
+			$this->numero->HrefValue = "";
+			$this->numero->TooltipValue = "";
+
 			// tipo_pedido
 			$this->tipo_pedido->LinkCustomAttributes = "";
 			$this->tipo_pedido->HrefValue = "";
 			$this->tipo_pedido->TooltipValue = "";
 
-			// numero
-			$this->numero->LinkCustomAttributes = "";
-			$this->numero->HrefValue = "";
-			$this->numero->TooltipValue = "";
+			// fecha_data
+			$this->fecha_data->LinkCustomAttributes = "";
+			$this->fecha_data->HrefValue = "";
+			$this->fecha_data->TooltipValue = "";
+
+			// fecha_hora
+			$this->fecha_hora->LinkCustomAttributes = "";
+			$this->fecha_hora->HrefValue = "";
+			$this->fecha_hora->TooltipValue = "";
 
 			// id_fornecedor
 			$this->id_fornecedor->LinkCustomAttributes = "";
@@ -990,6 +1106,164 @@ class cpedidos_view extends cpedidos {
 		// Call Row Rendered event
 		if ($this->RowType <> EW_ROWTYPE_AGGREGATEINIT)
 			$this->Row_Rendered();
+	}
+
+	// Set up export options
+	function SetupExportOptions() {
+		global $Language;
+
+		// Printer friendly
+		$item = &$this->ExportOptions->Add("print");
+		$item->Body = "<a href=\"" . $this->ExportPrintUrl . "\" class=\"ewExportLink ewPrint\" title=\"" . ew_HtmlEncode($Language->Phrase("PrinterFriendlyText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("PrinterFriendlyText")) . "\">" . $Language->Phrase("PrinterFriendly") . "</a>";
+		$item->Visible = TRUE;
+
+		// Export to Excel
+		$item = &$this->ExportOptions->Add("excel");
+		$item->Body = "<a href=\"" . $this->ExportExcelUrl . "\" class=\"ewExportLink ewExcel\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToExcelText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToExcelText")) . "\">" . $Language->Phrase("ExportToExcel") . "</a>";
+		$item->Visible = TRUE;
+
+		// Export to Word
+		$item = &$this->ExportOptions->Add("word");
+		$item->Body = "<a href=\"" . $this->ExportWordUrl . "\" class=\"ewExportLink ewWord\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToWordText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToWordText")) . "\">" . $Language->Phrase("ExportToWord") . "</a>";
+		$item->Visible = FALSE;
+
+		// Export to Html
+		$item = &$this->ExportOptions->Add("html");
+		$item->Body = "<a href=\"" . $this->ExportHtmlUrl . "\" class=\"ewExportLink ewHtml\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToHtmlText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToHtmlText")) . "\">" . $Language->Phrase("ExportToHtml") . "</a>";
+		$item->Visible = FALSE;
+
+		// Export to Xml
+		$item = &$this->ExportOptions->Add("xml");
+		$item->Body = "<a href=\"" . $this->ExportXmlUrl . "\" class=\"ewExportLink ewXml\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToXmlText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToXmlText")) . "\">" . $Language->Phrase("ExportToXml") . "</a>";
+		$item->Visible = FALSE;
+
+		// Export to Csv
+		$item = &$this->ExportOptions->Add("csv");
+		$item->Body = "<a href=\"" . $this->ExportCsvUrl . "\" class=\"ewExportLink ewCsv\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToCsvText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToCsvText")) . "\">" . $Language->Phrase("ExportToCsv") . "</a>";
+		$item->Visible = FALSE;
+
+		// Export to Pdf
+		$item = &$this->ExportOptions->Add("pdf");
+		$item->Body = "<a href=\"" . $this->ExportPdfUrl . "\" class=\"ewExportLink ewPdf\" title=\"" . ew_HtmlEncode($Language->Phrase("ExportToPDFText")) . "\" data-caption=\"" . ew_HtmlEncode($Language->Phrase("ExportToPDFText")) . "\">" . $Language->Phrase("ExportToPDF") . "</a>";
+		$item->Visible = TRUE;
+
+		// Export to Email
+		$item = &$this->ExportOptions->Add("email");
+		$url = "";
+		$item->Body = "<button id=\"emf_pedidos\" class=\"ewExportLink ewEmail\" title=\"" . $Language->Phrase("ExportToEmailText") . "\" data-caption=\"" . $Language->Phrase("ExportToEmailText") . "\" onclick=\"ew_EmailDialogShow({lnk:'emf_pedidos',hdr:ewLanguage.Phrase('ExportToEmailText'),f:document.fpedidosview,key:" . ew_ArrayToJsonAttr($this->RecKey) . ",sel:false" . $url . "});\">" . $Language->Phrase("ExportToEmail") . "</button>";
+		$item->Visible = FALSE;
+
+		// Drop down button for export
+		$this->ExportOptions->UseButtonGroup = TRUE;
+		$this->ExportOptions->UseImageAndText = TRUE;
+		$this->ExportOptions->UseDropDownButton = FALSE;
+		if ($this->ExportOptions->UseButtonGroup && ew_IsMobile())
+			$this->ExportOptions->UseDropDownButton = TRUE;
+		$this->ExportOptions->DropDownButtonPhrase = $Language->Phrase("ButtonExport");
+
+		// Add group option item
+		$item = &$this->ExportOptions->Add($this->ExportOptions->GroupOptionName);
+		$item->Body = "";
+		$item->Visible = FALSE;
+
+		// Hide options for export
+		if ($this->Export <> "")
+			$this->ExportOptions->HideAllOptions();
+	}
+
+	// Export data in HTML/CSV/Word/Excel/XML/Email/PDF format
+	function ExportData() {
+		$utf8 = (strtolower(EW_CHARSET) == "utf-8");
+		$bSelectLimit = FALSE;
+
+		// Load recordset
+		if ($bSelectLimit) {
+			$this->TotalRecs = $this->ListRecordCount();
+		} else {
+			if (!$this->Recordset)
+				$this->Recordset = $this->LoadRecordset();
+			$rs = &$this->Recordset;
+			if ($rs)
+				$this->TotalRecs = $rs->RecordCount();
+		}
+		$this->StartRec = 1;
+		$this->SetupStartRec(); // Set up start record position
+
+		// Set the last record to display
+		if ($this->DisplayRecs <= 0) {
+			$this->StopRec = $this->TotalRecs;
+		} else {
+			$this->StopRec = $this->StartRec + $this->DisplayRecs - 1;
+		}
+		if (!$rs) {
+			header("Content-Type:"); // Remove header
+			header("Content-Disposition:");
+			$this->ShowMessage();
+			return;
+		}
+		$this->ExportDoc = ew_ExportDocument($this, "v");
+		$Doc = &$this->ExportDoc;
+		if ($bSelectLimit) {
+			$this->StartRec = 1;
+			$this->StopRec = $this->DisplayRecs <= 0 ? $this->TotalRecs : $this->DisplayRecs;
+		} else {
+
+			//$this->StartRec = $this->StartRec;
+			//$this->StopRec = $this->StopRec;
+
+		}
+
+		// Call Page Exporting server event
+		$this->ExportDoc->ExportCustom = !$this->Page_Exporting();
+		$ParentTable = "";
+		$sHeader = $this->PageHeader;
+		$this->Page_DataRendering($sHeader);
+		$Doc->Text .= $sHeader;
+		$this->ExportDocument($Doc, $rs, $this->StartRec, $this->StopRec, "view");
+
+		// Export detail records (detalhe_pedido)
+		if (EW_EXPORT_DETAIL_RECORDS && in_array("detalhe_pedido", explode(",", $this->getCurrentDetailTable()))) {
+			global $detalhe_pedido;
+			if (!isset($detalhe_pedido)) $detalhe_pedido = new cdetalhe_pedido;
+			$rsdetail = $detalhe_pedido->LoadRs($detalhe_pedido->GetDetailFilter()); // Load detail records
+			if ($rsdetail && !$rsdetail->EOF) {
+				$ExportStyle = $Doc->Style;
+				$Doc->SetStyle("h"); // Change to horizontal
+				if ($this->Export <> "csv" || EW_EXPORT_DETAIL_RECORDS_FOR_CSV) {
+					$Doc->ExportEmptyRow();
+					$detailcnt = $rsdetail->RecordCount();
+					$oldtbl = $Doc->Table;
+					$Doc->Table = $detalhe_pedido;
+					$detalhe_pedido->ExportDocument($Doc, $rsdetail, 1, $detailcnt);
+					$Doc->Table = $oldtbl;
+				}
+				$Doc->SetStyle($ExportStyle); // Restore
+				$rsdetail->Close();
+			}
+		}
+		$sFooter = $this->PageFooter;
+		$this->Page_DataRendered($sFooter);
+		$Doc->Text .= $sFooter;
+
+		// Close recordset
+		$rs->Close();
+
+		// Call Page Exported server event
+		$this->Page_Exported();
+
+		// Export header and footer
+		$Doc->ExportHeaderAndFooter();
+
+		// Clean output buffer
+		if (!EW_DEBUG_ENABLED && ob_get_length())
+			ob_end_clean();
+
+		// Write debug message if enabled
+		if (EW_DEBUG_ENABLED && $this->Export <> "pdf")
+			echo ew_DebugMsg();
+
+		// Output data
+		$Doc->Export();
 	}
 
 	// Set up detail parms based on QueryString
@@ -1153,6 +1427,7 @@ Page_Rendering();
 $pedidos_view->Page_Render();
 ?>
 <?php include_once "header.php" ?>
+<?php if ($pedidos->Export == "") { ?>
 <script type="text/javascript">
 
 // Form object
@@ -1177,7 +1452,7 @@ fpedidosview.Lists["x_id_fornecedor"] = {"LinkField":"x_id_perfil","Ajax":true,"
 fpedidosview.Lists["x_id_fornecedor"].Data = "<?php echo $pedidos_view->id_fornecedor->LookupFilterQuery(FALSE, "view") ?>";
 fpedidosview.Lists["x_id_transportadora"] = {"LinkField":"x_id_transportadora","Ajax":true,"AutoFill":false,"DisplayFields":["x_transportadora","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"tranportadora"};
 fpedidosview.Lists["x_id_transportadora"].Data = "<?php echo $pedidos_view->id_transportadora->LookupFilterQuery(FALSE, "view") ?>";
-fpedidosview.Lists["x_id_prazos"] = {"LinkField":"x_id_prazos","Ajax":true,"AutoFill":false,"DisplayFields":["x_prazo_em_dias","x_parcelas","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"prazos"};
+fpedidosview.Lists["x_id_prazos"] = {"LinkField":"x_id_prazos","Ajax":true,"AutoFill":false,"DisplayFields":["x_prazo_em_dias","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"prazos"};
 fpedidosview.Lists["x_id_prazos"].Data = "<?php echo $pedidos_view->id_prazos->LookupFilterQuery(FALSE, "view") ?>";
 fpedidosview.Lists["x_id_representante"] = {"LinkField":"x_id_representantes","Ajax":true,"AutoFill":false,"DisplayFields":["x_id_pessoa","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"representantes"};
 fpedidosview.Lists["x_id_representante"].Data = "<?php echo $pedidos_view->id_representante->LookupFilterQuery(FALSE, "view") ?>";
@@ -1185,7 +1460,6 @@ fpedidosview.Lists["x_comissao_representante"] = {"LinkField":"","Ajax":null,"Au
 fpedidosview.Lists["x_comissao_representante"].Options = <?php echo json_encode($pedidos_view->comissao_representante->Options()) ?>;
 fpedidosview.Lists["x_id_cliente"] = {"LinkField":"x_id_perfil","Ajax":true,"AutoFill":false,"DisplayFields":["x_razao_social","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"empresas"};
 fpedidosview.Lists["x_id_cliente"].Data = "<?php echo $pedidos_view->id_cliente->LookupFilterQuery(FALSE, "view") ?>";
-fpedidosview.AutoSuggests["x_id_cliente"] = <?php echo json_encode(array("data" => "ajax=autosuggest&" . $pedidos_view->id_cliente->LookupFilterQuery(TRUE, "view"))) ?>;
 fpedidosview.Lists["x_status"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
 fpedidosview.Lists["x_status"].Options = <?php echo json_encode($pedidos_view->status->Options()) ?>;
 
@@ -1195,6 +1469,8 @@ fpedidosview.Lists["x_status"].Options = <?php echo json_encode($pedidos_view->s
 
 // Write your client script here, no need to add script tags.
 </script>
+<?php } ?>
+<?php if ($pedidos->Export == "") { ?>
 <div class="ewToolbar">
 <?php $pedidos_view->ExportOptions->Render("body") ?>
 <?php
@@ -1203,10 +1479,58 @@ fpedidosview.Lists["x_status"].Options = <?php echo json_encode($pedidos_view->s
 ?>
 <div class="clearfix"></div>
 </div>
+<?php } ?>
 <?php $pedidos_view->ShowPageHeader(); ?>
 <?php
 $pedidos_view->ShowMessage();
 ?>
+<?php if (!$pedidos_view->IsModal) { ?>
+<?php if ($pedidos->Export == "") { ?>
+<form name="ewPagerForm" class="form-inline ewForm ewPagerForm" action="<?php echo ew_CurrentPage() ?>">
+<?php if (!isset($pedidos_view->Pager)) $pedidos_view->Pager = new cPrevNextPager($pedidos_view->StartRec, $pedidos_view->DisplayRecs, $pedidos_view->TotalRecs, $pedidos_view->AutoHidePager) ?>
+<?php if ($pedidos_view->Pager->RecordCount > 0 && $pedidos_view->Pager->Visible) { ?>
+<div class="ewPager">
+<span><?php echo $Language->Phrase("Page") ?>&nbsp;</span>
+<div class="ewPrevNext"><div class="input-group">
+<div class="input-group-btn">
+<!--first page button-->
+	<?php if ($pedidos_view->Pager->FirstButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerFirst") ?>" href="<?php echo $pedidos_view->PageUrl() ?>start=<?php echo $pedidos_view->Pager->FirstButton->Start ?>"><span class="icon-first ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerFirst") ?>"><span class="icon-first ewIcon"></span></a>
+	<?php } ?>
+<!--previous page button-->
+	<?php if ($pedidos_view->Pager->PrevButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerPrevious") ?>" href="<?php echo $pedidos_view->PageUrl() ?>start=<?php echo $pedidos_view->Pager->PrevButton->Start ?>"><span class="icon-prev ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerPrevious") ?>"><span class="icon-prev ewIcon"></span></a>
+	<?php } ?>
+</div>
+<!--current page number-->
+	<input class="form-control input-sm" type="text" name="<?php echo EW_TABLE_PAGE_NO ?>" value="<?php echo $pedidos_view->Pager->CurrentPage ?>">
+<div class="input-group-btn">
+<!--next page button-->
+	<?php if ($pedidos_view->Pager->NextButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerNext") ?>" href="<?php echo $pedidos_view->PageUrl() ?>start=<?php echo $pedidos_view->Pager->NextButton->Start ?>"><span class="icon-next ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerNext") ?>"><span class="icon-next ewIcon"></span></a>
+	<?php } ?>
+<!--last page button-->
+	<?php if ($pedidos_view->Pager->LastButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerLast") ?>" href="<?php echo $pedidos_view->PageUrl() ?>start=<?php echo $pedidos_view->Pager->LastButton->Start ?>"><span class="icon-last ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerLast") ?>"><span class="icon-last ewIcon"></span></a>
+	<?php } ?>
+</div>
+</div>
+</div>
+<span>&nbsp;<?php echo $Language->Phrase("of") ?>&nbsp;<?php echo $pedidos_view->Pager->PageCount ?></span>
+</div>
+<?php } ?>
+<div class="clearfix"></div>
+</form>
+<?php } ?>
+<?php } ?>
 <form name="fpedidosview" id="fpedidosview" class="form-inline ewForm ewViewForm" action="<?php echo ew_CurrentPage() ?>" method="post">
 <?php if ($pedidos_view->CheckToken) { ?>
 <input type="hidden" name="<?php echo EW_TOKEN_NAME ?>" value="<?php echo $pedidos_view->Token ?>">
@@ -1214,6 +1538,17 @@ $pedidos_view->ShowMessage();
 <input type="hidden" name="t" value="pedidos">
 <input type="hidden" name="modal" value="<?php echo intval($pedidos_view->IsModal) ?>">
 <table class="table table-striped table-bordered table-hover table-condensed ewViewTable">
+<?php if ($pedidos->numero->Visible) { // numero ?>
+	<tr id="r_numero">
+		<td class="col-sm-2"><span id="elh_pedidos_numero"><?php echo $pedidos->numero->FldCaption() ?></span></td>
+		<td data-name="numero"<?php echo $pedidos->numero->CellAttributes() ?>>
+<span id="el_pedidos_numero">
+<span<?php echo $pedidos->numero->ViewAttributes() ?>>
+<?php echo $pedidos->numero->ViewValue ?></span>
+</span>
+</td>
+	</tr>
+<?php } ?>
 <?php if ($pedidos->tipo_pedido->Visible) { // tipo_pedido ?>
 	<tr id="r_tipo_pedido">
 		<td class="col-sm-2"><span id="elh_pedidos_tipo_pedido"><?php echo $pedidos->tipo_pedido->FldCaption() ?></span></td>
@@ -1225,13 +1560,24 @@ $pedidos_view->ShowMessage();
 </td>
 	</tr>
 <?php } ?>
-<?php if ($pedidos->numero->Visible) { // numero ?>
-	<tr id="r_numero">
-		<td class="col-sm-2"><span id="elh_pedidos_numero"><?php echo $pedidos->numero->FldCaption() ?></span></td>
-		<td data-name="numero"<?php echo $pedidos->numero->CellAttributes() ?>>
-<span id="el_pedidos_numero">
-<span<?php echo $pedidos->numero->ViewAttributes() ?>>
-<?php echo $pedidos->numero->ViewValue ?></span>
+<?php if ($pedidos->fecha_data->Visible) { // fecha_data ?>
+	<tr id="r_fecha_data">
+		<td class="col-sm-2"><span id="elh_pedidos_fecha_data"><?php echo $pedidos->fecha_data->FldCaption() ?></span></td>
+		<td data-name="fecha_data"<?php echo $pedidos->fecha_data->CellAttributes() ?>>
+<span id="el_pedidos_fecha_data">
+<span<?php echo $pedidos->fecha_data->ViewAttributes() ?>>
+<?php echo $pedidos->fecha_data->ViewValue ?></span>
+</span>
+</td>
+	</tr>
+<?php } ?>
+<?php if ($pedidos->fecha_hora->Visible) { // fecha_hora ?>
+	<tr id="r_fecha_hora">
+		<td class="col-sm-2"><span id="elh_pedidos_fecha_hora"><?php echo $pedidos->fecha_hora->FldCaption() ?></span></td>
+		<td data-name="fecha_hora"<?php echo $pedidos->fecha_hora->CellAttributes() ?>>
+<span id="el_pedidos_fecha_hora">
+<span<?php echo $pedidos->fecha_hora->ViewAttributes() ?>>
+<?php echo $pedidos->fecha_hora->ViewValue ?></span>
 </span>
 </td>
 	</tr>
@@ -1325,6 +1671,51 @@ $pedidos_view->ShowMessage();
 	</tr>
 <?php } ?>
 </table>
+<?php if (!$pedidos_view->IsModal) { ?>
+<?php if ($pedidos->Export == "") { ?>
+<?php if (!isset($pedidos_view->Pager)) $pedidos_view->Pager = new cPrevNextPager($pedidos_view->StartRec, $pedidos_view->DisplayRecs, $pedidos_view->TotalRecs, $pedidos_view->AutoHidePager) ?>
+<?php if ($pedidos_view->Pager->RecordCount > 0 && $pedidos_view->Pager->Visible) { ?>
+<div class="ewPager">
+<span><?php echo $Language->Phrase("Page") ?>&nbsp;</span>
+<div class="ewPrevNext"><div class="input-group">
+<div class="input-group-btn">
+<!--first page button-->
+	<?php if ($pedidos_view->Pager->FirstButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerFirst") ?>" href="<?php echo $pedidos_view->PageUrl() ?>start=<?php echo $pedidos_view->Pager->FirstButton->Start ?>"><span class="icon-first ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerFirst") ?>"><span class="icon-first ewIcon"></span></a>
+	<?php } ?>
+<!--previous page button-->
+	<?php if ($pedidos_view->Pager->PrevButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerPrevious") ?>" href="<?php echo $pedidos_view->PageUrl() ?>start=<?php echo $pedidos_view->Pager->PrevButton->Start ?>"><span class="icon-prev ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerPrevious") ?>"><span class="icon-prev ewIcon"></span></a>
+	<?php } ?>
+</div>
+<!--current page number-->
+	<input class="form-control input-sm" type="text" name="<?php echo EW_TABLE_PAGE_NO ?>" value="<?php echo $pedidos_view->Pager->CurrentPage ?>">
+<div class="input-group-btn">
+<!--next page button-->
+	<?php if ($pedidos_view->Pager->NextButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerNext") ?>" href="<?php echo $pedidos_view->PageUrl() ?>start=<?php echo $pedidos_view->Pager->NextButton->Start ?>"><span class="icon-next ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerNext") ?>"><span class="icon-next ewIcon"></span></a>
+	<?php } ?>
+<!--last page button-->
+	<?php if ($pedidos_view->Pager->LastButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerLast") ?>" href="<?php echo $pedidos_view->PageUrl() ?>start=<?php echo $pedidos_view->Pager->LastButton->Start ?>"><span class="icon-last ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerLast") ?>"><span class="icon-last ewIcon"></span></a>
+	<?php } ?>
+</div>
+</div>
+</div>
+<span>&nbsp;<?php echo $Language->Phrase("of") ?>&nbsp;<?php echo $pedidos_view->Pager->PageCount ?></span>
+</div>
+<?php } ?>
+<div class="clearfix"></div>
+<?php } ?>
+<?php } ?>
 <?php
 	if (in_array("detalhe_pedido", explode(",", $pedidos->getCurrentDetailTable())) && $detalhe_pedido->DetailView) {
 ?>
@@ -1334,20 +1725,24 @@ $pedidos_view->ShowMessage();
 <?php include_once "detalhe_pedidogrid.php" ?>
 <?php } ?>
 </form>
+<?php if ($pedidos->Export == "") { ?>
 <script type="text/javascript">
 fpedidosview.Init();
 </script>
+<?php } ?>
 <?php
 $pedidos_view->ShowPageFooter();
 if (EW_DEBUG_ENABLED)
 	echo ew_DebugMsg();
 ?>
+<?php if ($pedidos->Export == "") { ?>
 <script type="text/javascript">
 
 // Write your table-specific startup script here
 // document.write("page loaded");
 
 </script>
+<?php } ?>
 <?php include_once "footer.php" ?>
 <?php
 $pedidos_view->Page_Terminate();

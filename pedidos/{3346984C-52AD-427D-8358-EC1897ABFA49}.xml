@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <configuration date="2018/05/24" author="e.World Technology Ltd.">
-  <project id="{3346984C-52AD-427D-8358-EC1897ABFA49}" file="C:\Users\Root\Documents\PHPReportMaker\Projects\pedidos.prp" name="pedidos" product="PHPReportMaker" version="11.0" datetime="2018/05/24 20:20:58" languagefolder="phprptlang" userlevel="-2,&quot;Anonymous&quot;,0;">
+  <project id="{3346984C-52AD-427D-8358-EC1897ABFA49}" file="C:\Users\Root\Documents\PHPReportMaker\Projects\pedidos.prp" name="pedidos" product="PHPReportMaker" version="11.0" datetime="2018/05/24 20:36:48" languagefolder="phprptlang" userlevel="-2,&quot;Anonymous&quot;,0;">
     <table id="categoria" name="categoria" caption="categoria" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />
     <table id="configurar" name="configurar" caption="configurar" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />
     <table id="desconto" name="desconto" caption="desconto" userlevel="-2,&quot;Anonymous&quot;,0;" priv="1" />

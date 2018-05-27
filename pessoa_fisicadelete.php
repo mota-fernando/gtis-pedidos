@@ -285,15 +285,9 @@ class cpessoa_fisica_delete extends cpessoa_fisica {
 			$this->id_pessoa->Visible = FALSE;
 		$this->nome_pessoa->SetVisibility();
 		$this->sobrenome_pessoa->SetVisibility();
-		$this->nascimento->SetVisibility();
 		$this->telefone->SetVisibility();
 		$this->_email->SetVisibility();
 		$this->celular->SetVisibility();
-		$this->CPF->SetVisibility();
-		$this->RG->SetVisibility();
-		$this->id_endereco->SetVisibility();
-		$this->endereco_numero->SetVisibility();
-		$this->id_empresa->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -655,11 +649,6 @@ class cpessoa_fisica_delete extends cpessoa_fisica {
 			$this->sobrenome_pessoa->HrefValue = "";
 			$this->sobrenome_pessoa->TooltipValue = "";
 
-			// nascimento
-			$this->nascimento->LinkCustomAttributes = "";
-			$this->nascimento->HrefValue = "";
-			$this->nascimento->TooltipValue = "";
-
 			// telefone
 			$this->telefone->LinkCustomAttributes = "";
 			$this->telefone->HrefValue = "";
@@ -674,31 +663,6 @@ class cpessoa_fisica_delete extends cpessoa_fisica {
 			$this->celular->LinkCustomAttributes = "";
 			$this->celular->HrefValue = "";
 			$this->celular->TooltipValue = "";
-
-			// CPF
-			$this->CPF->LinkCustomAttributes = "";
-			$this->CPF->HrefValue = "";
-			$this->CPF->TooltipValue = "";
-
-			// RG
-			$this->RG->LinkCustomAttributes = "";
-			$this->RG->HrefValue = "";
-			$this->RG->TooltipValue = "";
-
-			// id_endereco
-			$this->id_endereco->LinkCustomAttributes = "";
-			$this->id_endereco->HrefValue = "";
-			$this->id_endereco->TooltipValue = "";
-
-			// endereco_numero
-			$this->endereco_numero->LinkCustomAttributes = "";
-			$this->endereco_numero->HrefValue = "";
-			$this->endereco_numero->TooltipValue = "";
-
-			// id_empresa
-			$this->id_empresa->LinkCustomAttributes = "";
-			$this->id_empresa->HrefValue = "";
-			$this->id_empresa->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -906,13 +870,8 @@ fpessoa_fisicadelete.Form_CustomValidate =
 fpessoa_fisicadelete.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-fpessoa_fisicadelete.Lists["x_id_endereco"] = {"LinkField":"x_id_endereco","Ajax":true,"AutoFill":false,"DisplayFields":["x_endereco","x_bairro","x_estado","x_cidade"],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"endereco"};
-fpessoa_fisicadelete.Lists["x_id_endereco"].Data = "<?php echo $pessoa_fisica_delete->id_endereco->LookupFilterQuery(FALSE, "delete") ?>";
-fpessoa_fisicadelete.Lists["x_id_empresa"] = {"LinkField":"x_id_perfil","Ajax":true,"AutoFill":false,"DisplayFields":["x_razao_social","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"empresas"};
-fpessoa_fisicadelete.Lists["x_id_empresa"].Data = "<?php echo $pessoa_fisica_delete->id_empresa->LookupFilterQuery(FALSE, "delete") ?>";
-fpessoa_fisicadelete.AutoSuggests["x_id_empresa"] = <?php echo json_encode(array("data" => "ajax=autosuggest&" . $pessoa_fisica_delete->id_empresa->LookupFilterQuery(TRUE, "delete"))) ?>;
-
 // Form object for search
+
 </script>
 <script type="text/javascript">
 
@@ -946,9 +905,6 @@ $pessoa_fisica_delete->ShowMessage();
 <?php if ($pessoa_fisica->sobrenome_pessoa->Visible) { // sobrenome_pessoa ?>
 		<th class="<?php echo $pessoa_fisica->sobrenome_pessoa->HeaderCellClass() ?>"><span id="elh_pessoa_fisica_sobrenome_pessoa" class="pessoa_fisica_sobrenome_pessoa"><?php echo $pessoa_fisica->sobrenome_pessoa->FldCaption() ?></span></th>
 <?php } ?>
-<?php if ($pessoa_fisica->nascimento->Visible) { // nascimento ?>
-		<th class="<?php echo $pessoa_fisica->nascimento->HeaderCellClass() ?>"><span id="elh_pessoa_fisica_nascimento" class="pessoa_fisica_nascimento"><?php echo $pessoa_fisica->nascimento->FldCaption() ?></span></th>
-<?php } ?>
 <?php if ($pessoa_fisica->telefone->Visible) { // telefone ?>
 		<th class="<?php echo $pessoa_fisica->telefone->HeaderCellClass() ?>"><span id="elh_pessoa_fisica_telefone" class="pessoa_fisica_telefone"><?php echo $pessoa_fisica->telefone->FldCaption() ?></span></th>
 <?php } ?>
@@ -957,21 +913,6 @@ $pessoa_fisica_delete->ShowMessage();
 <?php } ?>
 <?php if ($pessoa_fisica->celular->Visible) { // celular ?>
 		<th class="<?php echo $pessoa_fisica->celular->HeaderCellClass() ?>"><span id="elh_pessoa_fisica_celular" class="pessoa_fisica_celular"><?php echo $pessoa_fisica->celular->FldCaption() ?></span></th>
-<?php } ?>
-<?php if ($pessoa_fisica->CPF->Visible) { // CPF ?>
-		<th class="<?php echo $pessoa_fisica->CPF->HeaderCellClass() ?>"><span id="elh_pessoa_fisica_CPF" class="pessoa_fisica_CPF"><?php echo $pessoa_fisica->CPF->FldCaption() ?></span></th>
-<?php } ?>
-<?php if ($pessoa_fisica->RG->Visible) { // RG ?>
-		<th class="<?php echo $pessoa_fisica->RG->HeaderCellClass() ?>"><span id="elh_pessoa_fisica_RG" class="pessoa_fisica_RG"><?php echo $pessoa_fisica->RG->FldCaption() ?></span></th>
-<?php } ?>
-<?php if ($pessoa_fisica->id_endereco->Visible) { // id_endereco ?>
-		<th class="<?php echo $pessoa_fisica->id_endereco->HeaderCellClass() ?>"><span id="elh_pessoa_fisica_id_endereco" class="pessoa_fisica_id_endereco"><?php echo $pessoa_fisica->id_endereco->FldCaption() ?></span></th>
-<?php } ?>
-<?php if ($pessoa_fisica->endereco_numero->Visible) { // endereco_numero ?>
-		<th class="<?php echo $pessoa_fisica->endereco_numero->HeaderCellClass() ?>"><span id="elh_pessoa_fisica_endereco_numero" class="pessoa_fisica_endereco_numero"><?php echo $pessoa_fisica->endereco_numero->FldCaption() ?></span></th>
-<?php } ?>
-<?php if ($pessoa_fisica->id_empresa->Visible) { // id_empresa ?>
-		<th class="<?php echo $pessoa_fisica->id_empresa->HeaderCellClass() ?>"><span id="elh_pessoa_fisica_id_empresa" class="pessoa_fisica_id_empresa"><?php echo $pessoa_fisica->id_empresa->FldCaption() ?></span></th>
 <?php } ?>
 	</tr>
 	</thead>
@@ -1018,14 +959,6 @@ while (!$pessoa_fisica_delete->Recordset->EOF) {
 </span>
 </td>
 <?php } ?>
-<?php if ($pessoa_fisica->nascimento->Visible) { // nascimento ?>
-		<td<?php echo $pessoa_fisica->nascimento->CellAttributes() ?>>
-<span id="el<?php echo $pessoa_fisica_delete->RowCnt ?>_pessoa_fisica_nascimento" class="pessoa_fisica_nascimento">
-<span<?php echo $pessoa_fisica->nascimento->ViewAttributes() ?>>
-<?php echo $pessoa_fisica->nascimento->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
 <?php if ($pessoa_fisica->telefone->Visible) { // telefone ?>
 		<td<?php echo $pessoa_fisica->telefone->CellAttributes() ?>>
 <span id="el<?php echo $pessoa_fisica_delete->RowCnt ?>_pessoa_fisica_telefone" class="pessoa_fisica_telefone">
@@ -1047,46 +980,6 @@ while (!$pessoa_fisica_delete->Recordset->EOF) {
 <span id="el<?php echo $pessoa_fisica_delete->RowCnt ?>_pessoa_fisica_celular" class="pessoa_fisica_celular">
 <span<?php echo $pessoa_fisica->celular->ViewAttributes() ?>>
 <?php echo $pessoa_fisica->celular->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($pessoa_fisica->CPF->Visible) { // CPF ?>
-		<td<?php echo $pessoa_fisica->CPF->CellAttributes() ?>>
-<span id="el<?php echo $pessoa_fisica_delete->RowCnt ?>_pessoa_fisica_CPF" class="pessoa_fisica_CPF">
-<span<?php echo $pessoa_fisica->CPF->ViewAttributes() ?>>
-<?php echo $pessoa_fisica->CPF->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($pessoa_fisica->RG->Visible) { // RG ?>
-		<td<?php echo $pessoa_fisica->RG->CellAttributes() ?>>
-<span id="el<?php echo $pessoa_fisica_delete->RowCnt ?>_pessoa_fisica_RG" class="pessoa_fisica_RG">
-<span<?php echo $pessoa_fisica->RG->ViewAttributes() ?>>
-<?php echo $pessoa_fisica->RG->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($pessoa_fisica->id_endereco->Visible) { // id_endereco ?>
-		<td<?php echo $pessoa_fisica->id_endereco->CellAttributes() ?>>
-<span id="el<?php echo $pessoa_fisica_delete->RowCnt ?>_pessoa_fisica_id_endereco" class="pessoa_fisica_id_endereco">
-<span<?php echo $pessoa_fisica->id_endereco->ViewAttributes() ?>>
-<?php echo $pessoa_fisica->id_endereco->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($pessoa_fisica->endereco_numero->Visible) { // endereco_numero ?>
-		<td<?php echo $pessoa_fisica->endereco_numero->CellAttributes() ?>>
-<span id="el<?php echo $pessoa_fisica_delete->RowCnt ?>_pessoa_fisica_endereco_numero" class="pessoa_fisica_endereco_numero">
-<span<?php echo $pessoa_fisica->endereco_numero->ViewAttributes() ?>>
-<?php echo $pessoa_fisica->endereco_numero->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($pessoa_fisica->id_empresa->Visible) { // id_empresa ?>
-		<td<?php echo $pessoa_fisica->id_empresa->CellAttributes() ?>>
-<span id="el<?php echo $pessoa_fisica_delete->RowCnt ?>_pessoa_fisica_id_empresa" class="pessoa_fisica_id_empresa">
-<span<?php echo $pessoa_fisica->id_empresa->ViewAttributes() ?>>
-<?php echo $pessoa_fisica->id_empresa->ListViewValue() ?></span>
 </span>
 </td>
 <?php } ?>

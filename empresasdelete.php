@@ -291,10 +291,6 @@ class cempresas_delete extends cempresas {
 		$this->id_endereco->SetVisibility();
 		$this->endereco_numero->SetVisibility();
 		$this->nome_fantasia->SetVisibility();
-		$this->cnpj->SetVisibility();
-		$this->ie->SetVisibility();
-		$this->celular->SetVisibility();
-		$this->whatsapp->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -714,26 +710,6 @@ class cempresas_delete extends cempresas {
 			$this->nome_fantasia->LinkCustomAttributes = "";
 			$this->nome_fantasia->HrefValue = "";
 			$this->nome_fantasia->TooltipValue = "";
-
-			// cnpj
-			$this->cnpj->LinkCustomAttributes = "";
-			$this->cnpj->HrefValue = "";
-			$this->cnpj->TooltipValue = "";
-
-			// ie
-			$this->ie->LinkCustomAttributes = "";
-			$this->ie->HrefValue = "";
-			$this->ie->TooltipValue = "";
-
-			// celular
-			$this->celular->LinkCustomAttributes = "";
-			$this->celular->HrefValue = "";
-			$this->celular->TooltipValue = "";
-
-			// whatsapp
-			$this->whatsapp->LinkCustomAttributes = "";
-			$this->whatsapp->HrefValue = "";
-			$this->whatsapp->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -999,18 +975,6 @@ $empresas_delete->ShowMessage();
 <?php if ($empresas->nome_fantasia->Visible) { // nome_fantasia ?>
 		<th class="<?php echo $empresas->nome_fantasia->HeaderCellClass() ?>"><span id="elh_empresas_nome_fantasia" class="empresas_nome_fantasia"><?php echo $empresas->nome_fantasia->FldCaption() ?></span></th>
 <?php } ?>
-<?php if ($empresas->cnpj->Visible) { // cnpj ?>
-		<th class="<?php echo $empresas->cnpj->HeaderCellClass() ?>"><span id="elh_empresas_cnpj" class="empresas_cnpj"><?php echo $empresas->cnpj->FldCaption() ?></span></th>
-<?php } ?>
-<?php if ($empresas->ie->Visible) { // ie ?>
-		<th class="<?php echo $empresas->ie->HeaderCellClass() ?>"><span id="elh_empresas_ie" class="empresas_ie"><?php echo $empresas->ie->FldCaption() ?></span></th>
-<?php } ?>
-<?php if ($empresas->celular->Visible) { // celular ?>
-		<th class="<?php echo $empresas->celular->HeaderCellClass() ?>"><span id="elh_empresas_celular" class="empresas_celular"><?php echo $empresas->celular->FldCaption() ?></span></th>
-<?php } ?>
-<?php if ($empresas->whatsapp->Visible) { // whatsapp ?>
-		<th class="<?php echo $empresas->whatsapp->HeaderCellClass() ?>"><span id="elh_empresas_whatsapp" class="empresas_whatsapp"><?php echo $empresas->whatsapp->FldCaption() ?></span></th>
-<?php } ?>
 	</tr>
 	</thead>
 	<tbody>
@@ -1101,38 +1065,6 @@ while (!$empresas_delete->Recordset->EOF) {
 <span id="el<?php echo $empresas_delete->RowCnt ?>_empresas_nome_fantasia" class="empresas_nome_fantasia">
 <span<?php echo $empresas->nome_fantasia->ViewAttributes() ?>>
 <?php echo $empresas->nome_fantasia->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($empresas->cnpj->Visible) { // cnpj ?>
-		<td<?php echo $empresas->cnpj->CellAttributes() ?>>
-<span id="el<?php echo $empresas_delete->RowCnt ?>_empresas_cnpj" class="empresas_cnpj">
-<span<?php echo $empresas->cnpj->ViewAttributes() ?>>
-<?php echo $empresas->cnpj->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($empresas->ie->Visible) { // ie ?>
-		<td<?php echo $empresas->ie->CellAttributes() ?>>
-<span id="el<?php echo $empresas_delete->RowCnt ?>_empresas_ie" class="empresas_ie">
-<span<?php echo $empresas->ie->ViewAttributes() ?>>
-<?php echo $empresas->ie->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($empresas->celular->Visible) { // celular ?>
-		<td<?php echo $empresas->celular->CellAttributes() ?>>
-<span id="el<?php echo $empresas_delete->RowCnt ?>_empresas_celular" class="empresas_celular">
-<span<?php echo $empresas->celular->ViewAttributes() ?>>
-<?php echo $empresas->celular->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($empresas->whatsapp->Visible) { // whatsapp ?>
-		<td<?php echo $empresas->whatsapp->CellAttributes() ?>>
-<span id="el<?php echo $empresas_delete->RowCnt ?>_empresas_whatsapp" class="empresas_whatsapp">
-<span<?php echo $empresas->whatsapp->ViewAttributes() ?>>
-<?php echo $empresas->whatsapp->ListViewValue() ?></span>
 </span>
 </td>
 <?php } ?>

@@ -318,9 +318,10 @@ class cdetalhe_pedido_grid extends cdetalhe_pedido {
 			$this->id_detalhe->Visible = FALSE;
 		$this->numero_pedido->SetVisibility();
 		$this->id_produto->SetVisibility();
+		$this->desconto->SetVisibility();
+		$this->preco->SetVisibility();
 		$this->quantidade->SetVisibility();
-		$this->custo->SetVisibility();
-		$this->id_desconto->SetVisibility();
+		$this->subtotal->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -545,7 +546,7 @@ class cdetalhe_pedido_grid extends cdetalhe_pedido {
 
 	// Exit inline mode
 	function ClearInlineMode() {
-		$this->custo->FormValue = ""; // Clear form value
+		$this->subtotal->FormValue = ""; // Clear form value
 		$this->LastAction = $this->CurrentAction; // Save last action
 		$this->CurrentAction = ""; // Clear action
 		$_SESSION[EW_SESSION_INLINE_MODE] = ""; // Clear inline mode
@@ -789,11 +790,13 @@ class cdetalhe_pedido_grid extends cdetalhe_pedido {
 			return FALSE;
 		if ($objForm->HasValue("x_id_produto") && $objForm->HasValue("o_id_produto") && $this->id_produto->CurrentValue <> $this->id_produto->OldValue)
 			return FALSE;
+		if ($objForm->HasValue("x_desconto") && $objForm->HasValue("o_desconto") && $this->desconto->CurrentValue <> $this->desconto->OldValue)
+			return FALSE;
+		if ($objForm->HasValue("x_preco") && $objForm->HasValue("o_preco") && $this->preco->CurrentValue <> $this->preco->OldValue)
+			return FALSE;
 		if ($objForm->HasValue("x_quantidade") && $objForm->HasValue("o_quantidade") && $this->quantidade->CurrentValue <> $this->quantidade->OldValue)
 			return FALSE;
-		if ($objForm->HasValue("x_custo") && $objForm->HasValue("o_custo") && $this->custo->CurrentValue <> $this->custo->OldValue)
-			return FALSE;
-		if ($objForm->HasValue("x_id_desconto") && $objForm->HasValue("o_id_desconto") && $this->id_desconto->CurrentValue <> $this->id_desconto->OldValue)
+		if ($objForm->HasValue("x_subtotal") && $objForm->HasValue("o_subtotal") && $this->subtotal->CurrentValue <> $this->subtotal->OldValue)
 			return FALSE;
 		return TRUE;
 	}
@@ -925,33 +928,27 @@ class cdetalhe_pedido_grid extends cdetalhe_pedido {
 		if ($this->AllowAddDeleteRow) {
 			$item = &$this->ListOptions->Add("griddelete");
 			$item->CssClass = "text-nowrap";
-			$item->OnLeft = FALSE;
+			$item->OnLeft = TRUE;
 			$item->Visible = FALSE; // Default hidden
 		}
 
 		// Add group option item
 		$item = &$this->ListOptions->Add($this->ListOptions->GroupOptionName);
 		$item->Body = "";
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 		$item->Visible = FALSE;
 
 		// "view"
 		$item = &$this->ListOptions->Add("view");
 		$item->CssClass = "text-nowrap";
 		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 
 		// "edit"
 		$item = &$this->ListOptions->Add("edit");
 		$item->CssClass = "text-nowrap";
 		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
-
-		// "delete"
-		$item = &$this->ListOptions->Add("delete");
-		$item->CssClass = "text-nowrap";
-		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 
 		// Drop down button for ListOptions
 		$this->ListOptions->UseImageAndText = TRUE;
@@ -1020,13 +1017,6 @@ class cdetalhe_pedido_grid extends cdetalhe_pedido {
 		} else {
 			$oListOpt->Body = "";
 		}
-
-		// "delete"
-		$oListOpt = &$this->ListOptions->Items["delete"];
-		if (TRUE)
-			$oListOpt->Body = "<a class=\"ewRowLink ewDelete\"" . "" . " title=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" href=\"" . ew_HtmlEncode($this->DeleteUrl) . "\">" . $Language->Phrase("DeleteLink") . "</a>";
-		else
-			$oListOpt->Body = "";
 		} // End View mode
 		if ($this->CurrentMode == "edit" && is_numeric($this->RowIndex)) {
 			$this->MultiSelectKey .= "<input type=\"hidden\" name=\"" . $KeyName . "\" id=\"" . $KeyName . "\" value=\"" . $this->id_detalhe->CurrentValue . "\">";
@@ -1140,12 +1130,14 @@ class cdetalhe_pedido_grid extends cdetalhe_pedido {
 		$this->numero_pedido->OldValue = $this->numero_pedido->CurrentValue;
 		$this->id_produto->CurrentValue = NULL;
 		$this->id_produto->OldValue = $this->id_produto->CurrentValue;
-		$this->quantidade->CurrentValue = NULL;
+		$this->desconto->CurrentValue = 0 ;
+		$this->desconto->OldValue = $this->desconto->CurrentValue;
+		$this->preco->CurrentValue = 0 ;
+		$this->preco->OldValue = $this->preco->CurrentValue;
+		$this->quantidade->CurrentValue = 1;
 		$this->quantidade->OldValue = $this->quantidade->CurrentValue;
-		$this->custo->CurrentValue = NULL;
-		$this->custo->OldValue = $this->custo->CurrentValue;
-		$this->id_desconto->CurrentValue = NULL;
-		$this->id_desconto->OldValue = $this->id_desconto->CurrentValue;
+		$this->subtotal->CurrentValue = 0;
+		$this->subtotal->OldValue = $this->subtotal->CurrentValue;
 	}
 
 	// Load form values
@@ -1164,18 +1156,22 @@ class cdetalhe_pedido_grid extends cdetalhe_pedido {
 			$this->id_produto->setFormValue($objForm->GetValue("x_id_produto"));
 		}
 		$this->id_produto->setOldValue($objForm->GetValue("o_id_produto"));
+		if (!$this->desconto->FldIsDetailKey) {
+			$this->desconto->setFormValue($objForm->GetValue("x_desconto"));
+		}
+		$this->desconto->setOldValue($objForm->GetValue("o_desconto"));
+		if (!$this->preco->FldIsDetailKey) {
+			$this->preco->setFormValue($objForm->GetValue("x_preco"));
+		}
+		$this->preco->setOldValue($objForm->GetValue("o_preco"));
 		if (!$this->quantidade->FldIsDetailKey) {
 			$this->quantidade->setFormValue($objForm->GetValue("x_quantidade"));
 		}
 		$this->quantidade->setOldValue($objForm->GetValue("o_quantidade"));
-		if (!$this->custo->FldIsDetailKey) {
-			$this->custo->setFormValue($objForm->GetValue("x_custo"));
+		if (!$this->subtotal->FldIsDetailKey) {
+			$this->subtotal->setFormValue($objForm->GetValue("x_subtotal"));
 		}
-		$this->custo->setOldValue($objForm->GetValue("o_custo"));
-		if (!$this->id_desconto->FldIsDetailKey) {
-			$this->id_desconto->setFormValue($objForm->GetValue("x_id_desconto"));
-		}
-		$this->id_desconto->setOldValue($objForm->GetValue("o_id_desconto"));
+		$this->subtotal->setOldValue($objForm->GetValue("o_subtotal"));
 	}
 
 	// Restore form values
@@ -1185,9 +1181,10 @@ class cdetalhe_pedido_grid extends cdetalhe_pedido {
 			$this->id_detalhe->CurrentValue = $this->id_detalhe->FormValue;
 		$this->numero_pedido->CurrentValue = $this->numero_pedido->FormValue;
 		$this->id_produto->CurrentValue = $this->id_produto->FormValue;
+		$this->desconto->CurrentValue = $this->desconto->FormValue;
+		$this->preco->CurrentValue = $this->preco->FormValue;
 		$this->quantidade->CurrentValue = $this->quantidade->FormValue;
-		$this->custo->CurrentValue = $this->custo->FormValue;
-		$this->id_desconto->CurrentValue = $this->id_desconto->FormValue;
+		$this->subtotal->CurrentValue = $this->subtotal->FormValue;
 	}
 
 	// Load recordset
@@ -1252,9 +1249,10 @@ class cdetalhe_pedido_grid extends cdetalhe_pedido {
 		$this->id_detalhe->setDbValue($row['id_detalhe']);
 		$this->numero_pedido->setDbValue($row['numero_pedido']);
 		$this->id_produto->setDbValue($row['id_produto']);
+		$this->desconto->setDbValue($row['desconto']);
+		$this->preco->setDbValue($row['preco']);
 		$this->quantidade->setDbValue($row['quantidade']);
-		$this->custo->setDbValue($row['custo']);
-		$this->id_desconto->setDbValue($row['id_desconto']);
+		$this->subtotal->setDbValue($row['subtotal']);
 	}
 
 	// Return a row with default values
@@ -1264,9 +1262,10 @@ class cdetalhe_pedido_grid extends cdetalhe_pedido {
 		$row['id_detalhe'] = $this->id_detalhe->CurrentValue;
 		$row['numero_pedido'] = $this->numero_pedido->CurrentValue;
 		$row['id_produto'] = $this->id_produto->CurrentValue;
+		$row['desconto'] = $this->desconto->CurrentValue;
+		$row['preco'] = $this->preco->CurrentValue;
 		$row['quantidade'] = $this->quantidade->CurrentValue;
-		$row['custo'] = $this->custo->CurrentValue;
-		$row['id_desconto'] = $this->id_desconto->CurrentValue;
+		$row['subtotal'] = $this->subtotal->CurrentValue;
 		return $row;
 	}
 
@@ -1278,9 +1277,10 @@ class cdetalhe_pedido_grid extends cdetalhe_pedido {
 		$this->id_detalhe->DbValue = $row['id_detalhe'];
 		$this->numero_pedido->DbValue = $row['numero_pedido'];
 		$this->id_produto->DbValue = $row['id_produto'];
+		$this->desconto->DbValue = $row['desconto'];
+		$this->preco->DbValue = $row['preco'];
 		$this->quantidade->DbValue = $row['quantidade'];
-		$this->custo->DbValue = $row['custo'];
-		$this->id_desconto->DbValue = $row['id_desconto'];
+		$this->subtotal->DbValue = $row['subtotal'];
 	}
 
 	// Load old record
@@ -1322,8 +1322,8 @@ class cdetalhe_pedido_grid extends cdetalhe_pedido {
 		$this->DeleteUrl = $this->GetDeleteUrl();
 
 		// Convert decimal values if posted back
-		if ($this->custo->FormValue == $this->custo->CurrentValue && is_numeric(ew_StrToFloat($this->custo->CurrentValue)))
-			$this->custo->CurrentValue = ew_StrToFloat($this->custo->CurrentValue);
+		if ($this->subtotal->FormValue == $this->subtotal->CurrentValue && is_numeric(ew_StrToFloat($this->subtotal->CurrentValue)))
+			$this->subtotal->CurrentValue = ew_StrToFloat($this->subtotal->CurrentValue);
 
 		// Call Row_Rendering event
 		$this->Row_Rendering();
@@ -1332,9 +1332,10 @@ class cdetalhe_pedido_grid extends cdetalhe_pedido {
 		// id_detalhe
 		// numero_pedido
 		// id_produto
+		// desconto
+		// preco
 		// quantidade
-		// custo
-		// id_desconto
+		// subtotal
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
@@ -1369,36 +1370,59 @@ class cdetalhe_pedido_grid extends cdetalhe_pedido {
 		}
 		$this->id_produto->ViewCustomAttributes = "";
 
-		// quantidade
-		$this->quantidade->ViewValue = $this->quantidade->CurrentValue;
-		$this->quantidade->ViewCustomAttributes = "";
-
-		// custo
-		$this->custo->ViewValue = $this->custo->CurrentValue;
-		$this->custo->ViewCustomAttributes = "";
-
-		// id_desconto
-		if (strval($this->id_desconto->CurrentValue) <> "") {
-			$sFilterWrk = "`id_desconto`" . ew_SearchString("=", $this->id_desconto->CurrentValue, EW_DATATYPE_NUMBER, "");
-		$sSqlWrk = "SELECT `id_desconto`, `porcentagem` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `desconto`";
+		// desconto
+		if (strval($this->desconto->CurrentValue) <> "") {
+			$sFilterWrk = "`porcentagem`" . ew_SearchString("=", $this->desconto->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `porcentagem`, `porcentagem` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `desconto`";
 		$sWhereWrk = "";
-		$this->id_desconto->LookupFilters = array();
+		$this->desconto->LookupFilters = array();
 		ew_AddFilter($sWhereWrk, $sFilterWrk);
-		$this->Lookup_Selecting($this->id_desconto, $sWhereWrk); // Call Lookup Selecting
+		$this->Lookup_Selecting($this->desconto, $sWhereWrk); // Call Lookup Selecting
 		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
 			$rswrk = Conn()->Execute($sSqlWrk);
 			if ($rswrk && !$rswrk->EOF) { // Lookup values found
 				$arwrk = array();
 				$arwrk[1] = $rswrk->fields('DispFld');
-				$this->id_desconto->ViewValue = $this->id_desconto->DisplayValue($arwrk);
+				$this->desconto->ViewValue = $this->desconto->DisplayValue($arwrk);
 				$rswrk->Close();
 			} else {
-				$this->id_desconto->ViewValue = $this->id_desconto->CurrentValue;
+				$this->desconto->ViewValue = $this->desconto->CurrentValue;
 			}
 		} else {
-			$this->id_desconto->ViewValue = NULL;
+			$this->desconto->ViewValue = NULL;
 		}
-		$this->id_desconto->ViewCustomAttributes = "";
+		$this->desconto->ViewCustomAttributes = "";
+
+		// preco
+		if (strval($this->preco->CurrentValue) <> "") {
+			$sFilterWrk = "`preco_produto`" . ew_SearchString("=", $this->preco->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `preco_produto`, `preco_produto` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `produtos`";
+		$sWhereWrk = "";
+		$this->preco->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->preco, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = ew_FormatCurrency($rswrk->fields('DispFld'), 2, -1, -1, -1);
+				$this->preco->ViewValue = $this->preco->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->preco->ViewValue = $this->preco->CurrentValue;
+			}
+		} else {
+			$this->preco->ViewValue = NULL;
+		}
+		$this->preco->ViewCustomAttributes = "";
+
+		// quantidade
+		$this->quantidade->ViewValue = $this->quantidade->CurrentValue;
+		$this->quantidade->ViewCustomAttributes = "";
+
+		// subtotal
+		$this->subtotal->ViewValue = $this->subtotal->CurrentValue;
+		$this->subtotal->ViewCustomAttributes = "";
 
 			// id_detalhe
 			$this->id_detalhe->LinkCustomAttributes = "";
@@ -1415,20 +1439,25 @@ class cdetalhe_pedido_grid extends cdetalhe_pedido {
 			$this->id_produto->HrefValue = "";
 			$this->id_produto->TooltipValue = "";
 
+			// desconto
+			$this->desconto->LinkCustomAttributes = "";
+			$this->desconto->HrefValue = "";
+			$this->desconto->TooltipValue = "";
+
+			// preco
+			$this->preco->LinkCustomAttributes = "";
+			$this->preco->HrefValue = "";
+			$this->preco->TooltipValue = "";
+
 			// quantidade
 			$this->quantidade->LinkCustomAttributes = "";
 			$this->quantidade->HrefValue = "";
 			$this->quantidade->TooltipValue = "";
 
-			// custo
-			$this->custo->LinkCustomAttributes = "";
-			$this->custo->HrefValue = "";
-			$this->custo->TooltipValue = "";
-
-			// id_desconto
-			$this->id_desconto->LinkCustomAttributes = "";
-			$this->id_desconto->HrefValue = "";
-			$this->id_desconto->TooltipValue = "";
+			// subtotal
+			$this->subtotal->LinkCustomAttributes = "";
+			$this->subtotal->HrefValue = "";
+			$this->subtotal->TooltipValue = "";
 		} elseif ($this->RowType == EW_ROWTYPE_ADD) { // Add row
 
 			// id_detalhe
@@ -1465,40 +1494,63 @@ class cdetalhe_pedido_grid extends cdetalhe_pedido {
 			if ($rswrk) $rswrk->Close();
 			$this->id_produto->EditValue = $arwrk;
 
+			// desconto
+			$this->desconto->EditAttrs["class"] = "form-control";
+			$this->desconto->EditCustomAttributes = "";
+			if (trim(strval($this->desconto->CurrentValue)) == "") {
+				$sFilterWrk = "0=1";
+			} else {
+				$sFilterWrk = "`porcentagem`" . ew_SearchString("=", $this->desconto->CurrentValue, EW_DATATYPE_NUMBER, "");
+			}
+			$sSqlWrk = "SELECT `porcentagem`, `porcentagem` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `desconto`";
+			$sWhereWrk = "";
+			$this->desconto->LookupFilters = array();
+			ew_AddFilter($sWhereWrk, $sFilterWrk);
+			$this->Lookup_Selecting($this->desconto, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
+			if ($rswrk) $rswrk->Close();
+			$this->desconto->EditValue = $arwrk;
+
+			// preco
+			$this->preco->EditAttrs["class"] = "form-control";
+			$this->preco->EditCustomAttributes = "";
+			if (trim(strval($this->preco->CurrentValue)) == "") {
+				$sFilterWrk = "0=1";
+			} else {
+				$sFilterWrk = "`preco_produto`" . ew_SearchString("=", $this->preco->CurrentValue, EW_DATATYPE_NUMBER, "");
+			}
+			$sSqlWrk = "SELECT `preco_produto`, `preco_produto` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, `id_produto` AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `produtos`";
+			$sWhereWrk = "";
+			$this->preco->LookupFilters = array();
+			ew_AddFilter($sWhereWrk, $sFilterWrk);
+			$this->Lookup_Selecting($this->preco, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
+			if ($rswrk) $rswrk->Close();
+			$rowswrk = count($arwrk);
+			for ($rowcntwrk = 0; $rowcntwrk < $rowswrk; $rowcntwrk++) {
+				$arwrk[$rowcntwrk][1] = ew_FormatCurrency($arwrk[$rowcntwrk][1], 2, -1, -1, -1);
+			}
+			$this->preco->EditValue = $arwrk;
+
 			// quantidade
 			$this->quantidade->EditAttrs["class"] = "form-control";
 			$this->quantidade->EditCustomAttributes = "";
 			$this->quantidade->EditValue = ew_HtmlEncode($this->quantidade->CurrentValue);
 			$this->quantidade->PlaceHolder = ew_RemoveHtml($this->quantidade->FldCaption());
 
-			// custo
-			$this->custo->EditAttrs["class"] = "form-control";
-			$this->custo->EditCustomAttributes = "";
-			$this->custo->EditValue = ew_HtmlEncode($this->custo->CurrentValue);
-			$this->custo->PlaceHolder = ew_RemoveHtml($this->custo->FldCaption());
-			if (strval($this->custo->EditValue) <> "" && is_numeric($this->custo->EditValue)) {
-			$this->custo->EditValue = ew_FormatNumber($this->custo->EditValue, -2, -1, -2, 0);
-			$this->custo->OldValue = $this->custo->EditValue;
+			// subtotal
+			$this->subtotal->EditAttrs["class"] = "form-control";
+			$this->subtotal->EditCustomAttributes = "";
+			$this->subtotal->EditValue = ew_HtmlEncode($this->subtotal->CurrentValue);
+			$this->subtotal->PlaceHolder = ew_RemoveHtml($this->subtotal->FldCaption());
+			if (strval($this->subtotal->EditValue) <> "" && is_numeric($this->subtotal->EditValue)) {
+			$this->subtotal->EditValue = ew_FormatNumber($this->subtotal->EditValue, -2, -1, -2, 0);
+			$this->subtotal->OldValue = $this->subtotal->EditValue;
 			}
-
-			// id_desconto
-			$this->id_desconto->EditAttrs["class"] = "form-control";
-			$this->id_desconto->EditCustomAttributes = "";
-			if (trim(strval($this->id_desconto->CurrentValue)) == "") {
-				$sFilterWrk = "0=1";
-			} else {
-				$sFilterWrk = "`id_desconto`" . ew_SearchString("=", $this->id_desconto->CurrentValue, EW_DATATYPE_NUMBER, "");
-			}
-			$sSqlWrk = "SELECT `id_desconto`, `porcentagem` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `desconto`";
-			$sWhereWrk = "";
-			$this->id_desconto->LookupFilters = array();
-			ew_AddFilter($sWhereWrk, $sFilterWrk);
-			$this->Lookup_Selecting($this->id_desconto, $sWhereWrk); // Call Lookup Selecting
-			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			$rswrk = Conn()->Execute($sSqlWrk);
-			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
-			if ($rswrk) $rswrk->Close();
-			$this->id_desconto->EditValue = $arwrk;
 
 			// Add refer script
 			// id_detalhe
@@ -1514,17 +1566,21 @@ class cdetalhe_pedido_grid extends cdetalhe_pedido {
 			$this->id_produto->LinkCustomAttributes = "";
 			$this->id_produto->HrefValue = "";
 
+			// desconto
+			$this->desconto->LinkCustomAttributes = "";
+			$this->desconto->HrefValue = "";
+
+			// preco
+			$this->preco->LinkCustomAttributes = "";
+			$this->preco->HrefValue = "";
+
 			// quantidade
 			$this->quantidade->LinkCustomAttributes = "";
 			$this->quantidade->HrefValue = "";
 
-			// custo
-			$this->custo->LinkCustomAttributes = "";
-			$this->custo->HrefValue = "";
-
-			// id_desconto
-			$this->id_desconto->LinkCustomAttributes = "";
-			$this->id_desconto->HrefValue = "";
+			// subtotal
+			$this->subtotal->LinkCustomAttributes = "";
+			$this->subtotal->HrefValue = "";
 		} elseif ($this->RowType == EW_ROWTYPE_EDIT) { // Edit row
 
 			// id_detalhe
@@ -1565,40 +1621,63 @@ class cdetalhe_pedido_grid extends cdetalhe_pedido {
 			if ($rswrk) $rswrk->Close();
 			$this->id_produto->EditValue = $arwrk;
 
+			// desconto
+			$this->desconto->EditAttrs["class"] = "form-control";
+			$this->desconto->EditCustomAttributes = "";
+			if (trim(strval($this->desconto->CurrentValue)) == "") {
+				$sFilterWrk = "0=1";
+			} else {
+				$sFilterWrk = "`porcentagem`" . ew_SearchString("=", $this->desconto->CurrentValue, EW_DATATYPE_NUMBER, "");
+			}
+			$sSqlWrk = "SELECT `porcentagem`, `porcentagem` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `desconto`";
+			$sWhereWrk = "";
+			$this->desconto->LookupFilters = array();
+			ew_AddFilter($sWhereWrk, $sFilterWrk);
+			$this->Lookup_Selecting($this->desconto, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
+			if ($rswrk) $rswrk->Close();
+			$this->desconto->EditValue = $arwrk;
+
+			// preco
+			$this->preco->EditAttrs["class"] = "form-control";
+			$this->preco->EditCustomAttributes = "";
+			if (trim(strval($this->preco->CurrentValue)) == "") {
+				$sFilterWrk = "0=1";
+			} else {
+				$sFilterWrk = "`preco_produto`" . ew_SearchString("=", $this->preco->CurrentValue, EW_DATATYPE_NUMBER, "");
+			}
+			$sSqlWrk = "SELECT `preco_produto`, `preco_produto` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, `id_produto` AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `produtos`";
+			$sWhereWrk = "";
+			$this->preco->LookupFilters = array();
+			ew_AddFilter($sWhereWrk, $sFilterWrk);
+			$this->Lookup_Selecting($this->preco, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
+			if ($rswrk) $rswrk->Close();
+			$rowswrk = count($arwrk);
+			for ($rowcntwrk = 0; $rowcntwrk < $rowswrk; $rowcntwrk++) {
+				$arwrk[$rowcntwrk][1] = ew_FormatCurrency($arwrk[$rowcntwrk][1], 2, -1, -1, -1);
+			}
+			$this->preco->EditValue = $arwrk;
+
 			// quantidade
 			$this->quantidade->EditAttrs["class"] = "form-control";
 			$this->quantidade->EditCustomAttributes = "";
 			$this->quantidade->EditValue = ew_HtmlEncode($this->quantidade->CurrentValue);
 			$this->quantidade->PlaceHolder = ew_RemoveHtml($this->quantidade->FldCaption());
 
-			// custo
-			$this->custo->EditAttrs["class"] = "form-control";
-			$this->custo->EditCustomAttributes = "";
-			$this->custo->EditValue = ew_HtmlEncode($this->custo->CurrentValue);
-			$this->custo->PlaceHolder = ew_RemoveHtml($this->custo->FldCaption());
-			if (strval($this->custo->EditValue) <> "" && is_numeric($this->custo->EditValue)) {
-			$this->custo->EditValue = ew_FormatNumber($this->custo->EditValue, -2, -1, -2, 0);
-			$this->custo->OldValue = $this->custo->EditValue;
+			// subtotal
+			$this->subtotal->EditAttrs["class"] = "form-control";
+			$this->subtotal->EditCustomAttributes = "";
+			$this->subtotal->EditValue = ew_HtmlEncode($this->subtotal->CurrentValue);
+			$this->subtotal->PlaceHolder = ew_RemoveHtml($this->subtotal->FldCaption());
+			if (strval($this->subtotal->EditValue) <> "" && is_numeric($this->subtotal->EditValue)) {
+			$this->subtotal->EditValue = ew_FormatNumber($this->subtotal->EditValue, -2, -1, -2, 0);
+			$this->subtotal->OldValue = $this->subtotal->EditValue;
 			}
-
-			// id_desconto
-			$this->id_desconto->EditAttrs["class"] = "form-control";
-			$this->id_desconto->EditCustomAttributes = "";
-			if (trim(strval($this->id_desconto->CurrentValue)) == "") {
-				$sFilterWrk = "0=1";
-			} else {
-				$sFilterWrk = "`id_desconto`" . ew_SearchString("=", $this->id_desconto->CurrentValue, EW_DATATYPE_NUMBER, "");
-			}
-			$sSqlWrk = "SELECT `id_desconto`, `porcentagem` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `desconto`";
-			$sWhereWrk = "";
-			$this->id_desconto->LookupFilters = array();
-			ew_AddFilter($sWhereWrk, $sFilterWrk);
-			$this->Lookup_Selecting($this->id_desconto, $sWhereWrk); // Call Lookup Selecting
-			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
-			$rswrk = Conn()->Execute($sSqlWrk);
-			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
-			if ($rswrk) $rswrk->Close();
-			$this->id_desconto->EditValue = $arwrk;
 
 			// Edit refer script
 			// id_detalhe
@@ -1614,17 +1693,21 @@ class cdetalhe_pedido_grid extends cdetalhe_pedido {
 			$this->id_produto->LinkCustomAttributes = "";
 			$this->id_produto->HrefValue = "";
 
+			// desconto
+			$this->desconto->LinkCustomAttributes = "";
+			$this->desconto->HrefValue = "";
+
+			// preco
+			$this->preco->LinkCustomAttributes = "";
+			$this->preco->HrefValue = "";
+
 			// quantidade
 			$this->quantidade->LinkCustomAttributes = "";
 			$this->quantidade->HrefValue = "";
 
-			// custo
-			$this->custo->LinkCustomAttributes = "";
-			$this->custo->HrefValue = "";
-
-			// id_desconto
-			$this->id_desconto->LinkCustomAttributes = "";
-			$this->id_desconto->HrefValue = "";
+			// subtotal
+			$this->subtotal->LinkCustomAttributes = "";
+			$this->subtotal->HrefValue = "";
 		}
 		if ($this->RowType == EW_ROWTYPE_ADD || $this->RowType == EW_ROWTYPE_EDIT || $this->RowType == EW_ROWTYPE_SEARCH) // Add/Edit/Search row
 			$this->SetupFieldTitles();
@@ -1647,17 +1730,20 @@ class cdetalhe_pedido_grid extends cdetalhe_pedido {
 		if (!$this->id_produto->FldIsDetailKey && !is_null($this->id_produto->FormValue) && $this->id_produto->FormValue == "") {
 			ew_AddMessage($gsFormError, str_replace("%s", $this->id_produto->FldCaption(), $this->id_produto->ReqErrMsg));
 		}
+		if (!$this->preco->FldIsDetailKey && !is_null($this->preco->FormValue) && $this->preco->FormValue == "") {
+			ew_AddMessage($gsFormError, str_replace("%s", $this->preco->FldCaption(), $this->preco->ReqErrMsg));
+		}
 		if (!$this->quantidade->FldIsDetailKey && !is_null($this->quantidade->FormValue) && $this->quantidade->FormValue == "") {
 			ew_AddMessage($gsFormError, str_replace("%s", $this->quantidade->FldCaption(), $this->quantidade->ReqErrMsg));
 		}
 		if (!ew_CheckInteger($this->quantidade->FormValue)) {
 			ew_AddMessage($gsFormError, $this->quantidade->FldErrMsg());
 		}
-		if (!$this->custo->FldIsDetailKey && !is_null($this->custo->FormValue) && $this->custo->FormValue == "") {
-			ew_AddMessage($gsFormError, str_replace("%s", $this->custo->FldCaption(), $this->custo->ReqErrMsg));
+		if (!$this->subtotal->FldIsDetailKey && !is_null($this->subtotal->FormValue) && $this->subtotal->FormValue == "") {
+			ew_AddMessage($gsFormError, str_replace("%s", $this->subtotal->FldCaption(), $this->subtotal->ReqErrMsg));
 		}
-		if (!ew_CheckNumber($this->custo->FormValue)) {
-			ew_AddMessage($gsFormError, $this->custo->FldErrMsg());
+		if (!ew_CheckNumber($this->subtotal->FormValue)) {
+			ew_AddMessage($gsFormError, $this->subtotal->FldErrMsg());
 		}
 
 		// Return validate result
@@ -1774,14 +1860,17 @@ class cdetalhe_pedido_grid extends cdetalhe_pedido {
 			// id_produto
 			$this->id_produto->SetDbValueDef($rsnew, $this->id_produto->CurrentValue, NULL, $this->id_produto->ReadOnly);
 
+			// desconto
+			$this->desconto->SetDbValueDef($rsnew, $this->desconto->CurrentValue, NULL, $this->desconto->ReadOnly);
+
+			// preco
+			$this->preco->SetDbValueDef($rsnew, $this->preco->CurrentValue, NULL, $this->preco->ReadOnly);
+
 			// quantidade
 			$this->quantidade->SetDbValueDef($rsnew, $this->quantidade->CurrentValue, NULL, $this->quantidade->ReadOnly);
 
-			// custo
-			$this->custo->SetDbValueDef($rsnew, $this->custo->CurrentValue, NULL, $this->custo->ReadOnly);
-
-			// id_desconto
-			$this->id_desconto->SetDbValueDef($rsnew, $this->id_desconto->CurrentValue, NULL, $this->id_desconto->ReadOnly);
+			// subtotal
+			$this->subtotal->SetDbValueDef($rsnew, $this->subtotal->CurrentValue, 0, $this->subtotal->ReadOnly);
 
 			// Call Row Updating event
 			$bUpdateRow = $this->Row_Updating($rsold, $rsnew);
@@ -1837,14 +1926,17 @@ class cdetalhe_pedido_grid extends cdetalhe_pedido {
 		// id_produto
 		$this->id_produto->SetDbValueDef($rsnew, $this->id_produto->CurrentValue, NULL, FALSE);
 
+		// desconto
+		$this->desconto->SetDbValueDef($rsnew, $this->desconto->CurrentValue, NULL, FALSE);
+
+		// preco
+		$this->preco->SetDbValueDef($rsnew, $this->preco->CurrentValue, NULL, FALSE);
+
 		// quantidade
 		$this->quantidade->SetDbValueDef($rsnew, $this->quantidade->CurrentValue, NULL, FALSE);
 
-		// custo
-		$this->custo->SetDbValueDef($rsnew, $this->custo->CurrentValue, NULL, FALSE);
-
-		// id_desconto
-		$this->id_desconto->SetDbValueDef($rsnew, $this->id_desconto->CurrentValue, NULL, FALSE);
+		// subtotal
+		$this->subtotal->SetDbValueDef($rsnew, $this->subtotal->CurrentValue, 0, FALSE);
 
 		// Call Row Inserting event
 		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
@@ -1906,14 +1998,26 @@ class cdetalhe_pedido_grid extends cdetalhe_pedido {
 			if ($sSqlWrk <> "")
 				$fld->LookupFilters["s"] .= $sSqlWrk;
 			break;
-		case "x_id_desconto":
+		case "x_desconto":
 			$sSqlWrk = "";
-			$sSqlWrk = "SELECT `id_desconto` AS `LinkFld`, `porcentagem` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `desconto`";
+			$sSqlWrk = "SELECT `porcentagem` AS `LinkFld`, `porcentagem` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `desconto`";
 			$sWhereWrk = "";
 			$fld->LookupFilters = array();
-			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`id_desconto` IN ({filter_value})', "t0" => "3", "fn0" => "");
+			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`porcentagem` IN ({filter_value})', "t0" => "3", "fn0" => "");
 			$sSqlWrk = "";
-			$this->Lookup_Selecting($this->id_desconto, $sWhereWrk); // Call Lookup Selecting
+			$this->Lookup_Selecting($this->desconto, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			if ($sSqlWrk <> "")
+				$fld->LookupFilters["s"] .= $sSqlWrk;
+			break;
+		case "x_preco":
+			$sSqlWrk = "";
+			$sSqlWrk = "SELECT `preco_produto` AS `LinkFld`, `preco_produto` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `produtos`";
+			$sWhereWrk = "{filter}";
+			$fld->LookupFilters = array();
+			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`preco_produto` IN ({filter_value})', "t0" => "4", "fn0" => "", "f1" => '`id_produto` IN ({filter_value})', "t1" => "3", "fn1" => "");
+			$sSqlWrk = "";
+			$this->Lookup_Selecting($this->preco, $sWhereWrk); // Call Lookup Selecting
 			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
 			if ($sSqlWrk <> "")
 				$fld->LookupFilters["s"] .= $sSqlWrk;

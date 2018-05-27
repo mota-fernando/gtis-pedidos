@@ -50,14 +50,16 @@ class crepresentantes extends cTable {
 		$this->fields['id_representantes'] = &$this->id_representantes;
 
 		// id_pessoa
-		$this->id_pessoa = new cField('representantes', 'representantes', 'x_id_pessoa', 'id_pessoa', '`id_pessoa`', '`id_pessoa`', 3, -1, FALSE, '`id_pessoa`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
+		$this->id_pessoa = new cField('representantes', 'representantes', 'x_id_pessoa', 'id_pessoa', '`id_pessoa`', '`id_pessoa`', 3, -1, FALSE, '`EV__id_pessoa`', TRUE, TRUE, TRUE, 'FORMATTED TEXT', 'SELECT');
 		$this->id_pessoa->Sortable = TRUE; // Allow sort
+		$this->id_pessoa->UsePleaseSelect = TRUE; // Use PleaseSelect by default
+		$this->id_pessoa->PleaseSelectText = $Language->Phrase("PleaseSelect"); // PleaseSelect text
 		$this->id_pessoa->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['id_pessoa'] = &$this->id_pessoa;
 
 		// comissao
 		$this->comissao = new cField('representantes', 'representantes', 'x_comissao', 'comissao', '`comissao`', '`comissao`', 3, -1, FALSE, '`comissao`', FALSE, FALSE, FALSE, 'FORMATTED TEXT', 'TEXT');
-		$this->comissao->Sortable = TRUE; // Allow sort
+		$this->comissao->Sortable = FALSE; // Allow sort
 		$this->comissao->FldDefaultErrMsg = $Language->Phrase("IncorrectInteger");
 		$this->fields['comissao'] = &$this->comissao;
 	}
@@ -94,9 +96,20 @@ class crepresentantes extends cTable {
 			}
 			$ofld->setSort($sThisSort);
 			$this->setSessionOrderBy($sSortField . " " . $sThisSort); // Save to Session
+			$sSortFieldList = ($ofld->FldVirtualExpression <> "") ? $ofld->FldVirtualExpression : $sSortField;
+			$this->setSessionOrderByList($sSortFieldList . " " . $sThisSort); // Save to Session
 		} else {
 			$ofld->setSort("");
 		}
+	}
+
+	// Session ORDER BY for List page
+	function getSessionOrderByList() {
+		return @$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_ORDER_BY_LIST];
+	}
+
+	function setSessionOrderByList($v) {
+		$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_ORDER_BY_LIST] = $v;
 	}
 
 	// Table level SQL
@@ -125,6 +138,23 @@ class crepresentantes extends cTable {
 
 	function setSqlSelect($v) {
 		$this->_SqlSelect = $v;
+	}
+	var $_SqlSelectList = "";
+
+	function getSqlSelectList() { // Select for List page
+		$select = "";
+		$select = "SELECT * FROM (" .
+			"SELECT *, (SELECT `nome_pessoa` FROM `pessoa_fisica` `EW_TMP_LOOKUPTABLE` WHERE `EW_TMP_LOOKUPTABLE`.`id_pessoa` = `representantes`.`id_pessoa` LIMIT 1) AS `EV__id_pessoa` FROM `representantes`" .
+			") `EW_TMP_TABLE`";
+		return ($this->_SqlSelectList <> "") ? $this->_SqlSelectList : $select;
+	}
+
+	function SqlSelectList() { // For backward compatibility
+		return $this->getSqlSelectList();
+	}
+
+	function setSqlSelectList($v) {
+		$this->_SqlSelectList = $v;
 	}
 	var $_SqlWhere = "";
 
@@ -237,16 +267,38 @@ class crepresentantes extends cTable {
 		ew_AddFilter($sFilter, $this->CurrentFilter);
 		$sFilter = $this->ApplyUserIDFilters($sFilter);
 		$this->Recordset_Selecting($sFilter);
-		$sSelect = $this->getSqlSelect();
-		$sSort = $this->UseSessionForListSQL ? $this->getSessionOrderBy() : "";
+		if ($this->UseVirtualFields()) {
+			$sSelect = $this->getSqlSelectList();
+			$sSort = $this->UseSessionForListSQL ? $this->getSessionOrderByList() : "";
+		} else {
+			$sSelect = $this->getSqlSelect();
+			$sSort = $this->UseSessionForListSQL ? $this->getSessionOrderBy() : "";
+		}
 		return ew_BuildSelectSql($sSelect, $this->getSqlWhere(), $this->getSqlGroupBy(),
 			$this->getSqlHaving(), $this->getSqlOrderBy(), $sFilter, $sSort);
 	}
 
 	// Get ORDER BY clause
 	function GetOrderBy() {
-		$sSort = $this->getSessionOrderBy();
+		$sSort = ($this->UseVirtualFields()) ? $this->getSessionOrderByList() : $this->getSessionOrderBy();
 		return ew_BuildSelectSql("", "", "", "", $this->getSqlOrderBy(), "", $sSort);
+	}
+
+	// Check if virtual fields is used in SQL
+	function UseVirtualFields() {
+		$sWhere = $this->UseSessionForListSQL ? $this->getSessionWhere() : $this->CurrentFilter;
+		$sOrderBy = $this->UseSessionForListSQL ? $this->getSessionOrderByList() : "";
+		if ($sWhere <> "")
+			$sWhere = " " . str_replace(array("(",")"), array("",""), $sWhere) . " ";
+		if ($sOrderBy <> "")
+			$sOrderBy = " " . str_replace(array("(",")"), array("",""), $sOrderBy) . " ";
+		if ($this->id_pessoa->AdvancedSearch->SearchValue <> "" ||
+			$this->id_pessoa->AdvancedSearch->SearchValue2 <> "" ||
+			strpos($sWhere, " " . $this->id_pessoa->FldVirtualExpression . " ") !== FALSE)
+			return TRUE;
+		if (strpos($sOrderBy, " " . $this->id_pessoa->FldVirtualExpression . " ") !== FALSE)
+			return TRUE;
+		return FALSE;
 	}
 
 	// Try to get record count
@@ -297,7 +349,10 @@ class crepresentantes extends cTable {
 		$select = $this->TableType == 'CUSTOMVIEW' ? $this->getSqlSelect() : "SELECT * FROM " . $this->getSqlFrom();
 		$groupBy = $this->TableType == 'CUSTOMVIEW' ? $this->getSqlGroupBy() : "";
 		$having = $this->TableType == 'CUSTOMVIEW' ? $this->getSqlHaving() : "";
-		$sql = ew_BuildSelectSql($select, $this->getSqlWhere(), $groupBy, $having, "", $filter, "");
+		if ($this->UseVirtualFields())
+			$sql = ew_BuildSelectSql($this->getSqlSelectList(), $this->getSqlWhere(), $groupBy, $having, "", $filter, "");
+		else
+			$sql = ew_BuildSelectSql($select, $this->getSqlWhere(), $groupBy, $having, "", $filter, "");
 		$cnt = $this->TryGetRecordCount($sql);
 		if ($cnt == -1) {
 			$conn = &$this->Connection();
@@ -603,13 +658,38 @@ class crepresentantes extends cTable {
 		// id_representantes
 		// id_pessoa
 		// comissao
-		// id_representantes
 
+		$this->comissao->CellCssStyle = "white-space: nowrap;";
+
+		// id_representantes
 		$this->id_representantes->ViewValue = $this->id_representantes->CurrentValue;
 		$this->id_representantes->ViewCustomAttributes = "";
 
 		// id_pessoa
-		$this->id_pessoa->ViewValue = $this->id_pessoa->CurrentValue;
+		if ($this->id_pessoa->VirtualValue <> "") {
+			$this->id_pessoa->ViewValue = $this->id_pessoa->VirtualValue;
+		} else {
+		if (strval($this->id_pessoa->CurrentValue) <> "") {
+			$sFilterWrk = "`id_pessoa`" . ew_SearchString("=", $this->id_pessoa->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_pessoa`, `nome_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `pessoa_fisica`";
+		$sWhereWrk = "";
+		$this->id_pessoa->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_pessoa, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_pessoa->ViewValue = $this->id_pessoa->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_pessoa->ViewValue = $this->id_pessoa->CurrentValue;
+			}
+		} else {
+			$this->id_pessoa->ViewValue = NULL;
+		}
+		}
 		$this->id_pessoa->ViewCustomAttributes = "";
 
 		// comissao
@@ -654,8 +734,6 @@ class crepresentantes extends cTable {
 		// id_pessoa
 		$this->id_pessoa->EditAttrs["class"] = "form-control";
 		$this->id_pessoa->EditCustomAttributes = "";
-		$this->id_pessoa->EditValue = $this->id_pessoa->CurrentValue;
-		$this->id_pessoa->PlaceHolder = ew_RemoveHtml($this->id_pessoa->FldCaption());
 
 		// comissao
 		$this->comissao->EditAttrs["class"] = "form-control";
@@ -691,11 +769,9 @@ class crepresentantes extends cTable {
 				$Doc->BeginExportRow();
 				if ($ExportPageType == "view") {
 					if ($this->id_pessoa->Exportable) $Doc->ExportCaption($this->id_pessoa);
-					if ($this->comissao->Exportable) $Doc->ExportCaption($this->comissao);
 				} else {
 					if ($this->id_representantes->Exportable) $Doc->ExportCaption($this->id_representantes);
 					if ($this->id_pessoa->Exportable) $Doc->ExportCaption($this->id_pessoa);
-					if ($this->comissao->Exportable) $Doc->ExportCaption($this->comissao);
 				}
 				$Doc->EndExportRow();
 			}
@@ -728,11 +804,9 @@ class crepresentantes extends cTable {
 					$Doc->BeginExportRow($RowCnt); // Allow CSS styles if enabled
 					if ($ExportPageType == "view") {
 						if ($this->id_pessoa->Exportable) $Doc->ExportField($this->id_pessoa);
-						if ($this->comissao->Exportable) $Doc->ExportField($this->comissao);
 					} else {
 						if ($this->id_representantes->Exportable) $Doc->ExportField($this->id_representantes);
 						if ($this->id_pessoa->Exportable) $Doc->ExportField($this->id_pessoa);
-						if ($this->comissao->Exportable) $Doc->ExportField($this->comissao);
 					}
 					$Doc->EndExportRow($RowCnt);
 				}

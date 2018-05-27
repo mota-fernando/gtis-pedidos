@@ -280,19 +280,10 @@ class cpedidos_delete extends cpedidos {
 	function Page_Init() {
 		global $gsExport, $gsCustomExport, $gsExportFile, $UserProfile, $Language, $Security, $objForm;
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
-		$this->id_pedidos->SetVisibility();
-		if ($this->IsAdd() || $this->IsCopy() || $this->IsGridAdd())
-			$this->id_pedidos->Visible = FALSE;
-		$this->tipo_pedido->SetVisibility();
 		$this->numero->SetVisibility();
+		$this->tipo_pedido->SetVisibility();
 		$this->fecha_data->SetVisibility();
-		$this->fecha_hora->SetVisibility();
 		$this->id_fornecedor->SetVisibility();
-		$this->id_transportadora->SetVisibility();
-		$this->id_prazos->SetVisibility();
-		$this->comentarios->SetVisibility();
-		$this->id_representante->SetVisibility();
-		$this->comissao_representante->SetVisibility();
 		$this->id_cliente->SetVisibility();
 		$this->status->SetVisibility();
 
@@ -475,8 +466,8 @@ class cpedidos_delete extends cpedidos {
 		if (!$rs || $rs->EOF)
 			return;
 		$this->id_pedidos->setDbValue($row['id_pedidos']);
-		$this->tipo_pedido->setDbValue($row['tipo_pedido']);
 		$this->numero->setDbValue($row['numero']);
+		$this->tipo_pedido->setDbValue($row['tipo_pedido']);
 		$this->fecha_data->setDbValue($row['fecha_data']);
 		$this->fecha_hora->setDbValue($row['fecha_hora']);
 		$this->id_fornecedor->setDbValue($row['id_fornecedor']);
@@ -493,8 +484,8 @@ class cpedidos_delete extends cpedidos {
 	function NewRow() {
 		$row = array();
 		$row['id_pedidos'] = NULL;
-		$row['tipo_pedido'] = NULL;
 		$row['numero'] = NULL;
+		$row['tipo_pedido'] = NULL;
 		$row['fecha_data'] = NULL;
 		$row['fecha_hora'] = NULL;
 		$row['id_fornecedor'] = NULL;
@@ -514,8 +505,8 @@ class cpedidos_delete extends cpedidos {
 			return;
 		$row = is_array($rs) ? $rs : $rs->fields;
 		$this->id_pedidos->DbValue = $row['id_pedidos'];
-		$this->tipo_pedido->DbValue = $row['tipo_pedido'];
 		$this->numero->DbValue = $row['numero'];
+		$this->tipo_pedido->DbValue = $row['tipo_pedido'];
 		$this->fecha_data->DbValue = $row['fecha_data'];
 		$this->fecha_hora->DbValue = $row['fecha_hora'];
 		$this->id_fornecedor->DbValue = $row['id_fornecedor'];
@@ -539,8 +530,8 @@ class cpedidos_delete extends cpedidos {
 
 		// Common render codes for all row types
 		// id_pedidos
-		// tipo_pedido
 		// numero
+		// tipo_pedido
 		// fecha_data
 		// fecha_hora
 		// id_fornecedor
@@ -554,9 +545,9 @@ class cpedidos_delete extends cpedidos {
 
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
-		// id_pedidos
-		$this->id_pedidos->ViewValue = $this->id_pedidos->CurrentValue;
-		$this->id_pedidos->ViewCustomAttributes = "";
+		// numero
+		$this->numero->ViewValue = $this->numero->CurrentValue;
+		$this->numero->ViewCustomAttributes = "";
 
 		// tipo_pedido
 		if (strval($this->tipo_pedido->CurrentValue) <> "") {
@@ -565,10 +556,6 @@ class cpedidos_delete extends cpedidos {
 			$this->tipo_pedido->ViewValue = NULL;
 		}
 		$this->tipo_pedido->ViewCustomAttributes = "";
-
-		// numero
-		$this->numero->ViewValue = $this->numero->CurrentValue;
-		$this->numero->ViewCustomAttributes = "";
 
 		// fecha_data
 		$this->fecha_data->ViewValue = $this->fecha_data->CurrentValue;
@@ -629,7 +616,7 @@ class cpedidos_delete extends cpedidos {
 		// id_prazos
 		if (strval($this->id_prazos->CurrentValue) <> "") {
 			$sFilterWrk = "`id_prazos`" . ew_SearchString("=", $this->id_prazos->CurrentValue, EW_DATATYPE_NUMBER, "");
-		$sSqlWrk = "SELECT `id_prazos`, `prazo_em_dias` AS `DispFld`, `parcelas` AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `prazos`";
+		$sSqlWrk = "SELECT `id_prazos`, `prazo_em_dias` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `prazos`";
 		$sWhereWrk = "";
 		$this->id_prazos->LookupFilters = array();
 		ew_AddFilter($sWhereWrk, $sFilterWrk);
@@ -639,7 +626,6 @@ class cpedidos_delete extends cpedidos {
 			if ($rswrk && !$rswrk->EOF) { // Lookup values found
 				$arwrk = array();
 				$arwrk[1] = $rswrk->fields('DispFld');
-				$arwrk[2] = $rswrk->fields('Disp2Fld');
 				$this->id_prazos->ViewValue = $this->id_prazos->DisplayValue($arwrk);
 				$rswrk->Close();
 			} else {
@@ -686,7 +672,6 @@ class cpedidos_delete extends cpedidos {
 		$this->comissao_representante->ViewCustomAttributes = "";
 
 		// id_cliente
-		$this->id_cliente->ViewValue = $this->id_cliente->CurrentValue;
 		if (strval($this->id_cliente->CurrentValue) <> "") {
 			$sFilterWrk = "`id_perfil`" . ew_SearchString("=", $this->id_cliente->CurrentValue, EW_DATATYPE_NUMBER, "");
 		$sSqlWrk = "SELECT `id_perfil`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `empresas`";
@@ -717,60 +702,25 @@ class cpedidos_delete extends cpedidos {
 		}
 		$this->status->ViewCustomAttributes = "";
 
-			// id_pedidos
-			$this->id_pedidos->LinkCustomAttributes = "";
-			$this->id_pedidos->HrefValue = "";
-			$this->id_pedidos->TooltipValue = "";
+			// numero
+			$this->numero->LinkCustomAttributes = "";
+			$this->numero->HrefValue = "";
+			$this->numero->TooltipValue = "";
 
 			// tipo_pedido
 			$this->tipo_pedido->LinkCustomAttributes = "";
 			$this->tipo_pedido->HrefValue = "";
 			$this->tipo_pedido->TooltipValue = "";
 
-			// numero
-			$this->numero->LinkCustomAttributes = "";
-			$this->numero->HrefValue = "";
-			$this->numero->TooltipValue = "";
-
 			// fecha_data
 			$this->fecha_data->LinkCustomAttributes = "";
 			$this->fecha_data->HrefValue = "";
 			$this->fecha_data->TooltipValue = "";
 
-			// fecha_hora
-			$this->fecha_hora->LinkCustomAttributes = "";
-			$this->fecha_hora->HrefValue = "";
-			$this->fecha_hora->TooltipValue = "";
-
 			// id_fornecedor
 			$this->id_fornecedor->LinkCustomAttributes = "";
 			$this->id_fornecedor->HrefValue = "";
 			$this->id_fornecedor->TooltipValue = "";
-
-			// id_transportadora
-			$this->id_transportadora->LinkCustomAttributes = "";
-			$this->id_transportadora->HrefValue = "";
-			$this->id_transportadora->TooltipValue = "";
-
-			// id_prazos
-			$this->id_prazos->LinkCustomAttributes = "";
-			$this->id_prazos->HrefValue = "";
-			$this->id_prazos->TooltipValue = "";
-
-			// comentarios
-			$this->comentarios->LinkCustomAttributes = "";
-			$this->comentarios->HrefValue = "";
-			$this->comentarios->TooltipValue = "";
-
-			// id_representante
-			$this->id_representante->LinkCustomAttributes = "";
-			$this->id_representante->HrefValue = "";
-			$this->id_representante->TooltipValue = "";
-
-			// comissao_representante
-			$this->comissao_representante->LinkCustomAttributes = "";
-			$this->comissao_representante->HrefValue = "";
-			$this->comissao_representante->TooltipValue = "";
 
 			// id_cliente
 			$this->id_cliente->LinkCustomAttributes = "";
@@ -992,17 +942,8 @@ fpedidosdelete.Lists["x_tipo_pedido"] = {"LinkField":"","Ajax":null,"AutoFill":f
 fpedidosdelete.Lists["x_tipo_pedido"].Options = <?php echo json_encode($pedidos_delete->tipo_pedido->Options()) ?>;
 fpedidosdelete.Lists["x_id_fornecedor"] = {"LinkField":"x_id_perfil","Ajax":true,"AutoFill":false,"DisplayFields":["x_razao_social","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"empresas"};
 fpedidosdelete.Lists["x_id_fornecedor"].Data = "<?php echo $pedidos_delete->id_fornecedor->LookupFilterQuery(FALSE, "delete") ?>";
-fpedidosdelete.Lists["x_id_transportadora"] = {"LinkField":"x_id_transportadora","Ajax":true,"AutoFill":false,"DisplayFields":["x_transportadora","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"tranportadora"};
-fpedidosdelete.Lists["x_id_transportadora"].Data = "<?php echo $pedidos_delete->id_transportadora->LookupFilterQuery(FALSE, "delete") ?>";
-fpedidosdelete.Lists["x_id_prazos"] = {"LinkField":"x_id_prazos","Ajax":true,"AutoFill":false,"DisplayFields":["x_prazo_em_dias","x_parcelas","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"prazos"};
-fpedidosdelete.Lists["x_id_prazos"].Data = "<?php echo $pedidos_delete->id_prazos->LookupFilterQuery(FALSE, "delete") ?>";
-fpedidosdelete.Lists["x_id_representante"] = {"LinkField":"x_id_representantes","Ajax":true,"AutoFill":false,"DisplayFields":["x_id_pessoa","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"representantes"};
-fpedidosdelete.Lists["x_id_representante"].Data = "<?php echo $pedidos_delete->id_representante->LookupFilterQuery(FALSE, "delete") ?>";
-fpedidosdelete.Lists["x_comissao_representante"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
-fpedidosdelete.Lists["x_comissao_representante"].Options = <?php echo json_encode($pedidos_delete->comissao_representante->Options()) ?>;
 fpedidosdelete.Lists["x_id_cliente"] = {"LinkField":"x_id_perfil","Ajax":true,"AutoFill":false,"DisplayFields":["x_razao_social","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"empresas"};
 fpedidosdelete.Lists["x_id_cliente"].Data = "<?php echo $pedidos_delete->id_cliente->LookupFilterQuery(FALSE, "delete") ?>";
-fpedidosdelete.AutoSuggests["x_id_cliente"] = <?php echo json_encode(array("data" => "ajax=autosuggest&" . $pedidos_delete->id_cliente->LookupFilterQuery(TRUE, "delete"))) ?>;
 fpedidosdelete.Lists["x_status"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
 fpedidosdelete.Lists["x_status"].Options = <?php echo json_encode($pedidos_delete->status->Options()) ?>;
 
@@ -1031,38 +972,17 @@ $pedidos_delete->ShowMessage();
 <table class="table ewTable">
 	<thead>
 	<tr class="ewTableHeader">
-<?php if ($pedidos->id_pedidos->Visible) { // id_pedidos ?>
-		<th class="<?php echo $pedidos->id_pedidos->HeaderCellClass() ?>"><span id="elh_pedidos_id_pedidos" class="pedidos_id_pedidos"><?php echo $pedidos->id_pedidos->FldCaption() ?></span></th>
+<?php if ($pedidos->numero->Visible) { // numero ?>
+		<th class="<?php echo $pedidos->numero->HeaderCellClass() ?>"><span id="elh_pedidos_numero" class="pedidos_numero"><?php echo $pedidos->numero->FldCaption() ?></span></th>
 <?php } ?>
 <?php if ($pedidos->tipo_pedido->Visible) { // tipo_pedido ?>
 		<th class="<?php echo $pedidos->tipo_pedido->HeaderCellClass() ?>"><span id="elh_pedidos_tipo_pedido" class="pedidos_tipo_pedido"><?php echo $pedidos->tipo_pedido->FldCaption() ?></span></th>
 <?php } ?>
-<?php if ($pedidos->numero->Visible) { // numero ?>
-		<th class="<?php echo $pedidos->numero->HeaderCellClass() ?>"><span id="elh_pedidos_numero" class="pedidos_numero"><?php echo $pedidos->numero->FldCaption() ?></span></th>
-<?php } ?>
 <?php if ($pedidos->fecha_data->Visible) { // fecha_data ?>
 		<th class="<?php echo $pedidos->fecha_data->HeaderCellClass() ?>"><span id="elh_pedidos_fecha_data" class="pedidos_fecha_data"><?php echo $pedidos->fecha_data->FldCaption() ?></span></th>
 <?php } ?>
-<?php if ($pedidos->fecha_hora->Visible) { // fecha_hora ?>
-		<th class="<?php echo $pedidos->fecha_hora->HeaderCellClass() ?>"><span id="elh_pedidos_fecha_hora" class="pedidos_fecha_hora"><?php echo $pedidos->fecha_hora->FldCaption() ?></span></th>
-<?php } ?>
 <?php if ($pedidos->id_fornecedor->Visible) { // id_fornecedor ?>
 		<th class="<?php echo $pedidos->id_fornecedor->HeaderCellClass() ?>"><span id="elh_pedidos_id_fornecedor" class="pedidos_id_fornecedor"><?php echo $pedidos->id_fornecedor->FldCaption() ?></span></th>
-<?php } ?>
-<?php if ($pedidos->id_transportadora->Visible) { // id_transportadora ?>
-		<th class="<?php echo $pedidos->id_transportadora->HeaderCellClass() ?>"><span id="elh_pedidos_id_transportadora" class="pedidos_id_transportadora"><?php echo $pedidos->id_transportadora->FldCaption() ?></span></th>
-<?php } ?>
-<?php if ($pedidos->id_prazos->Visible) { // id_prazos ?>
-		<th class="<?php echo $pedidos->id_prazos->HeaderCellClass() ?>"><span id="elh_pedidos_id_prazos" class="pedidos_id_prazos"><?php echo $pedidos->id_prazos->FldCaption() ?></span></th>
-<?php } ?>
-<?php if ($pedidos->comentarios->Visible) { // comentarios ?>
-		<th class="<?php echo $pedidos->comentarios->HeaderCellClass() ?>"><span id="elh_pedidos_comentarios" class="pedidos_comentarios"><?php echo $pedidos->comentarios->FldCaption() ?></span></th>
-<?php } ?>
-<?php if ($pedidos->id_representante->Visible) { // id_representante ?>
-		<th class="<?php echo $pedidos->id_representante->HeaderCellClass() ?>"><span id="elh_pedidos_id_representante" class="pedidos_id_representante"><?php echo $pedidos->id_representante->FldCaption() ?></span></th>
-<?php } ?>
-<?php if ($pedidos->comissao_representante->Visible) { // comissao_representante ?>
-		<th class="<?php echo $pedidos->comissao_representante->HeaderCellClass() ?>"><span id="elh_pedidos_comissao_representante" class="pedidos_comissao_representante"><?php echo $pedidos->comissao_representante->FldCaption() ?></span></th>
 <?php } ?>
 <?php if ($pedidos->id_cliente->Visible) { // id_cliente ?>
 		<th class="<?php echo $pedidos->id_cliente->HeaderCellClass() ?>"><span id="elh_pedidos_id_cliente" class="pedidos_id_cliente"><?php echo $pedidos->id_cliente->FldCaption() ?></span></th>
@@ -1091,11 +1011,11 @@ while (!$pedidos_delete->Recordset->EOF) {
 	$pedidos_delete->RenderRow();
 ?>
 	<tr<?php echo $pedidos->RowAttributes() ?>>
-<?php if ($pedidos->id_pedidos->Visible) { // id_pedidos ?>
-		<td<?php echo $pedidos->id_pedidos->CellAttributes() ?>>
-<span id="el<?php echo $pedidos_delete->RowCnt ?>_pedidos_id_pedidos" class="pedidos_id_pedidos">
-<span<?php echo $pedidos->id_pedidos->ViewAttributes() ?>>
-<?php echo $pedidos->id_pedidos->ListViewValue() ?></span>
+<?php if ($pedidos->numero->Visible) { // numero ?>
+		<td<?php echo $pedidos->numero->CellAttributes() ?>>
+<span id="el<?php echo $pedidos_delete->RowCnt ?>_pedidos_numero" class="pedidos_numero">
+<span<?php echo $pedidos->numero->ViewAttributes() ?>>
+<?php echo $pedidos->numero->ListViewValue() ?></span>
 </span>
 </td>
 <?php } ?>
@@ -1107,14 +1027,6 @@ while (!$pedidos_delete->Recordset->EOF) {
 </span>
 </td>
 <?php } ?>
-<?php if ($pedidos->numero->Visible) { // numero ?>
-		<td<?php echo $pedidos->numero->CellAttributes() ?>>
-<span id="el<?php echo $pedidos_delete->RowCnt ?>_pedidos_numero" class="pedidos_numero">
-<span<?php echo $pedidos->numero->ViewAttributes() ?>>
-<?php echo $pedidos->numero->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
 <?php if ($pedidos->fecha_data->Visible) { // fecha_data ?>
 		<td<?php echo $pedidos->fecha_data->CellAttributes() ?>>
 <span id="el<?php echo $pedidos_delete->RowCnt ?>_pedidos_fecha_data" class="pedidos_fecha_data">
@@ -1123,59 +1035,11 @@ while (!$pedidos_delete->Recordset->EOF) {
 </span>
 </td>
 <?php } ?>
-<?php if ($pedidos->fecha_hora->Visible) { // fecha_hora ?>
-		<td<?php echo $pedidos->fecha_hora->CellAttributes() ?>>
-<span id="el<?php echo $pedidos_delete->RowCnt ?>_pedidos_fecha_hora" class="pedidos_fecha_hora">
-<span<?php echo $pedidos->fecha_hora->ViewAttributes() ?>>
-<?php echo $pedidos->fecha_hora->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
 <?php if ($pedidos->id_fornecedor->Visible) { // id_fornecedor ?>
 		<td<?php echo $pedidos->id_fornecedor->CellAttributes() ?>>
 <span id="el<?php echo $pedidos_delete->RowCnt ?>_pedidos_id_fornecedor" class="pedidos_id_fornecedor">
 <span<?php echo $pedidos->id_fornecedor->ViewAttributes() ?>>
 <?php echo $pedidos->id_fornecedor->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($pedidos->id_transportadora->Visible) { // id_transportadora ?>
-		<td<?php echo $pedidos->id_transportadora->CellAttributes() ?>>
-<span id="el<?php echo $pedidos_delete->RowCnt ?>_pedidos_id_transportadora" class="pedidos_id_transportadora">
-<span<?php echo $pedidos->id_transportadora->ViewAttributes() ?>>
-<?php echo $pedidos->id_transportadora->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($pedidos->id_prazos->Visible) { // id_prazos ?>
-		<td<?php echo $pedidos->id_prazos->CellAttributes() ?>>
-<span id="el<?php echo $pedidos_delete->RowCnt ?>_pedidos_id_prazos" class="pedidos_id_prazos">
-<span<?php echo $pedidos->id_prazos->ViewAttributes() ?>>
-<?php echo $pedidos->id_prazos->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($pedidos->comentarios->Visible) { // comentarios ?>
-		<td<?php echo $pedidos->comentarios->CellAttributes() ?>>
-<span id="el<?php echo $pedidos_delete->RowCnt ?>_pedidos_comentarios" class="pedidos_comentarios">
-<span<?php echo $pedidos->comentarios->ViewAttributes() ?>>
-<?php echo $pedidos->comentarios->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($pedidos->id_representante->Visible) { // id_representante ?>
-		<td<?php echo $pedidos->id_representante->CellAttributes() ?>>
-<span id="el<?php echo $pedidos_delete->RowCnt ?>_pedidos_id_representante" class="pedidos_id_representante">
-<span<?php echo $pedidos->id_representante->ViewAttributes() ?>>
-<?php echo $pedidos->id_representante->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($pedidos->comissao_representante->Visible) { // comissao_representante ?>
-		<td<?php echo $pedidos->comissao_representante->CellAttributes() ?>>
-<span id="el<?php echo $pedidos_delete->RowCnt ?>_pedidos_comissao_representante" class="pedidos_comissao_representante">
-<span<?php echo $pedidos->comissao_representante->ViewAttributes() ?>>
-<?php echo $pedidos->comissao_representante->ListViewValue() ?></span>
 </span>
 </td>
 <?php } ?>

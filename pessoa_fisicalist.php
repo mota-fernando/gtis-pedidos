@@ -418,15 +418,9 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 			$this->id_pessoa->Visible = FALSE;
 		$this->nome_pessoa->SetVisibility();
 		$this->sobrenome_pessoa->SetVisibility();
-		$this->nascimento->SetVisibility();
 		$this->telefone->SetVisibility();
 		$this->_email->SetVisibility();
 		$this->celular->SetVisibility();
-		$this->CPF->SetVisibility();
-		$this->RG->SetVisibility();
-		$this->id_endereco->SetVisibility();
-		$this->endereco_numero->SetVisibility();
-		$this->id_empresa->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -1071,15 +1065,9 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 			$this->UpdateSort($this->id_pessoa); // id_pessoa
 			$this->UpdateSort($this->nome_pessoa); // nome_pessoa
 			$this->UpdateSort($this->sobrenome_pessoa); // sobrenome_pessoa
-			$this->UpdateSort($this->nascimento); // nascimento
 			$this->UpdateSort($this->telefone); // telefone
 			$this->UpdateSort($this->_email); // email
 			$this->UpdateSort($this->celular); // celular
-			$this->UpdateSort($this->CPF); // CPF
-			$this->UpdateSort($this->RG); // RG
-			$this->UpdateSort($this->id_endereco); // id_endereco
-			$this->UpdateSort($this->endereco_numero); // endereco_numero
-			$this->UpdateSort($this->id_empresa); // id_empresa
 			$this->setStartRecordNumber(1); // Reset start position
 		}
 	}
@@ -1115,15 +1103,9 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 				$this->id_pessoa->setSort("");
 				$this->nome_pessoa->setSort("");
 				$this->sobrenome_pessoa->setSort("");
-				$this->nascimento->setSort("");
 				$this->telefone->setSort("");
 				$this->_email->setSort("");
 				$this->celular->setSort("");
-				$this->CPF->setSort("");
-				$this->RG->setSort("");
-				$this->id_endereco->setSort("");
-				$this->endereco_numero->setSort("");
-				$this->id_empresa->setSort("");
 			}
 
 			// Reset start position
@@ -1139,37 +1121,31 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 		// Add group option item
 		$item = &$this->ListOptions->Add($this->ListOptions->GroupOptionName);
 		$item->Body = "";
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 		$item->Visible = FALSE;
 
 		// "view"
 		$item = &$this->ListOptions->Add("view");
 		$item->CssClass = "text-nowrap";
 		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 
 		// "edit"
 		$item = &$this->ListOptions->Add("edit");
 		$item->CssClass = "text-nowrap";
 		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 
 		// "copy"
 		$item = &$this->ListOptions->Add("copy");
 		$item->CssClass = "text-nowrap";
 		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
-
-		// "delete"
-		$item = &$this->ListOptions->Add("delete");
-		$item->CssClass = "text-nowrap";
-		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 
 		// List actions
 		$item = &$this->ListOptions->Add("listactions");
 		$item->CssClass = "text-nowrap";
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 		$item->Visible = FALSE;
 		$item->ShowInButtonGroup = FALSE;
 		$item->ShowInDropDown = FALSE;
@@ -1177,8 +1153,9 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 		// "checkbox"
 		$item = &$this->ListOptions->Add("checkbox");
 		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 		$item->Header = "<input type=\"checkbox\" name=\"key\" id=\"key\" onclick=\"ew_SelectAllKey(this);\">";
+		$item->MoveTo(0);
 		$item->ShowInDropDown = FALSE;
 		$item->ShowInButtonGroup = FALSE;
 
@@ -1233,13 +1210,6 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 			$oListOpt->Body = "";
 		}
 
-		// "delete"
-		$oListOpt = &$this->ListOptions->Items["delete"];
-		if (TRUE)
-			$oListOpt->Body = "<a class=\"ewRowLink ewDelete\"" . "" . " title=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" href=\"" . ew_HtmlEncode($this->DeleteUrl) . "\">" . $Language->Phrase("DeleteLink") . "</a>";
-		else
-			$oListOpt->Body = "";
-
 		// Set up list action buttons
 		$oListOpt = &$this->ListOptions->GetItem("listactions");
 		if ($oListOpt && $this->Export == "" && $this->CurrentAction == "") {
@@ -1290,6 +1260,11 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 		$item->Body = "<a class=\"ewAddEdit ewAdd\" title=\"" . $addcaption . "\" data-caption=\"" . $addcaption . "\" href=\"" . ew_HtmlEncode($this->AddUrl) . "\">" . $Language->Phrase("AddLink") . "</a>";
 		$item->Visible = ($this->AddUrl <> "");
 		$option = $options["action"];
+
+		// Add multi delete
+		$item = &$option->Add("multidelete");
+		$item->Body = "<a class=\"ewAction ewMultiDelete\" title=\"" . ew_HtmlTitle($Language->Phrase("DeleteSelectedLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("DeleteSelectedLink")) . "\" href=\"\" onclick=\"ew_SubmitAction(event,{f:document.fpessoa_fisicalist,url:'" . $this->MultiDeleteUrl . "'});return false;\">" . $Language->Phrase("DeleteSelectedLink") . "</a>";
+		$item->Visible = (TRUE);
 
 		// Set up options default
 		foreach ($options as &$option) {
@@ -1464,6 +1439,9 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 
 	function SetupListOptionsExt() {
 		global $Security, $Language;
+
+		// Hide detail items for dropdown if necessary
+		$this->ListOptions->HideDetailItemsForDropDown();
 	}
 
 	function RenderListOptionsExt() {
@@ -1782,11 +1760,6 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 			$this->sobrenome_pessoa->HrefValue = "";
 			$this->sobrenome_pessoa->TooltipValue = "";
 
-			// nascimento
-			$this->nascimento->LinkCustomAttributes = "";
-			$this->nascimento->HrefValue = "";
-			$this->nascimento->TooltipValue = "";
-
 			// telefone
 			$this->telefone->LinkCustomAttributes = "";
 			$this->telefone->HrefValue = "";
@@ -1801,31 +1774,6 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 			$this->celular->LinkCustomAttributes = "";
 			$this->celular->HrefValue = "";
 			$this->celular->TooltipValue = "";
-
-			// CPF
-			$this->CPF->LinkCustomAttributes = "";
-			$this->CPF->HrefValue = "";
-			$this->CPF->TooltipValue = "";
-
-			// RG
-			$this->RG->LinkCustomAttributes = "";
-			$this->RG->HrefValue = "";
-			$this->RG->TooltipValue = "";
-
-			// id_endereco
-			$this->id_endereco->LinkCustomAttributes = "";
-			$this->id_endereco->HrefValue = "";
-			$this->id_endereco->TooltipValue = "";
-
-			// endereco_numero
-			$this->endereco_numero->LinkCustomAttributes = "";
-			$this->endereco_numero->HrefValue = "";
-			$this->endereco_numero->TooltipValue = "";
-
-			// id_empresa
-			$this->id_empresa->LinkCustomAttributes = "";
-			$this->id_empresa->HrefValue = "";
-			$this->id_empresa->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -2179,14 +2127,31 @@ fpessoa_fisicalist.Form_CustomValidate =
 fpessoa_fisicalist.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-fpessoa_fisicalist.Lists["x_id_endereco"] = {"LinkField":"x_id_endereco","Ajax":true,"AutoFill":false,"DisplayFields":["x_endereco","x_bairro","x_estado","x_cidade"],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"endereco"};
-fpessoa_fisicalist.Lists["x_id_endereco"].Data = "<?php echo $pessoa_fisica_list->id_endereco->LookupFilterQuery(FALSE, "list") ?>";
-fpessoa_fisicalist.Lists["x_id_empresa"] = {"LinkField":"x_id_perfil","Ajax":true,"AutoFill":false,"DisplayFields":["x_razao_social","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"empresas"};
-fpessoa_fisicalist.Lists["x_id_empresa"].Data = "<?php echo $pessoa_fisica_list->id_empresa->LookupFilterQuery(FALSE, "list") ?>";
-fpessoa_fisicalist.AutoSuggests["x_id_empresa"] = <?php echo json_encode(array("data" => "ajax=autosuggest&" . $pessoa_fisica_list->id_empresa->LookupFilterQuery(TRUE, "list"))) ?>;
-
 // Form object for search
+
 var CurrentSearchForm = fpessoa_fisicalistsrch = new ew_Form("fpessoa_fisicalistsrch");
+</script>
+<style type="text/css">
+.ewTablePreviewRow { /* main table preview row color */
+	background-color: #FFFFFF; /* preview row color */
+}
+.ewTablePreviewRow .ewGrid {
+	display: table;
+}
+</style>
+<div id="ewPreview" class="d-none"><!-- preview -->
+	<div class="nav-tabs-custom"><!-- .nav-tabs-custom -->
+		<ul class="nav nav-tabs" role="tablist"></ul>
+		<div class="tab-content"><!-- .tab-content -->
+			<div class="tab-pane fade"></div>
+		</div><!-- /.tab-content -->
+	</div><!-- /.nav-tabs-custom -->
+</div><!-- /preview -->
+<script type="text/javascript" src="phpjs/ewpreview.js"></script>
+<script type="text/javascript">
+var EW_PREVIEW_PLACEMENT = EW_CSS_FLIP ? "left" : "right";
+var EW_PREVIEW_SINGLE_ROW = false;
+var EW_PREVIEW_OVERLAY = false;
 </script>
 <script type="text/javascript">
 
@@ -2266,6 +2231,66 @@ $pessoa_fisica_list->ShowMessage();
 ?>
 <?php if ($pessoa_fisica_list->TotalRecs > 0 || $pessoa_fisica->CurrentAction <> "") { ?>
 <div class="box ewBox ewGrid<?php if ($pessoa_fisica_list->IsAddOrEdit()) { ?> ewGridAddEdit<?php } ?> pessoa_fisica">
+<?php if ($pessoa_fisica->Export == "") { ?>
+<div class="box-header ewGridUpperPanel">
+<?php if ($pessoa_fisica->CurrentAction <> "gridadd" && $pessoa_fisica->CurrentAction <> "gridedit") { ?>
+<form name="ewPagerForm" class="form-inline ewForm ewPagerForm" action="<?php echo ew_CurrentPage() ?>">
+<?php if (!isset($pessoa_fisica_list->Pager)) $pessoa_fisica_list->Pager = new cPrevNextPager($pessoa_fisica_list->StartRec, $pessoa_fisica_list->DisplayRecs, $pessoa_fisica_list->TotalRecs, $pessoa_fisica_list->AutoHidePager) ?>
+<?php if ($pessoa_fisica_list->Pager->RecordCount > 0 && $pessoa_fisica_list->Pager->Visible) { ?>
+<div class="ewPager">
+<span><?php echo $Language->Phrase("Page") ?>&nbsp;</span>
+<div class="ewPrevNext"><div class="input-group">
+<div class="input-group-btn">
+<!--first page button-->
+	<?php if ($pessoa_fisica_list->Pager->FirstButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerFirst") ?>" href="<?php echo $pessoa_fisica_list->PageUrl() ?>start=<?php echo $pessoa_fisica_list->Pager->FirstButton->Start ?>"><span class="icon-first ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerFirst") ?>"><span class="icon-first ewIcon"></span></a>
+	<?php } ?>
+<!--previous page button-->
+	<?php if ($pessoa_fisica_list->Pager->PrevButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerPrevious") ?>" href="<?php echo $pessoa_fisica_list->PageUrl() ?>start=<?php echo $pessoa_fisica_list->Pager->PrevButton->Start ?>"><span class="icon-prev ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerPrevious") ?>"><span class="icon-prev ewIcon"></span></a>
+	<?php } ?>
+</div>
+<!--current page number-->
+	<input class="form-control input-sm" type="text" name="<?php echo EW_TABLE_PAGE_NO ?>" value="<?php echo $pessoa_fisica_list->Pager->CurrentPage ?>">
+<div class="input-group-btn">
+<!--next page button-->
+	<?php if ($pessoa_fisica_list->Pager->NextButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerNext") ?>" href="<?php echo $pessoa_fisica_list->PageUrl() ?>start=<?php echo $pessoa_fisica_list->Pager->NextButton->Start ?>"><span class="icon-next ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerNext") ?>"><span class="icon-next ewIcon"></span></a>
+	<?php } ?>
+<!--last page button-->
+	<?php if ($pessoa_fisica_list->Pager->LastButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerLast") ?>" href="<?php echo $pessoa_fisica_list->PageUrl() ?>start=<?php echo $pessoa_fisica_list->Pager->LastButton->Start ?>"><span class="icon-last ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerLast") ?>"><span class="icon-last ewIcon"></span></a>
+	<?php } ?>
+</div>
+</div>
+</div>
+<span>&nbsp;<?php echo $Language->Phrase("of") ?>&nbsp;<?php echo $pessoa_fisica_list->Pager->PageCount ?></span>
+</div>
+<?php } ?>
+<?php if ($pessoa_fisica_list->Pager->RecordCount > 0) { ?>
+<div class="ewPager ewRec">
+	<span><?php echo $Language->Phrase("Record") ?>&nbsp;<?php echo $pessoa_fisica_list->Pager->FromIndex ?>&nbsp;<?php echo $Language->Phrase("To") ?>&nbsp;<?php echo $pessoa_fisica_list->Pager->ToIndex ?>&nbsp;<?php echo $Language->Phrase("Of") ?>&nbsp;<?php echo $pessoa_fisica_list->Pager->RecordCount ?></span>
+</div>
+<?php } ?>
+</form>
+<?php } ?>
+<div class="ewListOtherOptions">
+<?php
+	foreach ($pessoa_fisica_list->OtherOptions as &$option)
+		$option->Render("body");
+?>
+</div>
+<div class="clearfix"></div>
+</div>
+<?php } ?>
 <form name="fpessoa_fisicalist" id="fpessoa_fisicalist" class="form-inline ewForm ewListForm" action="<?php echo ew_CurrentPage() ?>" method="post">
 <?php if ($pessoa_fisica_list->CheckToken) { ?>
 <input type="hidden" name="<?php echo EW_TOKEN_NAME ?>" value="<?php echo $pessoa_fisica_list->Token ?>">
@@ -2315,15 +2340,6 @@ $pessoa_fisica_list->ListOptions->Render("header", "left");
 		</div></div></th>
 	<?php } ?>
 <?php } ?>
-<?php if ($pessoa_fisica->nascimento->Visible) { // nascimento ?>
-	<?php if ($pessoa_fisica->SortUrl($pessoa_fisica->nascimento) == "") { ?>
-		<th data-name="nascimento" class="<?php echo $pessoa_fisica->nascimento->HeaderCellClass() ?>"><div id="elh_pessoa_fisica_nascimento" class="pessoa_fisica_nascimento"><div class="ewTableHeaderCaption"><?php echo $pessoa_fisica->nascimento->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="nascimento" class="<?php echo $pessoa_fisica->nascimento->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $pessoa_fisica->SortUrl($pessoa_fisica->nascimento) ?>',1);"><div id="elh_pessoa_fisica_nascimento" class="pessoa_fisica_nascimento">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $pessoa_fisica->nascimento->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($pessoa_fisica->nascimento->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($pessoa_fisica->nascimento->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
 <?php if ($pessoa_fisica->telefone->Visible) { // telefone ?>
 	<?php if ($pessoa_fisica->SortUrl($pessoa_fisica->telefone) == "") { ?>
 		<th data-name="telefone" class="<?php echo $pessoa_fisica->telefone->HeaderCellClass() ?>"><div id="elh_pessoa_fisica_telefone" class="pessoa_fisica_telefone"><div class="ewTableHeaderCaption"><?php echo $pessoa_fisica->telefone->FldCaption() ?></div></div></th>
@@ -2348,51 +2364,6 @@ $pessoa_fisica_list->ListOptions->Render("header", "left");
 	<?php } else { ?>
 		<th data-name="celular" class="<?php echo $pessoa_fisica->celular->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $pessoa_fisica->SortUrl($pessoa_fisica->celular) ?>',1);"><div id="elh_pessoa_fisica_celular" class="pessoa_fisica_celular">
 			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $pessoa_fisica->celular->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($pessoa_fisica->celular->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($pessoa_fisica->celular->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($pessoa_fisica->CPF->Visible) { // CPF ?>
-	<?php if ($pessoa_fisica->SortUrl($pessoa_fisica->CPF) == "") { ?>
-		<th data-name="CPF" class="<?php echo $pessoa_fisica->CPF->HeaderCellClass() ?>"><div id="elh_pessoa_fisica_CPF" class="pessoa_fisica_CPF"><div class="ewTableHeaderCaption"><?php echo $pessoa_fisica->CPF->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="CPF" class="<?php echo $pessoa_fisica->CPF->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $pessoa_fisica->SortUrl($pessoa_fisica->CPF) ?>',1);"><div id="elh_pessoa_fisica_CPF" class="pessoa_fisica_CPF">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $pessoa_fisica->CPF->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($pessoa_fisica->CPF->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($pessoa_fisica->CPF->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($pessoa_fisica->RG->Visible) { // RG ?>
-	<?php if ($pessoa_fisica->SortUrl($pessoa_fisica->RG) == "") { ?>
-		<th data-name="RG" class="<?php echo $pessoa_fisica->RG->HeaderCellClass() ?>"><div id="elh_pessoa_fisica_RG" class="pessoa_fisica_RG"><div class="ewTableHeaderCaption"><?php echo $pessoa_fisica->RG->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="RG" class="<?php echo $pessoa_fisica->RG->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $pessoa_fisica->SortUrl($pessoa_fisica->RG) ?>',1);"><div id="elh_pessoa_fisica_RG" class="pessoa_fisica_RG">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $pessoa_fisica->RG->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($pessoa_fisica->RG->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($pessoa_fisica->RG->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($pessoa_fisica->id_endereco->Visible) { // id_endereco ?>
-	<?php if ($pessoa_fisica->SortUrl($pessoa_fisica->id_endereco) == "") { ?>
-		<th data-name="id_endereco" class="<?php echo $pessoa_fisica->id_endereco->HeaderCellClass() ?>"><div id="elh_pessoa_fisica_id_endereco" class="pessoa_fisica_id_endereco"><div class="ewTableHeaderCaption"><?php echo $pessoa_fisica->id_endereco->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="id_endereco" class="<?php echo $pessoa_fisica->id_endereco->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $pessoa_fisica->SortUrl($pessoa_fisica->id_endereco) ?>',1);"><div id="elh_pessoa_fisica_id_endereco" class="pessoa_fisica_id_endereco">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $pessoa_fisica->id_endereco->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($pessoa_fisica->id_endereco->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($pessoa_fisica->id_endereco->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($pessoa_fisica->endereco_numero->Visible) { // endereco_numero ?>
-	<?php if ($pessoa_fisica->SortUrl($pessoa_fisica->endereco_numero) == "") { ?>
-		<th data-name="endereco_numero" class="<?php echo $pessoa_fisica->endereco_numero->HeaderCellClass() ?>"><div id="elh_pessoa_fisica_endereco_numero" class="pessoa_fisica_endereco_numero"><div class="ewTableHeaderCaption"><?php echo $pessoa_fisica->endereco_numero->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="endereco_numero" class="<?php echo $pessoa_fisica->endereco_numero->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $pessoa_fisica->SortUrl($pessoa_fisica->endereco_numero) ?>',1);"><div id="elh_pessoa_fisica_endereco_numero" class="pessoa_fisica_endereco_numero">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $pessoa_fisica->endereco_numero->FldCaption() ?><?php echo $Language->Phrase("SrchLegend") ?></span><span class="ewTableHeaderSort"><?php if ($pessoa_fisica->endereco_numero->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($pessoa_fisica->endereco_numero->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($pessoa_fisica->id_empresa->Visible) { // id_empresa ?>
-	<?php if ($pessoa_fisica->SortUrl($pessoa_fisica->id_empresa) == "") { ?>
-		<th data-name="id_empresa" class="<?php echo $pessoa_fisica->id_empresa->HeaderCellClass() ?>"><div id="elh_pessoa_fisica_id_empresa" class="pessoa_fisica_id_empresa"><div class="ewTableHeaderCaption"><?php echo $pessoa_fisica->id_empresa->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="id_empresa" class="<?php echo $pessoa_fisica->id_empresa->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $pessoa_fisica->SortUrl($pessoa_fisica->id_empresa) ?>',1);"><div id="elh_pessoa_fisica_id_empresa" class="pessoa_fisica_id_empresa">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $pessoa_fisica->id_empresa->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($pessoa_fisica->id_empresa->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($pessoa_fisica->id_empresa->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
 		</div></div></th>
 	<?php } ?>
 <?php } ?>
@@ -2485,14 +2456,6 @@ $pessoa_fisica_list->ListOptions->Render("body", "left", $pessoa_fisica_list->Ro
 </span>
 </td>
 	<?php } ?>
-	<?php if ($pessoa_fisica->nascimento->Visible) { // nascimento ?>
-		<td data-name="nascimento"<?php echo $pessoa_fisica->nascimento->CellAttributes() ?>>
-<span id="el<?php echo $pessoa_fisica_list->RowCnt ?>_pessoa_fisica_nascimento" class="pessoa_fisica_nascimento">
-<span<?php echo $pessoa_fisica->nascimento->ViewAttributes() ?>>
-<?php echo $pessoa_fisica->nascimento->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
 	<?php if ($pessoa_fisica->telefone->Visible) { // telefone ?>
 		<td data-name="telefone"<?php echo $pessoa_fisica->telefone->CellAttributes() ?>>
 <span id="el<?php echo $pessoa_fisica_list->RowCnt ?>_pessoa_fisica_telefone" class="pessoa_fisica_telefone">
@@ -2514,46 +2477,6 @@ $pessoa_fisica_list->ListOptions->Render("body", "left", $pessoa_fisica_list->Ro
 <span id="el<?php echo $pessoa_fisica_list->RowCnt ?>_pessoa_fisica_celular" class="pessoa_fisica_celular">
 <span<?php echo $pessoa_fisica->celular->ViewAttributes() ?>>
 <?php echo $pessoa_fisica->celular->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($pessoa_fisica->CPF->Visible) { // CPF ?>
-		<td data-name="CPF"<?php echo $pessoa_fisica->CPF->CellAttributes() ?>>
-<span id="el<?php echo $pessoa_fisica_list->RowCnt ?>_pessoa_fisica_CPF" class="pessoa_fisica_CPF">
-<span<?php echo $pessoa_fisica->CPF->ViewAttributes() ?>>
-<?php echo $pessoa_fisica->CPF->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($pessoa_fisica->RG->Visible) { // RG ?>
-		<td data-name="RG"<?php echo $pessoa_fisica->RG->CellAttributes() ?>>
-<span id="el<?php echo $pessoa_fisica_list->RowCnt ?>_pessoa_fisica_RG" class="pessoa_fisica_RG">
-<span<?php echo $pessoa_fisica->RG->ViewAttributes() ?>>
-<?php echo $pessoa_fisica->RG->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($pessoa_fisica->id_endereco->Visible) { // id_endereco ?>
-		<td data-name="id_endereco"<?php echo $pessoa_fisica->id_endereco->CellAttributes() ?>>
-<span id="el<?php echo $pessoa_fisica_list->RowCnt ?>_pessoa_fisica_id_endereco" class="pessoa_fisica_id_endereco">
-<span<?php echo $pessoa_fisica->id_endereco->ViewAttributes() ?>>
-<?php echo $pessoa_fisica->id_endereco->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($pessoa_fisica->endereco_numero->Visible) { // endereco_numero ?>
-		<td data-name="endereco_numero"<?php echo $pessoa_fisica->endereco_numero->CellAttributes() ?>>
-<span id="el<?php echo $pessoa_fisica_list->RowCnt ?>_pessoa_fisica_endereco_numero" class="pessoa_fisica_endereco_numero">
-<span<?php echo $pessoa_fisica->endereco_numero->ViewAttributes() ?>>
-<?php echo $pessoa_fisica->endereco_numero->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($pessoa_fisica->id_empresa->Visible) { // id_empresa ?>
-		<td data-name="id_empresa"<?php echo $pessoa_fisica->id_empresa->CellAttributes() ?>>
-<span id="el<?php echo $pessoa_fisica_list->RowCnt ?>_pessoa_fisica_id_empresa" class="pessoa_fisica_id_empresa">
-<span<?php echo $pessoa_fisica->id_empresa->ViewAttributes() ?>>
-<?php echo $pessoa_fisica->id_empresa->ListViewValue() ?></span>
 </span>
 </td>
 	<?php } ?>

@@ -287,7 +287,6 @@ class crepresentantes_add extends crepresentantes {
 		$objForm = new cFormObj();
 		$this->CurrentAction = (@$_GET["a"] <> "") ? $_GET["a"] : @$_POST["a_list"]; // Set up current action
 		$this->id_pessoa->SetVisibility();
-		$this->comissao->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -505,16 +504,12 @@ class crepresentantes_add extends crepresentantes {
 		if (!$this->id_pessoa->FldIsDetailKey) {
 			$this->id_pessoa->setFormValue($objForm->GetValue("x_id_pessoa"));
 		}
-		if (!$this->comissao->FldIsDetailKey) {
-			$this->comissao->setFormValue($objForm->GetValue("x_comissao"));
-		}
 	}
 
 	// Restore form values
 	function RestoreFormValues() {
 		global $objForm;
 		$this->id_pessoa->CurrentValue = $this->id_pessoa->FormValue;
-		$this->comissao->CurrentValue = $this->comissao->FormValue;
 	}
 
 	// Load row based on key values
@@ -552,6 +547,11 @@ class crepresentantes_add extends crepresentantes {
 			return;
 		$this->id_representantes->setDbValue($row['id_representantes']);
 		$this->id_pessoa->setDbValue($row['id_pessoa']);
+		if (array_key_exists('EV__id_pessoa', $rs->fields)) {
+			$this->id_pessoa->VirtualValue = $rs->fields('EV__id_pessoa'); // Set up virtual field value
+		} else {
+			$this->id_pessoa->VirtualValue = ""; // Clear value
+		}
 		$this->comissao->setDbValue($row['comissao']);
 	}
 
@@ -618,45 +618,62 @@ class crepresentantes_add extends crepresentantes {
 		$this->id_representantes->ViewCustomAttributes = "";
 
 		// id_pessoa
-		$this->id_pessoa->ViewValue = $this->id_pessoa->CurrentValue;
+		if ($this->id_pessoa->VirtualValue <> "") {
+			$this->id_pessoa->ViewValue = $this->id_pessoa->VirtualValue;
+		} else {
+		if (strval($this->id_pessoa->CurrentValue) <> "") {
+			$sFilterWrk = "`id_pessoa`" . ew_SearchString("=", $this->id_pessoa->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_pessoa`, `nome_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `pessoa_fisica`";
+		$sWhereWrk = "";
+		$this->id_pessoa->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_pessoa, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_pessoa->ViewValue = $this->id_pessoa->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_pessoa->ViewValue = $this->id_pessoa->CurrentValue;
+			}
+		} else {
+			$this->id_pessoa->ViewValue = NULL;
+		}
+		}
 		$this->id_pessoa->ViewCustomAttributes = "";
-
-		// comissao
-		$this->comissao->ViewValue = $this->comissao->CurrentValue;
-		$this->comissao->ViewCustomAttributes = "";
 
 			// id_pessoa
 			$this->id_pessoa->LinkCustomAttributes = "";
 			$this->id_pessoa->HrefValue = "";
 			$this->id_pessoa->TooltipValue = "";
-
-			// comissao
-			$this->comissao->LinkCustomAttributes = "";
-			$this->comissao->HrefValue = "";
-			$this->comissao->TooltipValue = "";
 		} elseif ($this->RowType == EW_ROWTYPE_ADD) { // Add row
 
 			// id_pessoa
 			$this->id_pessoa->EditAttrs["class"] = "form-control";
 			$this->id_pessoa->EditCustomAttributes = "";
-			$this->id_pessoa->EditValue = ew_HtmlEncode($this->id_pessoa->CurrentValue);
-			$this->id_pessoa->PlaceHolder = ew_RemoveHtml($this->id_pessoa->FldCaption());
-
-			// comissao
-			$this->comissao->EditAttrs["class"] = "form-control";
-			$this->comissao->EditCustomAttributes = "";
-			$this->comissao->EditValue = ew_HtmlEncode($this->comissao->CurrentValue);
-			$this->comissao->PlaceHolder = ew_RemoveHtml($this->comissao->FldCaption());
+			if (trim(strval($this->id_pessoa->CurrentValue)) == "") {
+				$sFilterWrk = "0=1";
+			} else {
+				$sFilterWrk = "`id_pessoa`" . ew_SearchString("=", $this->id_pessoa->CurrentValue, EW_DATATYPE_NUMBER, "");
+			}
+			$sSqlWrk = "SELECT `id_pessoa`, `nome_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `pessoa_fisica`";
+			$sWhereWrk = "";
+			$this->id_pessoa->LookupFilters = array();
+			ew_AddFilter($sWhereWrk, $sFilterWrk);
+			$this->Lookup_Selecting($this->id_pessoa, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
+			if ($rswrk) $rswrk->Close();
+			$this->id_pessoa->EditValue = $arwrk;
 
 			// Add refer script
 			// id_pessoa
 
 			$this->id_pessoa->LinkCustomAttributes = "";
 			$this->id_pessoa->HrefValue = "";
-
-			// comissao
-			$this->comissao->LinkCustomAttributes = "";
-			$this->comissao->HrefValue = "";
 		}
 		if ($this->RowType == EW_ROWTYPE_ADD || $this->RowType == EW_ROWTYPE_EDIT || $this->RowType == EW_ROWTYPE_SEARCH) // Add/Edit/Search row
 			$this->SetupFieldTitles();
@@ -676,12 +693,6 @@ class crepresentantes_add extends crepresentantes {
 		// Check if validation required
 		if (!EW_SERVER_VALIDATE)
 			return ($gsFormError == "");
-		if (!ew_CheckInteger($this->id_pessoa->FormValue)) {
-			ew_AddMessage($gsFormError, $this->id_pessoa->FldErrMsg());
-		}
-		if (!ew_CheckInteger($this->comissao->FormValue)) {
-			ew_AddMessage($gsFormError, $this->comissao->FldErrMsg());
-		}
 
 		// Return validate result
 		$ValidateForm = ($gsFormError == "");
@@ -708,9 +719,6 @@ class crepresentantes_add extends crepresentantes {
 
 		// id_pessoa
 		$this->id_pessoa->SetDbValueDef($rsnew, $this->id_pessoa->CurrentValue, NULL, FALSE);
-
-		// comissao
-		$this->comissao->SetDbValueDef($rsnew, $this->comissao->CurrentValue, NULL, FALSE);
 
 		// Call Row Inserting event
 		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
@@ -757,6 +765,18 @@ class crepresentantes_add extends crepresentantes {
 		global $gsLanguage;
 		$pageId = $pageId ?: $this->PageID;
 		switch ($fld->FldVar) {
+		case "x_id_pessoa":
+			$sSqlWrk = "";
+			$sSqlWrk = "SELECT `id_pessoa` AS `LinkFld`, `nome_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `pessoa_fisica`";
+			$sWhereWrk = "";
+			$fld->LookupFilters = array();
+			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`id_pessoa` IN ({filter_value})', "t0" => "3", "fn0" => "");
+			$sSqlWrk = "";
+			$this->Lookup_Selecting($this->id_pessoa, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			if ($sSqlWrk <> "")
+				$fld->LookupFilters["s"] .= $sSqlWrk;
+			break;
 		}
 	}
 
@@ -876,12 +896,6 @@ frepresentantesadd.Validate = function() {
 	for (var i = startcnt; i <= rowcnt; i++) {
 		var infix = ($k[0]) ? String(i) : "";
 		$fobj.data("rowindex", infix);
-			elm = this.GetElements("x" + infix + "_id_pessoa");
-			if (elm && !ew_CheckInteger(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($representantes->id_pessoa->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_comissao");
-			if (elm && !ew_CheckInteger(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($representantes->comissao->FldErrMsg()) ?>");
 
 			// Fire Form_CustomValidate event
 			if (!this.Form_CustomValidate(fobj))
@@ -911,8 +925,10 @@ frepresentantesadd.Form_CustomValidate =
 frepresentantesadd.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-// Form object for search
+frepresentantesadd.Lists["x_id_pessoa"] = {"LinkField":"x_id_pessoa","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_pessoa","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"pessoa_fisica"};
+frepresentantesadd.Lists["x_id_pessoa"].Data = "<?php echo $representantes_add->id_pessoa->LookupFilterQuery(FALSE, "add") ?>";
 
+// Form object for search
 </script>
 <script type="text/javascript">
 
@@ -935,19 +951,12 @@ $representantes_add->ShowMessage();
 		<label id="elh_representantes_id_pessoa" for="x_id_pessoa" class="<?php echo $representantes_add->LeftColumnClass ?>"><?php echo $representantes->id_pessoa->FldCaption() ?></label>
 		<div class="<?php echo $representantes_add->RightColumnClass ?>"><div<?php echo $representantes->id_pessoa->CellAttributes() ?>>
 <span id="el_representantes_id_pessoa">
-<input type="text" data-table="representantes" data-field="x_id_pessoa" name="x_id_pessoa" id="x_id_pessoa" size="30" placeholder="<?php echo ew_HtmlEncode($representantes->id_pessoa->getPlaceHolder()) ?>" value="<?php echo $representantes->id_pessoa->EditValue ?>"<?php echo $representantes->id_pessoa->EditAttributes() ?>>
+<select data-table="representantes" data-field="x_id_pessoa" data-value-separator="<?php echo $representantes->id_pessoa->DisplayValueSeparatorAttribute() ?>" id="x_id_pessoa" name="x_id_pessoa"<?php echo $representantes->id_pessoa->EditAttributes() ?>>
+<?php echo $representantes->id_pessoa->SelectOptionListHtml("x_id_pessoa") ?>
+</select>
+<button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $representantes->id_pessoa->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_pessoa',url:'pessoa_fisicaaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_pessoa"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $representantes->id_pessoa->FldCaption() ?></span></button>
 </span>
 <?php echo $representantes->id_pessoa->CustomMsg ?></div></div>
-	</div>
-<?php } ?>
-<?php if ($representantes->comissao->Visible) { // comissao ?>
-	<div id="r_comissao" class="form-group">
-		<label id="elh_representantes_comissao" for="x_comissao" class="<?php echo $representantes_add->LeftColumnClass ?>"><?php echo $representantes->comissao->FldCaption() ?></label>
-		<div class="<?php echo $representantes_add->RightColumnClass ?>"><div<?php echo $representantes->comissao->CellAttributes() ?>>
-<span id="el_representantes_comissao">
-<input type="text" data-table="representantes" data-field="x_comissao" name="x_comissao" id="x_comissao" size="30" placeholder="<?php echo ew_HtmlEncode($representantes->comissao->getPlaceHolder()) ?>" value="<?php echo $representantes->comissao->EditValue ?>"<?php echo $representantes->comissao->EditAttributes() ?>>
-</span>
-<?php echo $representantes->comissao->CustomMsg ?></div></div>
 	</div>
 <?php } ?>
 </div><!-- /page* -->

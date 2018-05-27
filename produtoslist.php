@@ -419,20 +419,9 @@ class cprodutos_list extends cprodutos {
 		$this->codigo_produto->SetVisibility();
 		$this->nome_produto->SetVisibility();
 		$this->modelo_produto->SetVisibility();
+		$this->id_departamento_produto->SetVisibility();
 		$this->id_marca_produto->SetVisibility();
-		$this->status_produto->SetVisibility();
-		$this->unidade_medida_produto->SetVisibility();
-		$this->unidades->SetVisibility();
-		$this->peso_produto->SetVisibility();
-		$this->data_adicionado->SetVisibility();
-		if ($this->IsAddOrEdit())
-			$this->data_adicionado->Visible = FALSE;
-		$this->hora_adicionado->SetVisibility();
-		if ($this->IsAddOrEdit())
-			$this->hora_adicionado->Visible = FALSE;
 		$this->preco_produto->SetVisibility();
-		$this->descricao->SetVisibility();
-		$this->ipi->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -771,6 +760,7 @@ class cprodutos_list extends cprodutos {
 		$sFilterList = ew_Concat($sFilterList, $this->codigo_produto->AdvancedSearch->ToJson(), ","); // Field codigo_produto
 		$sFilterList = ew_Concat($sFilterList, $this->nome_produto->AdvancedSearch->ToJson(), ","); // Field nome_produto
 		$sFilterList = ew_Concat($sFilterList, $this->modelo_produto->AdvancedSearch->ToJson(), ","); // Field modelo_produto
+		$sFilterList = ew_Concat($sFilterList, $this->id_departamento_produto->AdvancedSearch->ToJson(), ","); // Field id_departamento_produto
 		$sFilterList = ew_Concat($sFilterList, $this->id_marca_produto->AdvancedSearch->ToJson(), ","); // Field id_marca_produto
 		$sFilterList = ew_Concat($sFilterList, $this->status_produto->AdvancedSearch->ToJson(), ","); // Field status_produto
 		$sFilterList = ew_Concat($sFilterList, $this->unidade_medida_produto->AdvancedSearch->ToJson(), ","); // Field unidade_medida_produto
@@ -856,6 +846,14 @@ class cprodutos_list extends cprodutos {
 		$this->modelo_produto->AdvancedSearch->SearchValue2 = @$filter["y_modelo_produto"];
 		$this->modelo_produto->AdvancedSearch->SearchOperator2 = @$filter["w_modelo_produto"];
 		$this->modelo_produto->AdvancedSearch->Save();
+
+		// Field id_departamento_produto
+		$this->id_departamento_produto->AdvancedSearch->SearchValue = @$filter["x_id_departamento_produto"];
+		$this->id_departamento_produto->AdvancedSearch->SearchOperator = @$filter["z_id_departamento_produto"];
+		$this->id_departamento_produto->AdvancedSearch->SearchCondition = @$filter["v_id_departamento_produto"];
+		$this->id_departamento_produto->AdvancedSearch->SearchValue2 = @$filter["y_id_departamento_produto"];
+		$this->id_departamento_produto->AdvancedSearch->SearchOperator2 = @$filter["w_id_departamento_produto"];
+		$this->id_departamento_produto->AdvancedSearch->Save();
 
 		// Field id_marca_produto
 		$this->id_marca_produto->AdvancedSearch->SearchValue = @$filter["x_id_marca_produto"];
@@ -945,6 +943,7 @@ class cprodutos_list extends cprodutos {
 		$sWhere = "";
 		$this->BuildBasicSearchSQL($sWhere, $this->nome_produto, $arKeywords, $type);
 		$this->BuildBasicSearchSQL($sWhere, $this->modelo_produto, $arKeywords, $type);
+		$this->BuildBasicSearchSQL($sWhere, $this->id_departamento_produto, $arKeywords, $type);
 		$this->BuildBasicSearchSQL($sWhere, $this->unidade_medida_produto, $arKeywords, $type);
 		$this->BuildBasicSearchSQL($sWhere, $this->peso_produto, $arKeywords, $type);
 		$this->BuildBasicSearchSQL($sWhere, $this->descricao, $arKeywords, $type);
@@ -1097,16 +1096,9 @@ class cprodutos_list extends cprodutos {
 			$this->UpdateSort($this->codigo_produto); // codigo_produto
 			$this->UpdateSort($this->nome_produto); // nome_produto
 			$this->UpdateSort($this->modelo_produto); // modelo_produto
+			$this->UpdateSort($this->id_departamento_produto); // id_departamento_produto
 			$this->UpdateSort($this->id_marca_produto); // id_marca_produto
-			$this->UpdateSort($this->status_produto); // status_produto
-			$this->UpdateSort($this->unidade_medida_produto); // unidade_medida_produto
-			$this->UpdateSort($this->unidades); // unidades
-			$this->UpdateSort($this->peso_produto); // peso_produto
-			$this->UpdateSort($this->data_adicionado); // data_adicionado
-			$this->UpdateSort($this->hora_adicionado); // hora_adicionado
 			$this->UpdateSort($this->preco_produto); // preco_produto
-			$this->UpdateSort($this->descricao); // descricao
-			$this->UpdateSort($this->ipi); // ipi
 			$this->setStartRecordNumber(1); // Reset start position
 		}
 	}
@@ -1143,16 +1135,9 @@ class cprodutos_list extends cprodutos {
 				$this->codigo_produto->setSort("");
 				$this->nome_produto->setSort("");
 				$this->modelo_produto->setSort("");
+				$this->id_departamento_produto->setSort("");
 				$this->id_marca_produto->setSort("");
-				$this->status_produto->setSort("");
-				$this->unidade_medida_produto->setSort("");
-				$this->unidades->setSort("");
-				$this->peso_produto->setSort("");
-				$this->data_adicionado->setSort("");
-				$this->hora_adicionado->setSort("");
 				$this->preco_produto->setSort("");
-				$this->descricao->setSort("");
-				$this->ipi->setSort("");
 			}
 
 			// Reset start position
@@ -1168,37 +1153,31 @@ class cprodutos_list extends cprodutos {
 		// Add group option item
 		$item = &$this->ListOptions->Add($this->ListOptions->GroupOptionName);
 		$item->Body = "";
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 		$item->Visible = FALSE;
 
 		// "view"
 		$item = &$this->ListOptions->Add("view");
 		$item->CssClass = "text-nowrap";
 		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 
 		// "edit"
 		$item = &$this->ListOptions->Add("edit");
 		$item->CssClass = "text-nowrap";
 		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 
 		// "copy"
 		$item = &$this->ListOptions->Add("copy");
 		$item->CssClass = "text-nowrap";
 		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
-
-		// "delete"
-		$item = &$this->ListOptions->Add("delete");
-		$item->CssClass = "text-nowrap";
-		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 
 		// List actions
 		$item = &$this->ListOptions->Add("listactions");
 		$item->CssClass = "text-nowrap";
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 		$item->Visible = FALSE;
 		$item->ShowInButtonGroup = FALSE;
 		$item->ShowInDropDown = FALSE;
@@ -1206,8 +1185,9 @@ class cprodutos_list extends cprodutos {
 		// "checkbox"
 		$item = &$this->ListOptions->Add("checkbox");
 		$item->Visible = TRUE;
-		$item->OnLeft = FALSE;
+		$item->OnLeft = TRUE;
 		$item->Header = "<input type=\"checkbox\" name=\"key\" id=\"key\" onclick=\"ew_SelectAllKey(this);\">";
+		$item->MoveTo(0);
 		$item->ShowInDropDown = FALSE;
 		$item->ShowInButtonGroup = FALSE;
 
@@ -1262,13 +1242,6 @@ class cprodutos_list extends cprodutos {
 			$oListOpt->Body = "";
 		}
 
-		// "delete"
-		$oListOpt = &$this->ListOptions->Items["delete"];
-		if (TRUE)
-			$oListOpt->Body = "<a class=\"ewRowLink ewDelete\"" . "" . " title=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("DeleteLink")) . "\" href=\"" . ew_HtmlEncode($this->DeleteUrl) . "\">" . $Language->Phrase("DeleteLink") . "</a>";
-		else
-			$oListOpt->Body = "";
-
 		// Set up list action buttons
 		$oListOpt = &$this->ListOptions->GetItem("listactions");
 		if ($oListOpt && $this->Export == "" && $this->CurrentAction == "") {
@@ -1319,6 +1292,11 @@ class cprodutos_list extends cprodutos {
 		$item->Body = "<a class=\"ewAddEdit ewAdd\" title=\"" . $addcaption . "\" data-caption=\"" . $addcaption . "\" href=\"" . ew_HtmlEncode($this->AddUrl) . "\">" . $Language->Phrase("AddLink") . "</a>";
 		$item->Visible = ($this->AddUrl <> "");
 		$option = $options["action"];
+
+		// Add multi delete
+		$item = &$option->Add("multidelete");
+		$item->Body = "<a class=\"ewAction ewMultiDelete\" title=\"" . ew_HtmlTitle($Language->Phrase("DeleteSelectedLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("DeleteSelectedLink")) . "\" href=\"\" onclick=\"ew_SubmitAction(event,{f:document.fprodutoslist,url:'" . $this->MultiDeleteUrl . "'});return false;\">" . $Language->Phrase("DeleteSelectedLink") . "</a>";
+		$item->Visible = (TRUE);
 
 		// Set up options default
 		foreach ($options as &$option) {
@@ -1493,6 +1471,9 @@ class cprodutos_list extends cprodutos {
 
 	function SetupListOptionsExt() {
 		global $Security, $Language;
+
+		// Hide detail items for dropdown if necessary
+		$this->ListOptions->HideDetailItemsForDropDown();
 	}
 
 	function RenderListOptionsExt() {
@@ -1708,9 +1689,6 @@ class cprodutos_list extends cprodutos {
 		// nome_produto
 		// modelo_produto
 		// id_departamento_produto
-
-		$this->id_departamento_produto->CellCssStyle = "white-space: nowrap;";
-
 		// id_marca_produto
 		// status_produto
 		// unidade_medida_produto
@@ -1739,6 +1717,29 @@ class cprodutos_list extends cprodutos {
 		// modelo_produto
 		$this->modelo_produto->ViewValue = $this->modelo_produto->CurrentValue;
 		$this->modelo_produto->ViewCustomAttributes = "";
+
+		// id_departamento_produto
+		if (strval($this->id_departamento_produto->CurrentValue) <> "") {
+			$sFilterWrk = "`id_categoria`" . ew_SearchString("=", $this->id_departamento_produto->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_categoria`, `categoria` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `categoria`";
+		$sWhereWrk = "";
+		$this->id_departamento_produto->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_departamento_produto, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_departamento_produto->ViewValue = $this->id_departamento_produto->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_departamento_produto->ViewValue = $this->id_departamento_produto->CurrentValue;
+			}
+		} else {
+			$this->id_departamento_produto->ViewValue = NULL;
+		}
+		$this->id_departamento_produto->ViewCustomAttributes = "";
 
 		// id_marca_produto
 		if (strval($this->id_marca_produto->CurrentValue) <> "") {
@@ -1795,6 +1796,7 @@ class cprodutos_list extends cprodutos {
 
 		// preco_produto
 		$this->preco_produto->ViewValue = $this->preco_produto->CurrentValue;
+		$this->preco_produto->ViewValue = ew_FormatCurrency($this->preco_produto->ViewValue, 2, -1, -1, -1);
 		$this->preco_produto->ViewCustomAttributes = "";
 
 		// descricao
@@ -1825,55 +1827,20 @@ class cprodutos_list extends cprodutos {
 			$this->modelo_produto->HrefValue = "";
 			$this->modelo_produto->TooltipValue = "";
 
+			// id_departamento_produto
+			$this->id_departamento_produto->LinkCustomAttributes = "";
+			$this->id_departamento_produto->HrefValue = "";
+			$this->id_departamento_produto->TooltipValue = "";
+
 			// id_marca_produto
 			$this->id_marca_produto->LinkCustomAttributes = "";
 			$this->id_marca_produto->HrefValue = "";
 			$this->id_marca_produto->TooltipValue = "";
 
-			// status_produto
-			$this->status_produto->LinkCustomAttributes = "";
-			$this->status_produto->HrefValue = "";
-			$this->status_produto->TooltipValue = "";
-
-			// unidade_medida_produto
-			$this->unidade_medida_produto->LinkCustomAttributes = "";
-			$this->unidade_medida_produto->HrefValue = "";
-			$this->unidade_medida_produto->TooltipValue = "";
-
-			// unidades
-			$this->unidades->LinkCustomAttributes = "";
-			$this->unidades->HrefValue = "";
-			$this->unidades->TooltipValue = "";
-
-			// peso_produto
-			$this->peso_produto->LinkCustomAttributes = "";
-			$this->peso_produto->HrefValue = "";
-			$this->peso_produto->TooltipValue = "";
-
-			// data_adicionado
-			$this->data_adicionado->LinkCustomAttributes = "";
-			$this->data_adicionado->HrefValue = "";
-			$this->data_adicionado->TooltipValue = "";
-
-			// hora_adicionado
-			$this->hora_adicionado->LinkCustomAttributes = "";
-			$this->hora_adicionado->HrefValue = "";
-			$this->hora_adicionado->TooltipValue = "";
-
 			// preco_produto
 			$this->preco_produto->LinkCustomAttributes = "";
 			$this->preco_produto->HrefValue = "";
 			$this->preco_produto->TooltipValue = "";
-
-			// descricao
-			$this->descricao->LinkCustomAttributes = "";
-			$this->descricao->HrefValue = "";
-			$this->descricao->TooltipValue = "";
-
-			// ipi
-			$this->ipi->LinkCustomAttributes = "";
-			$this->ipi->HrefValue = "";
-			$this->ipi->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -2227,13 +2194,35 @@ fprodutoslist.Form_CustomValidate =
 fprodutoslist.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
+fprodutoslist.Lists["x_id_departamento_produto"] = {"LinkField":"x_id_categoria","Ajax":true,"AutoFill":false,"DisplayFields":["x_categoria","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"categoria"};
+fprodutoslist.Lists["x_id_departamento_produto"].Data = "<?php echo $produtos_list->id_departamento_produto->LookupFilterQuery(FALSE, "list") ?>";
 fprodutoslist.Lists["x_id_marca_produto"] = {"LinkField":"x_id_marca","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_marca","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"marcas"};
 fprodutoslist.Lists["x_id_marca_produto"].Data = "<?php echo $produtos_list->id_marca_produto->LookupFilterQuery(FALSE, "list") ?>";
-fprodutoslist.Lists["x_status_produto"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
-fprodutoslist.Lists["x_status_produto"].Options = <?php echo json_encode($produtos_list->status_produto->Options()) ?>;
 
 // Form object for search
 var CurrentSearchForm = fprodutoslistsrch = new ew_Form("fprodutoslistsrch");
+</script>
+<style type="text/css">
+.ewTablePreviewRow { /* main table preview row color */
+	background-color: #FFFFFF; /* preview row color */
+}
+.ewTablePreviewRow .ewGrid {
+	display: table;
+}
+</style>
+<div id="ewPreview" class="d-none"><!-- preview -->
+	<div class="nav-tabs-custom"><!-- .nav-tabs-custom -->
+		<ul class="nav nav-tabs" role="tablist"></ul>
+		<div class="tab-content"><!-- .tab-content -->
+			<div class="tab-pane fade"></div>
+		</div><!-- /.tab-content -->
+	</div><!-- /.nav-tabs-custom -->
+</div><!-- /preview -->
+<script type="text/javascript" src="phpjs/ewpreview.js"></script>
+<script type="text/javascript">
+var EW_PREVIEW_PLACEMENT = EW_CSS_FLIP ? "left" : "right";
+var EW_PREVIEW_SINGLE_ROW = false;
+var EW_PREVIEW_OVERLAY = false;
 </script>
 <script type="text/javascript">
 
@@ -2313,6 +2302,66 @@ $produtos_list->ShowMessage();
 ?>
 <?php if ($produtos_list->TotalRecs > 0 || $produtos->CurrentAction <> "") { ?>
 <div class="box ewBox ewGrid<?php if ($produtos_list->IsAddOrEdit()) { ?> ewGridAddEdit<?php } ?> produtos">
+<?php if ($produtos->Export == "") { ?>
+<div class="box-header ewGridUpperPanel">
+<?php if ($produtos->CurrentAction <> "gridadd" && $produtos->CurrentAction <> "gridedit") { ?>
+<form name="ewPagerForm" class="form-inline ewForm ewPagerForm" action="<?php echo ew_CurrentPage() ?>">
+<?php if (!isset($produtos_list->Pager)) $produtos_list->Pager = new cPrevNextPager($produtos_list->StartRec, $produtos_list->DisplayRecs, $produtos_list->TotalRecs, $produtos_list->AutoHidePager) ?>
+<?php if ($produtos_list->Pager->RecordCount > 0 && $produtos_list->Pager->Visible) { ?>
+<div class="ewPager">
+<span><?php echo $Language->Phrase("Page") ?>&nbsp;</span>
+<div class="ewPrevNext"><div class="input-group">
+<div class="input-group-btn">
+<!--first page button-->
+	<?php if ($produtos_list->Pager->FirstButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerFirst") ?>" href="<?php echo $produtos_list->PageUrl() ?>start=<?php echo $produtos_list->Pager->FirstButton->Start ?>"><span class="icon-first ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerFirst") ?>"><span class="icon-first ewIcon"></span></a>
+	<?php } ?>
+<!--previous page button-->
+	<?php if ($produtos_list->Pager->PrevButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerPrevious") ?>" href="<?php echo $produtos_list->PageUrl() ?>start=<?php echo $produtos_list->Pager->PrevButton->Start ?>"><span class="icon-prev ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerPrevious") ?>"><span class="icon-prev ewIcon"></span></a>
+	<?php } ?>
+</div>
+<!--current page number-->
+	<input class="form-control input-sm" type="text" name="<?php echo EW_TABLE_PAGE_NO ?>" value="<?php echo $produtos_list->Pager->CurrentPage ?>">
+<div class="input-group-btn">
+<!--next page button-->
+	<?php if ($produtos_list->Pager->NextButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerNext") ?>" href="<?php echo $produtos_list->PageUrl() ?>start=<?php echo $produtos_list->Pager->NextButton->Start ?>"><span class="icon-next ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerNext") ?>"><span class="icon-next ewIcon"></span></a>
+	<?php } ?>
+<!--last page button-->
+	<?php if ($produtos_list->Pager->LastButton->Enabled) { ?>
+	<a class="btn btn-default btn-sm" title="<?php echo $Language->Phrase("PagerLast") ?>" href="<?php echo $produtos_list->PageUrl() ?>start=<?php echo $produtos_list->Pager->LastButton->Start ?>"><span class="icon-last ewIcon"></span></a>
+	<?php } else { ?>
+	<a class="btn btn-default btn-sm disabled" title="<?php echo $Language->Phrase("PagerLast") ?>"><span class="icon-last ewIcon"></span></a>
+	<?php } ?>
+</div>
+</div>
+</div>
+<span>&nbsp;<?php echo $Language->Phrase("of") ?>&nbsp;<?php echo $produtos_list->Pager->PageCount ?></span>
+</div>
+<?php } ?>
+<?php if ($produtos_list->Pager->RecordCount > 0) { ?>
+<div class="ewPager ewRec">
+	<span><?php echo $Language->Phrase("Record") ?>&nbsp;<?php echo $produtos_list->Pager->FromIndex ?>&nbsp;<?php echo $Language->Phrase("To") ?>&nbsp;<?php echo $produtos_list->Pager->ToIndex ?>&nbsp;<?php echo $Language->Phrase("Of") ?>&nbsp;<?php echo $produtos_list->Pager->RecordCount ?></span>
+</div>
+<?php } ?>
+</form>
+<?php } ?>
+<div class="ewListOtherOptions">
+<?php
+	foreach ($produtos_list->OtherOptions as &$option)
+		$option->Render("body");
+?>
+</div>
+<div class="clearfix"></div>
+</div>
+<?php } ?>
 <form name="fprodutoslist" id="fprodutoslist" class="form-inline ewForm ewListForm" action="<?php echo ew_CurrentPage() ?>" method="post">
 <?php if ($produtos_list->CheckToken) { ?>
 <input type="hidden" name="<?php echo EW_TOKEN_NAME ?>" value="<?php echo $produtos_list->Token ?>">
@@ -2371,6 +2420,15 @@ $produtos_list->ListOptions->Render("header", "left");
 		</div></div></th>
 	<?php } ?>
 <?php } ?>
+<?php if ($produtos->id_departamento_produto->Visible) { // id_departamento_produto ?>
+	<?php if ($produtos->SortUrl($produtos->id_departamento_produto) == "") { ?>
+		<th data-name="id_departamento_produto" class="<?php echo $produtos->id_departamento_produto->HeaderCellClass() ?>"><div id="elh_produtos_id_departamento_produto" class="produtos_id_departamento_produto"><div class="ewTableHeaderCaption"><?php echo $produtos->id_departamento_produto->FldCaption() ?></div></div></th>
+	<?php } else { ?>
+		<th data-name="id_departamento_produto" class="<?php echo $produtos->id_departamento_produto->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $produtos->SortUrl($produtos->id_departamento_produto) ?>',1);"><div id="elh_produtos_id_departamento_produto" class="produtos_id_departamento_produto">
+			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $produtos->id_departamento_produto->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($produtos->id_departamento_produto->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($produtos->id_departamento_produto->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
+		</div></div></th>
+	<?php } ?>
+<?php } ?>
 <?php if ($produtos->id_marca_produto->Visible) { // id_marca_produto ?>
 	<?php if ($produtos->SortUrl($produtos->id_marca_produto) == "") { ?>
 		<th data-name="id_marca_produto" class="<?php echo $produtos->id_marca_produto->HeaderCellClass() ?>"><div id="elh_produtos_id_marca_produto" class="produtos_id_marca_produto"><div class="ewTableHeaderCaption"><?php echo $produtos->id_marca_produto->FldCaption() ?></div></div></th>
@@ -2380,84 +2438,12 @@ $produtos_list->ListOptions->Render("header", "left");
 		</div></div></th>
 	<?php } ?>
 <?php } ?>
-<?php if ($produtos->status_produto->Visible) { // status_produto ?>
-	<?php if ($produtos->SortUrl($produtos->status_produto) == "") { ?>
-		<th data-name="status_produto" class="<?php echo $produtos->status_produto->HeaderCellClass() ?>"><div id="elh_produtos_status_produto" class="produtos_status_produto"><div class="ewTableHeaderCaption"><?php echo $produtos->status_produto->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="status_produto" class="<?php echo $produtos->status_produto->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $produtos->SortUrl($produtos->status_produto) ?>',1);"><div id="elh_produtos_status_produto" class="produtos_status_produto">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $produtos->status_produto->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($produtos->status_produto->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($produtos->status_produto->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($produtos->unidade_medida_produto->Visible) { // unidade_medida_produto ?>
-	<?php if ($produtos->SortUrl($produtos->unidade_medida_produto) == "") { ?>
-		<th data-name="unidade_medida_produto" class="<?php echo $produtos->unidade_medida_produto->HeaderCellClass() ?>"><div id="elh_produtos_unidade_medida_produto" class="produtos_unidade_medida_produto"><div class="ewTableHeaderCaption"><?php echo $produtos->unidade_medida_produto->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="unidade_medida_produto" class="<?php echo $produtos->unidade_medida_produto->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $produtos->SortUrl($produtos->unidade_medida_produto) ?>',1);"><div id="elh_produtos_unidade_medida_produto" class="produtos_unidade_medida_produto">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $produtos->unidade_medida_produto->FldCaption() ?><?php echo $Language->Phrase("SrchLegend") ?></span><span class="ewTableHeaderSort"><?php if ($produtos->unidade_medida_produto->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($produtos->unidade_medida_produto->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($produtos->unidades->Visible) { // unidades ?>
-	<?php if ($produtos->SortUrl($produtos->unidades) == "") { ?>
-		<th data-name="unidades" class="<?php echo $produtos->unidades->HeaderCellClass() ?>"><div id="elh_produtos_unidades" class="produtos_unidades"><div class="ewTableHeaderCaption"><?php echo $produtos->unidades->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="unidades" class="<?php echo $produtos->unidades->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $produtos->SortUrl($produtos->unidades) ?>',1);"><div id="elh_produtos_unidades" class="produtos_unidades">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $produtos->unidades->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($produtos->unidades->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($produtos->unidades->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($produtos->peso_produto->Visible) { // peso_produto ?>
-	<?php if ($produtos->SortUrl($produtos->peso_produto) == "") { ?>
-		<th data-name="peso_produto" class="<?php echo $produtos->peso_produto->HeaderCellClass() ?>"><div id="elh_produtos_peso_produto" class="produtos_peso_produto"><div class="ewTableHeaderCaption"><?php echo $produtos->peso_produto->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="peso_produto" class="<?php echo $produtos->peso_produto->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $produtos->SortUrl($produtos->peso_produto) ?>',1);"><div id="elh_produtos_peso_produto" class="produtos_peso_produto">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $produtos->peso_produto->FldCaption() ?><?php echo $Language->Phrase("SrchLegend") ?></span><span class="ewTableHeaderSort"><?php if ($produtos->peso_produto->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($produtos->peso_produto->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($produtos->data_adicionado->Visible) { // data_adicionado ?>
-	<?php if ($produtos->SortUrl($produtos->data_adicionado) == "") { ?>
-		<th data-name="data_adicionado" class="<?php echo $produtos->data_adicionado->HeaderCellClass() ?>"><div id="elh_produtos_data_adicionado" class="produtos_data_adicionado"><div class="ewTableHeaderCaption"><?php echo $produtos->data_adicionado->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="data_adicionado" class="<?php echo $produtos->data_adicionado->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $produtos->SortUrl($produtos->data_adicionado) ?>',1);"><div id="elh_produtos_data_adicionado" class="produtos_data_adicionado">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $produtos->data_adicionado->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($produtos->data_adicionado->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($produtos->data_adicionado->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($produtos->hora_adicionado->Visible) { // hora_adicionado ?>
-	<?php if ($produtos->SortUrl($produtos->hora_adicionado) == "") { ?>
-		<th data-name="hora_adicionado" class="<?php echo $produtos->hora_adicionado->HeaderCellClass() ?>"><div id="elh_produtos_hora_adicionado" class="produtos_hora_adicionado"><div class="ewTableHeaderCaption"><?php echo $produtos->hora_adicionado->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="hora_adicionado" class="<?php echo $produtos->hora_adicionado->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $produtos->SortUrl($produtos->hora_adicionado) ?>',1);"><div id="elh_produtos_hora_adicionado" class="produtos_hora_adicionado">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $produtos->hora_adicionado->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($produtos->hora_adicionado->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($produtos->hora_adicionado->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
 <?php if ($produtos->preco_produto->Visible) { // preco_produto ?>
 	<?php if ($produtos->SortUrl($produtos->preco_produto) == "") { ?>
 		<th data-name="preco_produto" class="<?php echo $produtos->preco_produto->HeaderCellClass() ?>"><div id="elh_produtos_preco_produto" class="produtos_preco_produto"><div class="ewTableHeaderCaption"><?php echo $produtos->preco_produto->FldCaption() ?></div></div></th>
 	<?php } else { ?>
 		<th data-name="preco_produto" class="<?php echo $produtos->preco_produto->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $produtos->SortUrl($produtos->preco_produto) ?>',1);"><div id="elh_produtos_preco_produto" class="produtos_preco_produto">
 			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $produtos->preco_produto->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($produtos->preco_produto->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($produtos->preco_produto->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($produtos->descricao->Visible) { // descricao ?>
-	<?php if ($produtos->SortUrl($produtos->descricao) == "") { ?>
-		<th data-name="descricao" class="<?php echo $produtos->descricao->HeaderCellClass() ?>"><div id="elh_produtos_descricao" class="produtos_descricao"><div class="ewTableHeaderCaption"><?php echo $produtos->descricao->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="descricao" class="<?php echo $produtos->descricao->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $produtos->SortUrl($produtos->descricao) ?>',1);"><div id="elh_produtos_descricao" class="produtos_descricao">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $produtos->descricao->FldCaption() ?><?php echo $Language->Phrase("SrchLegend") ?></span><span class="ewTableHeaderSort"><?php if ($produtos->descricao->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($produtos->descricao->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
-		</div></div></th>
-	<?php } ?>
-<?php } ?>
-<?php if ($produtos->ipi->Visible) { // ipi ?>
-	<?php if ($produtos->SortUrl($produtos->ipi) == "") { ?>
-		<th data-name="ipi" class="<?php echo $produtos->ipi->HeaderCellClass() ?>"><div id="elh_produtos_ipi" class="produtos_ipi"><div class="ewTableHeaderCaption"><?php echo $produtos->ipi->FldCaption() ?></div></div></th>
-	<?php } else { ?>
-		<th data-name="ipi" class="<?php echo $produtos->ipi->HeaderCellClass() ?>"><div class="ewPointer" onclick="ew_Sort(event,'<?php echo $produtos->SortUrl($produtos->ipi) ?>',1);"><div id="elh_produtos_ipi" class="produtos_ipi">
-			<div class="ewTableHeaderBtn"><span class="ewTableHeaderCaption"><?php echo $produtos->ipi->FldCaption() ?></span><span class="ewTableHeaderSort"><?php if ($produtos->ipi->getSort() == "ASC") { ?><span class="caret ewSortUp"></span><?php } elseif ($produtos->ipi->getSort() == "DESC") { ?><span class="caret"></span><?php } ?></span></div>
 		</div></div></th>
 	<?php } ?>
 <?php } ?>
@@ -2558,6 +2544,14 @@ $produtos_list->ListOptions->Render("body", "left", $produtos_list->RowCnt);
 </span>
 </td>
 	<?php } ?>
+	<?php if ($produtos->id_departamento_produto->Visible) { // id_departamento_produto ?>
+		<td data-name="id_departamento_produto"<?php echo $produtos->id_departamento_produto->CellAttributes() ?>>
+<span id="el<?php echo $produtos_list->RowCnt ?>_produtos_id_departamento_produto" class="produtos_id_departamento_produto">
+<span<?php echo $produtos->id_departamento_produto->ViewAttributes() ?>>
+<?php echo $produtos->id_departamento_produto->ListViewValue() ?></span>
+</span>
+</td>
+	<?php } ?>
 	<?php if ($produtos->id_marca_produto->Visible) { // id_marca_produto ?>
 		<td data-name="id_marca_produto"<?php echo $produtos->id_marca_produto->CellAttributes() ?>>
 <span id="el<?php echo $produtos_list->RowCnt ?>_produtos_id_marca_produto" class="produtos_id_marca_produto">
@@ -2566,75 +2560,11 @@ $produtos_list->ListOptions->Render("body", "left", $produtos_list->RowCnt);
 </span>
 </td>
 	<?php } ?>
-	<?php if ($produtos->status_produto->Visible) { // status_produto ?>
-		<td data-name="status_produto"<?php echo $produtos->status_produto->CellAttributes() ?>>
-<span id="el<?php echo $produtos_list->RowCnt ?>_produtos_status_produto" class="produtos_status_produto">
-<span<?php echo $produtos->status_produto->ViewAttributes() ?>>
-<?php echo $produtos->status_produto->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($produtos->unidade_medida_produto->Visible) { // unidade_medida_produto ?>
-		<td data-name="unidade_medida_produto"<?php echo $produtos->unidade_medida_produto->CellAttributes() ?>>
-<span id="el<?php echo $produtos_list->RowCnt ?>_produtos_unidade_medida_produto" class="produtos_unidade_medida_produto">
-<span<?php echo $produtos->unidade_medida_produto->ViewAttributes() ?>>
-<?php echo $produtos->unidade_medida_produto->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($produtos->unidades->Visible) { // unidades ?>
-		<td data-name="unidades"<?php echo $produtos->unidades->CellAttributes() ?>>
-<span id="el<?php echo $produtos_list->RowCnt ?>_produtos_unidades" class="produtos_unidades">
-<span<?php echo $produtos->unidades->ViewAttributes() ?>>
-<?php echo $produtos->unidades->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($produtos->peso_produto->Visible) { // peso_produto ?>
-		<td data-name="peso_produto"<?php echo $produtos->peso_produto->CellAttributes() ?>>
-<span id="el<?php echo $produtos_list->RowCnt ?>_produtos_peso_produto" class="produtos_peso_produto">
-<span<?php echo $produtos->peso_produto->ViewAttributes() ?>>
-<?php echo $produtos->peso_produto->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($produtos->data_adicionado->Visible) { // data_adicionado ?>
-		<td data-name="data_adicionado"<?php echo $produtos->data_adicionado->CellAttributes() ?>>
-<span id="el<?php echo $produtos_list->RowCnt ?>_produtos_data_adicionado" class="produtos_data_adicionado">
-<span<?php echo $produtos->data_adicionado->ViewAttributes() ?>>
-<?php echo $produtos->data_adicionado->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($produtos->hora_adicionado->Visible) { // hora_adicionado ?>
-		<td data-name="hora_adicionado"<?php echo $produtos->hora_adicionado->CellAttributes() ?>>
-<span id="el<?php echo $produtos_list->RowCnt ?>_produtos_hora_adicionado" class="produtos_hora_adicionado">
-<span<?php echo $produtos->hora_adicionado->ViewAttributes() ?>>
-<?php echo $produtos->hora_adicionado->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
 	<?php if ($produtos->preco_produto->Visible) { // preco_produto ?>
 		<td data-name="preco_produto"<?php echo $produtos->preco_produto->CellAttributes() ?>>
 <span id="el<?php echo $produtos_list->RowCnt ?>_produtos_preco_produto" class="produtos_preco_produto">
 <span<?php echo $produtos->preco_produto->ViewAttributes() ?>>
 <?php echo $produtos->preco_produto->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($produtos->descricao->Visible) { // descricao ?>
-		<td data-name="descricao"<?php echo $produtos->descricao->CellAttributes() ?>>
-<span id="el<?php echo $produtos_list->RowCnt ?>_produtos_descricao" class="produtos_descricao">
-<span<?php echo $produtos->descricao->ViewAttributes() ?>>
-<?php echo $produtos->descricao->ListViewValue() ?></span>
-</span>
-</td>
-	<?php } ?>
-	<?php if ($produtos->ipi->Visible) { // ipi ?>
-		<td data-name="ipi"<?php echo $produtos->ipi->CellAttributes() ?>>
-<span id="el<?php echo $produtos_list->RowCnt ?>_produtos_ipi" class="produtos_ipi">
-<span<?php echo $produtos->ipi->ViewAttributes() ?>>
-<?php echo $produtos->ipi->ListViewValue() ?></span>
 </span>
 </td>
 	<?php } ?>

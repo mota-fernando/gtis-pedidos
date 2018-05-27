@@ -679,7 +679,26 @@ class cprodutos_addopt extends cprodutos {
 		$this->modelo_produto->ViewCustomAttributes = "";
 
 		// id_departamento_produto
-		$this->id_departamento_produto->ViewValue = $this->id_departamento_produto->CurrentValue;
+		if (strval($this->id_departamento_produto->CurrentValue) <> "") {
+			$sFilterWrk = "`id_categoria`" . ew_SearchString("=", $this->id_departamento_produto->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_categoria`, `categoria` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `categoria`";
+		$sWhereWrk = "";
+		$this->id_departamento_produto->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_departamento_produto, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_departamento_produto->ViewValue = $this->id_departamento_produto->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_departamento_produto->ViewValue = $this->id_departamento_produto->CurrentValue;
+			}
+		} else {
+			$this->id_departamento_produto->ViewValue = NULL;
+		}
 		$this->id_departamento_produto->ViewCustomAttributes = "";
 
 		// id_marca_produto
@@ -737,6 +756,7 @@ class cprodutos_addopt extends cprodutos {
 
 		// preco_produto
 		$this->preco_produto->ViewValue = $this->preco_produto->CurrentValue;
+		$this->preco_produto->ViewValue = ew_FormatCurrency($this->preco_produto->ViewValue, 2, -1, -1, -1);
 		$this->preco_produto->ViewCustomAttributes = "";
 
 		// descricao
@@ -829,8 +849,21 @@ class cprodutos_addopt extends cprodutos {
 			// id_departamento_produto
 			$this->id_departamento_produto->EditAttrs["class"] = "form-control";
 			$this->id_departamento_produto->EditCustomAttributes = "";
-			$this->id_departamento_produto->EditValue = ew_HtmlEncode($this->id_departamento_produto->CurrentValue);
-			$this->id_departamento_produto->PlaceHolder = ew_RemoveHtml($this->id_departamento_produto->FldCaption());
+			if (trim(strval($this->id_departamento_produto->CurrentValue)) == "") {
+				$sFilterWrk = "0=1";
+			} else {
+				$sFilterWrk = "`id_categoria`" . ew_SearchString("=", $this->id_departamento_produto->CurrentValue, EW_DATATYPE_NUMBER, "");
+			}
+			$sSqlWrk = "SELECT `id_categoria`, `categoria` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `categoria`";
+			$sWhereWrk = "";
+			$this->id_departamento_produto->LookupFilters = array();
+			ew_AddFilter($sWhereWrk, $sFilterWrk);
+			$this->Lookup_Selecting($this->id_departamento_produto, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			$arwrk = ($rswrk) ? $rswrk->GetRows() : array();
+			if ($rswrk) $rswrk->Close();
+			$this->id_departamento_produto->EditValue = $arwrk;
 
 			// id_marca_produto
 			$this->id_marca_produto->EditAttrs["class"] = "form-control";
@@ -878,7 +911,7 @@ class cprodutos_addopt extends cprodutos {
 			$this->preco_produto->EditCustomAttributes = "";
 			$this->preco_produto->EditValue = ew_HtmlEncode($this->preco_produto->CurrentValue);
 			$this->preco_produto->PlaceHolder = ew_RemoveHtml($this->preco_produto->FldCaption());
-			if (strval($this->preco_produto->EditValue) <> "" && is_numeric($this->preco_produto->EditValue)) $this->preco_produto->EditValue = ew_FormatNumber($this->preco_produto->EditValue, -2, -1, -2, 0);
+			if (strval($this->preco_produto->EditValue) <> "" && is_numeric($this->preco_produto->EditValue)) $this->preco_produto->EditValue = ew_FormatNumber($this->preco_produto->EditValue, -2, -1, -2, -1);
 
 			// descricao
 			$this->descricao->EditAttrs["class"] = "form-control";
@@ -962,9 +995,6 @@ class cprodutos_addopt extends cprodutos {
 			return ($gsFormError == "");
 		if (!ew_CheckInteger($this->codigo_produto->FormValue)) {
 			ew_AddMessage($gsFormError, $this->codigo_produto->FldErrMsg());
-		}
-		if (!ew_CheckInteger($this->id_departamento_produto->FormValue)) {
-			ew_AddMessage($gsFormError, $this->id_departamento_produto->FldErrMsg());
 		}
 		if (!$this->unidades->FldIsDetailKey && !is_null($this->unidades->FormValue) && $this->unidades->FormValue == "") {
 			ew_AddMessage($gsFormError, str_replace("%s", $this->unidades->FldCaption(), $this->unidades->ReqErrMsg));
@@ -1083,6 +1113,18 @@ class cprodutos_addopt extends cprodutos {
 		global $gsLanguage;
 		$pageId = $pageId ?: $this->PageID;
 		switch ($fld->FldVar) {
+		case "x_id_departamento_produto":
+			$sSqlWrk = "";
+			$sSqlWrk = "SELECT `id_categoria` AS `LinkFld`, `categoria` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `categoria`";
+			$sWhereWrk = "";
+			$fld->LookupFilters = array();
+			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`id_categoria` IN ({filter_value})', "t0" => "3", "fn0" => "");
+			$sSqlWrk = "";
+			$this->Lookup_Selecting($this->id_departamento_produto, $sWhereWrk); // Call Lookup Selecting
+			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			if ($sSqlWrk <> "")
+				$fld->LookupFilters["s"] .= $sSqlWrk;
+			break;
 		case "x_id_marca_produto":
 			$sSqlWrk = "";
 			$sSqlWrk = "SELECT `id_marca` AS `LinkFld`, `nome_marca` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `marcas`";
@@ -1217,9 +1259,6 @@ fprodutosaddopt.Validate = function() {
 			elm = this.GetElements("x" + infix + "_codigo_produto");
 			if (elm && !ew_CheckInteger(elm.value))
 				return this.OnError(elm, "<?php echo ew_JsEncode2($produtos->codigo_produto->FldErrMsg()) ?>");
-			elm = this.GetElements("x" + infix + "_id_departamento_produto");
-			if (elm && !ew_CheckInteger(elm.value))
-				return this.OnError(elm, "<?php echo ew_JsEncode2($produtos->id_departamento_produto->FldErrMsg()) ?>");
 			elm = this.GetElements("x" + infix + "_unidades");
 			if (elm && !ew_IsHidden(elm) && !ew_HasValue(elm))
 				return this.OnError(elm, "<?php echo ew_JsEncode2(str_replace("%s", $produtos->unidades->FldCaption(), $produtos->unidades->ReqErrMsg)) ?>");
@@ -1252,6 +1291,8 @@ fprodutosaddopt.Form_CustomValidate =
 fprodutosaddopt.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
+fprodutosaddopt.Lists["x_id_departamento_produto"] = {"LinkField":"x_id_categoria","Ajax":true,"AutoFill":false,"DisplayFields":["x_categoria","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"categoria"};
+fprodutosaddopt.Lists["x_id_departamento_produto"].Data = "<?php echo $produtos_addopt->id_departamento_produto->LookupFilterQuery(FALSE, "addopt") ?>";
 fprodutosaddopt.Lists["x_id_marca_produto"] = {"LinkField":"x_id_marca","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_marca","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"marcas"};
 fprodutosaddopt.Lists["x_id_marca_produto"].Data = "<?php echo $produtos_addopt->id_marca_produto->LookupFilterQuery(FALSE, "addopt") ?>";
 fprodutosaddopt.Lists["x_status_produto"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
@@ -1300,7 +1341,9 @@ $produtos_addopt->ShowMessage();
 	<div class="form-group">
 		<label class="col-sm-2 control-label ewLabel" for="x_id_departamento_produto"><?php echo $produtos->id_departamento_produto->FldCaption() ?></label>
 		<div class="col-sm-10">
-<input type="text" data-table="produtos" data-field="x_id_departamento_produto" name="x_id_departamento_produto" id="x_id_departamento_produto" size="30" placeholder="<?php echo ew_HtmlEncode($produtos->id_departamento_produto->getPlaceHolder()) ?>" value="<?php echo $produtos->id_departamento_produto->EditValue ?>"<?php echo $produtos->id_departamento_produto->EditAttributes() ?>>
+<select data-table="produtos" data-field="x_id_departamento_produto" data-value-separator="<?php echo $produtos->id_departamento_produto->DisplayValueSeparatorAttribute() ?>" id="x_id_departamento_produto" name="x_id_departamento_produto"<?php echo $produtos->id_departamento_produto->EditAttributes() ?>>
+<?php echo $produtos->id_departamento_produto->SelectOptionListHtml("x_id_departamento_produto") ?>
+</select>
 </div>
 	</div>
 <?php } ?>

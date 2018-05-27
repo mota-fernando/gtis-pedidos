@@ -284,7 +284,6 @@ class crepresentantes_delete extends crepresentantes {
 		if ($this->IsAdd() || $this->IsCopy() || $this->IsGridAdd())
 			$this->id_representantes->Visible = FALSE;
 		$this->id_pessoa->SetVisibility();
-		$this->comissao->SetVisibility();
 
 		// Global Page Loading event (in userfn*.php)
 		Page_Loading();
@@ -417,7 +416,7 @@ class crepresentantes_delete extends crepresentantes {
 		if ($this->UseSelectLimit) {
 			$conn->raiseErrorFn = $GLOBALS["EW_ERROR_FN"];
 			if ($dbtype == "MSSQL") {
-				$rs = $conn->SelectLimit($sSql, $rowcnt, $offset, array("_hasOrderBy" => trim($this->getOrderBy()) || trim($this->getSessionOrderBy())));
+				$rs = $conn->SelectLimit($sSql, $rowcnt, $offset, array("_hasOrderBy" => trim($this->getOrderBy()) || trim($this->getSessionOrderByList())));
 			} else {
 				$rs = $conn->SelectLimit($sSql, $rowcnt, $offset);
 			}
@@ -466,6 +465,11 @@ class crepresentantes_delete extends crepresentantes {
 			return;
 		$this->id_representantes->setDbValue($row['id_representantes']);
 		$this->id_pessoa->setDbValue($row['id_pessoa']);
+		if (array_key_exists('EV__id_pessoa', $rs->fields)) {
+			$this->id_pessoa->VirtualValue = $rs->fields('EV__id_pessoa'); // Set up virtual field value
+		} else {
+			$this->id_pessoa->VirtualValue = ""; // Clear value
+		}
 		$this->comissao->setDbValue($row['comissao']);
 	}
 
@@ -502,6 +506,7 @@ class crepresentantes_delete extends crepresentantes {
 		// id_pessoa
 		// comissao
 
+		$this->comissao->CellCssStyle = "white-space: nowrap;";
 		if ($this->RowType == EW_ROWTYPE_VIEW) { // View row
 
 		// id_representantes
@@ -509,12 +514,31 @@ class crepresentantes_delete extends crepresentantes {
 		$this->id_representantes->ViewCustomAttributes = "";
 
 		// id_pessoa
-		$this->id_pessoa->ViewValue = $this->id_pessoa->CurrentValue;
+		if ($this->id_pessoa->VirtualValue <> "") {
+			$this->id_pessoa->ViewValue = $this->id_pessoa->VirtualValue;
+		} else {
+		if (strval($this->id_pessoa->CurrentValue) <> "") {
+			$sFilterWrk = "`id_pessoa`" . ew_SearchString("=", $this->id_pessoa->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_pessoa`, `nome_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `pessoa_fisica`";
+		$sWhereWrk = "";
+		$this->id_pessoa->LookupFilters = array();
+		ew_AddFilter($sWhereWrk, $sFilterWrk);
+		$this->Lookup_Selecting($this->id_pessoa, $sWhereWrk); // Call Lookup Selecting
+		if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
+			$rswrk = Conn()->Execute($sSqlWrk);
+			if ($rswrk && !$rswrk->EOF) { // Lookup values found
+				$arwrk = array();
+				$arwrk[1] = $rswrk->fields('DispFld');
+				$this->id_pessoa->ViewValue = $this->id_pessoa->DisplayValue($arwrk);
+				$rswrk->Close();
+			} else {
+				$this->id_pessoa->ViewValue = $this->id_pessoa->CurrentValue;
+			}
+		} else {
+			$this->id_pessoa->ViewValue = NULL;
+		}
+		}
 		$this->id_pessoa->ViewCustomAttributes = "";
-
-		// comissao
-		$this->comissao->ViewValue = $this->comissao->CurrentValue;
-		$this->comissao->ViewCustomAttributes = "";
 
 			// id_representantes
 			$this->id_representantes->LinkCustomAttributes = "";
@@ -525,11 +549,6 @@ class crepresentantes_delete extends crepresentantes {
 			$this->id_pessoa->LinkCustomAttributes = "";
 			$this->id_pessoa->HrefValue = "";
 			$this->id_pessoa->TooltipValue = "";
-
-			// comissao
-			$this->comissao->LinkCustomAttributes = "";
-			$this->comissao->HrefValue = "";
-			$this->comissao->TooltipValue = "";
 		}
 
 		// Call Row Rendered event
@@ -737,8 +756,10 @@ frepresentantesdelete.Form_CustomValidate =
 frepresentantesdelete.ValidateRequired = <?php echo json_encode(EW_CLIENT_VALIDATE) ?>;
 
 // Dynamic selection lists
-// Form object for search
+frepresentantesdelete.Lists["x_id_pessoa"] = {"LinkField":"x_id_pessoa","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_pessoa","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"pessoa_fisica"};
+frepresentantesdelete.Lists["x_id_pessoa"].Data = "<?php echo $representantes_delete->id_pessoa->LookupFilterQuery(FALSE, "delete") ?>";
 
+// Form object for search
 </script>
 <script type="text/javascript">
 
@@ -768,9 +789,6 @@ $representantes_delete->ShowMessage();
 <?php } ?>
 <?php if ($representantes->id_pessoa->Visible) { // id_pessoa ?>
 		<th class="<?php echo $representantes->id_pessoa->HeaderCellClass() ?>"><span id="elh_representantes_id_pessoa" class="representantes_id_pessoa"><?php echo $representantes->id_pessoa->FldCaption() ?></span></th>
-<?php } ?>
-<?php if ($representantes->comissao->Visible) { // comissao ?>
-		<th class="<?php echo $representantes->comissao->HeaderCellClass() ?>"><span id="elh_representantes_comissao" class="representantes_comissao"><?php echo $representantes->comissao->FldCaption() ?></span></th>
 <?php } ?>
 	</tr>
 	</thead>
@@ -806,14 +824,6 @@ while (!$representantes_delete->Recordset->EOF) {
 <span id="el<?php echo $representantes_delete->RowCnt ?>_representantes_id_pessoa" class="representantes_id_pessoa">
 <span<?php echo $representantes->id_pessoa->ViewAttributes() ?>>
 <?php echo $representantes->id_pessoa->ListViewValue() ?></span>
-</span>
-</td>
-<?php } ?>
-<?php if ($representantes->comissao->Visible) { // comissao ?>
-		<td<?php echo $representantes->comissao->CellAttributes() ?>>
-<span id="el<?php echo $representantes_delete->RowCnt ?>_representantes_comissao" class="representantes_comissao">
-<span<?php echo $representantes->comissao->ViewAttributes() ?>>
-<?php echo $representantes->comissao->ListViewValue() ?></span>
 </span>
 </td>
 <?php } ?>
