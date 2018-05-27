@@ -6,6 +6,7 @@ ob_start(); // Turn on output buffering
 <?php include_once ((EW_USE_ADODB) ? "adodb5/adodb.inc.php" : "ewmysql14.php") ?>
 <?php include_once "phpfn14.php" ?>
 <?php include_once "empresasinfo.php" ?>
+<?php include_once "tranportadorainfo.php" ?>
 <?php include_once "userfn14.php" ?>
 <?php
 
@@ -253,6 +254,9 @@ class cempresas_addopt extends cempresas {
 			$GLOBALS["empresas"] = &$this;
 			$GLOBALS["Table"] = &$GLOBALS["empresas"];
 		}
+
+		// Table object (tranportadora)
+		if (!isset($GLOBALS['tranportadora'])) $GLOBALS['tranportadora'] = new ctranportadora();
 
 		// Page ID
 		if (!defined("EW_PAGE_ID"))
@@ -1033,6 +1037,26 @@ class cempresas_addopt extends cempresas {
 	// Add record
 	function AddRow($rsold = NULL) {
 		global $Language, $Security;
+
+		// Check referential integrity for master table 'tranportadora'
+		$bValidMasterRecord = TRUE;
+		$sMasterFilter = $this->SqlMasterFilter_tranportadora();
+		if ($this->id_perfil->getSessionValue() <> "") {
+			$sMasterFilter = str_replace("@id_transportadora@", ew_AdjustSql($this->id_perfil->getSessionValue(), "DB"), $sMasterFilter);
+		} else {
+			$bValidMasterRecord = FALSE;
+		}
+		if ($bValidMasterRecord) {
+			if (!isset($GLOBALS["tranportadora"])) $GLOBALS["tranportadora"] = new ctranportadora();
+			$rsmaster = $GLOBALS["tranportadora"]->LoadRs($sMasterFilter);
+			$bValidMasterRecord = ($rsmaster && !$rsmaster->EOF);
+			$rsmaster->Close();
+		}
+		if (!$bValidMasterRecord) {
+			$sRelatedRecordMsg = str_replace("%t", "tranportadora", $Language->Phrase("RelatedRecordRequired"));
+			$this->setFailureMessage($sRelatedRecordMsg);
+			return FALSE;
+		}
 		$conn = &$this->Connection();
 
 		// Load db values from rsold
@@ -1080,7 +1104,9 @@ class cempresas_addopt extends cempresas {
 		// whatsapp
 		$this->whatsapp->SetDbValueDef($rsnew, $this->whatsapp->CurrentValue, NULL, FALSE);
 
+		// id_perfil
 		// Call Row Inserting event
+
 		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
 		$bInsertRow = $this->Row_Inserting($rs, $rsnew);
 		if ($bInsertRow) {

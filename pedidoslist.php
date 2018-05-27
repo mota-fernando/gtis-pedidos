@@ -303,7 +303,7 @@ class cpedidos_list extends cpedidos {
 		$this->ExportXmlUrl = $this->PageUrl() . "export=xml";
 		$this->ExportCsvUrl = $this->PageUrl() . "export=csv";
 		$this->ExportPdfUrl = $this->PageUrl() . "export=pdf";
-		$this->AddUrl = "pedidosadd.php?" . EW_TABLE_SHOW_DETAIL . "=detalhe_pedido";
+		$this->AddUrl = "pedidosadd.php?" . EW_TABLE_SHOW_DETAIL . "=";
 		$this->InlineAddUrl = $this->PageUrl() . "a=add";
 		$this->GridAddUrl = $this->PageUrl() . "a=gridadd";
 		$this->GridEditUrl = $this->PageUrl() . "a=gridedit";
@@ -1506,8 +1506,8 @@ class cpedidos_list extends cpedidos {
 
 		// id_transportadora
 		if (strval($this->id_transportadora->CurrentValue) <> "") {
-			$sFilterWrk = "`id_transportadora`" . ew_SearchString("=", $this->id_transportadora->CurrentValue, EW_DATATYPE_NUMBER, "");
-		$sSqlWrk = "SELECT `id_transportadora`, `transportadora` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `tranportadora`";
+			$sFilterWrk = "`id_empresa_transportadora`" . ew_SearchString("=", $this->id_transportadora->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_empresa_transportadora`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `transportadoras`";
 		$sWhereWrk = "";
 		$this->id_transportadora->LookupFilters = array();
 		ew_AddFilter($sWhereWrk, $sFilterWrk);
@@ -1548,6 +1548,7 @@ class cpedidos_list extends cpedidos {
 		} else {
 			$this->id_prazos->ViewValue = NULL;
 		}
+		$this->id_prazos->ViewValue = ew_FormatNumber($this->id_prazos->ViewValue, 0, -2, -2, -2);
 		$this->id_prazos->ViewCustomAttributes = "";
 
 		// comentarios
@@ -1556,8 +1557,8 @@ class cpedidos_list extends cpedidos {
 
 		// id_representante
 		if (strval($this->id_representante->CurrentValue) <> "") {
-			$sFilterWrk = "`id_representantes`" . ew_SearchString("=", $this->id_representante->CurrentValue, EW_DATATYPE_NUMBER, "");
-		$sSqlWrk = "SELECT `id_representantes`, `id_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `representantes`";
+			$sFilterWrk = "`id_pessoa`" . ew_SearchString("=", $this->id_representante->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_pessoa`, `nome_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `view1`";
 		$sWhereWrk = "";
 		$this->id_representante->LookupFilters = array();
 		ew_AddFilter($sWhereWrk, $sFilterWrk);

@@ -751,10 +751,6 @@ class cendereco_list extends cendereco {
 		// Initialize
 		$sFilterList = "";
 		$sSavedFilterList = "";
-
-		// Load server side filters
-		if (EW_SEARCH_FILTER_OPTION == "Server" && isset($UserProfile))
-			$sSavedFilterList = $UserProfile->GetSearchFilters(CurrentUserName(), "fenderecolistsrch");
 		$sFilterList = ew_Concat($sFilterList, $this->id_endereco->AdvancedSearch->ToJson(), ","); // Field id_endereco
 		$sFilterList = ew_Concat($sFilterList, $this->endereco->AdvancedSearch->ToJson(), ","); // Field endereco
 		$sFilterList = ew_Concat($sFilterList, $this->bairro->AdvancedSearch->ToJson(), ","); // Field bairro

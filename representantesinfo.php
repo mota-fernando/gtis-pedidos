@@ -112,6 +112,30 @@ class crepresentantes extends cTable {
 		$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_ORDER_BY_LIST] = $v;
 	}
 
+	// Current detail table name
+	function getCurrentDetailTable() {
+		return @$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_DETAIL_TABLE];
+	}
+
+	function setCurrentDetailTable($v) {
+		$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_DETAIL_TABLE] = $v;
+	}
+
+	// Get detail url
+	function GetDetailUrl() {
+
+		// Detail url
+		$sDetailUrl = "";
+		if ($this->getCurrentDetailTable() == "pessoa_fisica") {
+			$sDetailUrl = $GLOBALS["pessoa_fisica"]->GetListUrl() . "?" . EW_TABLE_SHOW_MASTER . "=" . $this->TableVar;
+			$sDetailUrl .= "&fk_id_representantes=" . urlencode($this->id_representantes->CurrentValue);
+		}
+		if ($sDetailUrl == "") {
+			$sDetailUrl = "representanteslist.php";
+		}
+		return $sDetailUrl;
+	}
+
 	// Table level SQL
 	var $_SqlFrom = "";
 
@@ -517,7 +541,10 @@ class crepresentantes extends cTable {
 
 	// Edit URL
 	function GetEditUrl($parm = "") {
-		$url = $this->KeyUrl("representantesedit.php", $this->UrlParm($parm));
+		if ($parm <> "")
+			$url = $this->KeyUrl("representantesedit.php", $this->UrlParm($parm));
+		else
+			$url = $this->KeyUrl("representantesedit.php", $this->UrlParm(EW_TABLE_SHOW_DETAIL . "="));
 		return $this->AddMasterUrl($url);
 	}
 
@@ -529,7 +556,10 @@ class crepresentantes extends cTable {
 
 	// Copy URL
 	function GetCopyUrl($parm = "") {
-		$url = $this->KeyUrl("representantesadd.php", $this->UrlParm($parm));
+		if ($parm <> "")
+			$url = $this->KeyUrl("representantesadd.php", $this->UrlParm($parm));
+		else
+			$url = $this->KeyUrl("representantesadd.php", $this->UrlParm(EW_TABLE_SHOW_DETAIL . "="));
 		return $this->AddMasterUrl($url);
 	}
 

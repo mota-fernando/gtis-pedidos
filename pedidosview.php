@@ -932,8 +932,8 @@ class cpedidos_view extends cpedidos {
 
 		// id_transportadora
 		if (strval($this->id_transportadora->CurrentValue) <> "") {
-			$sFilterWrk = "`id_transportadora`" . ew_SearchString("=", $this->id_transportadora->CurrentValue, EW_DATATYPE_NUMBER, "");
-		$sSqlWrk = "SELECT `id_transportadora`, `transportadora` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `tranportadora`";
+			$sFilterWrk = "`id_empresa_transportadora`" . ew_SearchString("=", $this->id_transportadora->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_empresa_transportadora`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `transportadoras`";
 		$sWhereWrk = "";
 		$this->id_transportadora->LookupFilters = array();
 		ew_AddFilter($sWhereWrk, $sFilterWrk);
@@ -974,6 +974,7 @@ class cpedidos_view extends cpedidos {
 		} else {
 			$this->id_prazos->ViewValue = NULL;
 		}
+		$this->id_prazos->ViewValue = ew_FormatNumber($this->id_prazos->ViewValue, 0, -2, -2, -2);
 		$this->id_prazos->ViewCustomAttributes = "";
 
 		// comentarios
@@ -982,8 +983,8 @@ class cpedidos_view extends cpedidos {
 
 		// id_representante
 		if (strval($this->id_representante->CurrentValue) <> "") {
-			$sFilterWrk = "`id_representantes`" . ew_SearchString("=", $this->id_representante->CurrentValue, EW_DATATYPE_NUMBER, "");
-		$sSqlWrk = "SELECT `id_representantes`, `id_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `representantes`";
+			$sFilterWrk = "`id_pessoa`" . ew_SearchString("=", $this->id_representante->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_pessoa`, `nome_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `view1`";
 		$sWhereWrk = "";
 		$this->id_representante->LookupFilters = array();
 		ew_AddFilter($sWhereWrk, $sFilterWrk);
@@ -1450,11 +1451,11 @@ fpedidosview.Lists["x_tipo_pedido"] = {"LinkField":"","Ajax":null,"AutoFill":fal
 fpedidosview.Lists["x_tipo_pedido"].Options = <?php echo json_encode($pedidos_view->tipo_pedido->Options()) ?>;
 fpedidosview.Lists["x_id_fornecedor"] = {"LinkField":"x_id_perfil","Ajax":true,"AutoFill":false,"DisplayFields":["x_razao_social","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"empresas"};
 fpedidosview.Lists["x_id_fornecedor"].Data = "<?php echo $pedidos_view->id_fornecedor->LookupFilterQuery(FALSE, "view") ?>";
-fpedidosview.Lists["x_id_transportadora"] = {"LinkField":"x_id_transportadora","Ajax":true,"AutoFill":false,"DisplayFields":["x_transportadora","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"tranportadora"};
+fpedidosview.Lists["x_id_transportadora"] = {"LinkField":"x_id_empresa_transportadora","Ajax":true,"AutoFill":false,"DisplayFields":["x_razao_social","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"transportadoras"};
 fpedidosview.Lists["x_id_transportadora"].Data = "<?php echo $pedidos_view->id_transportadora->LookupFilterQuery(FALSE, "view") ?>";
 fpedidosview.Lists["x_id_prazos"] = {"LinkField":"x_id_prazos","Ajax":true,"AutoFill":false,"DisplayFields":["x_prazo_em_dias","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"prazos"};
 fpedidosview.Lists["x_id_prazos"].Data = "<?php echo $pedidos_view->id_prazos->LookupFilterQuery(FALSE, "view") ?>";
-fpedidosview.Lists["x_id_representante"] = {"LinkField":"x_id_representantes","Ajax":true,"AutoFill":false,"DisplayFields":["x_id_pessoa","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"representantes"};
+fpedidosview.Lists["x_id_representante"] = {"LinkField":"x_id_pessoa","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_pessoa","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"view1"};
 fpedidosview.Lists["x_id_representante"].Data = "<?php echo $pedidos_view->id_representante->LookupFilterQuery(FALSE, "view") ?>";
 fpedidosview.Lists["x_comissao_representante"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
 fpedidosview.Lists["x_comissao_representante"].Options = <?php echo json_encode($pedidos_view->comissao_representante->Options()) ?>;

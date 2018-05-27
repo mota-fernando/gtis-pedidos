@@ -747,10 +747,6 @@ class cmarcas_list extends cmarcas {
 		// Initialize
 		$sFilterList = "";
 		$sSavedFilterList = "";
-
-		// Load server side filters
-		if (EW_SEARCH_FILTER_OPTION == "Server" && isset($UserProfile))
-			$sSavedFilterList = $UserProfile->GetSearchFilters(CurrentUserName(), "fmarcaslistsrch");
 		$sFilterList = ew_Concat($sFilterList, $this->id_marca->AdvancedSearch->ToJson(), ","); // Field id_marca
 		$sFilterList = ew_Concat($sFilterList, $this->nome_marca->AdvancedSearch->ToJson(), ","); // Field nome_marca
 		if ($this->BasicSearch->Keyword <> "") {

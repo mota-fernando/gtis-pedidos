@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<ew-language date="2018/5/25" version="14.0.0" id="pt-br" name="Portugues" desc="Portugues" author="Eder Villalba / Vinicius Bello ">
+<ew-language date="2018/5/27" version="14.0.0" id="pt-br" name="Portugues" desc="Portugues" author="Eder Villalba / Vinicius Bello ">
   <global>
     <phrase id="actiondeleted" value="Excluído" />
     <phrase id="actioninserted" value="Inserido" />
@@ -604,6 +604,15 @@
   <project>
     <phrase id="bodytitle" value="Sistema de Pedido - GTIS" />
     <phrase id="footertext" value="&amp;copy;2018 Criado para GTIS. Todos direitos são reservados." />
+    <menu id="10018">
+      <phrase id="menutext" value="transportadoras" />
+    </menu>
+    <menu id="10017">
+      <phrase id="menutext" value="view 1" />
+    </menu>
+    <menu id="10016">
+      <phrase id="menutext" value="Início" />
+    </menu>
     <menu id="8">
       <phrase id="menutext" value="Pedidos" />
     </menu>
@@ -626,7 +635,7 @@
       <phrase id="menutext" value="Endereços" />
     </menu>
     <menu id="9">
-      <phrase id="menutext" value="Clientes Pessoa Física" />
+      <phrase id="menutext" value="Pessoas " />
     </menu>
     <menu id="12">
       <phrase id="menutext" value="Representantes" />
@@ -690,8 +699,10 @@
     </menu>
     <table id="pedidos">
       <phrase id="tblcaption" value="Pedidos" />
+      <phrase id="tblpagecaption1" value="Pedido" />
       <field id="id_pedidos">
-        <phrase id="fldcaption" value="id pedidos" />
+        <phrase id="fldcaption" value="ID" />
+        <phrase id="fldtitle" value="ID" />
       </field>
       <field id="numero">
         <phrase id="fldcaption" value="Número do Pedido" />
@@ -708,9 +719,11 @@
       </field>
       <field id="fecha_data">
         <phrase id="fldcaption" value="Data" />
+        <phrase id="fldtitle" value="Data" />
       </field>
       <field id="fecha_hora">
         <phrase id="fldcaption" value="Hora" />
+        <phrase id="fldtitle" value="Hora" />
       </field>
       <field id="id_fornecedor">
         <phrase id="fldcaption" value="Fornecedor" />
@@ -780,7 +793,7 @@
       </field>
     </table>
     <table id="pessoa_fisica">
-      <phrase id="tblcaption" value="Clientes" />
+      <phrase id="tblcaption" value="Pessoas" />
       <field id="id_pessoa">
         <phrase id="fldcaption" value="id pessoa" />
       </field>
@@ -1014,6 +1027,33 @@
       </field>
       <field id="categoria">
         <phrase id="fldcaption" value="categoria" />
+      </field>
+    </table>
+    <table id="home_php">
+      <phrase id="tblcaption" value="Início" />
+    </table>
+    <table id="view1">
+      <phrase id="tblcaption" value="view 1" />
+      <field id="id_pessoa">
+        <phrase id="fldcaption" value="Representante" />
+      </field>
+      <field id="nome_pessoa">
+        <phrase id="fldcaption" value="Nome" />
+      </field>
+      <field id="sobrenome_pessoa">
+        <phrase id="fldcaption" value="Sobrenome" />
+      </field>
+      <field id="comissao">
+        <phrase id="fldcaption" value="Comissão em %" />
+      </field>
+    </table>
+    <table id="transportadoras">
+      <phrase id="tblcaption" value="transportadoras" />
+      <field id="id_empresa_transportadora">
+        <phrase id="fldcaption" value="Empresa Transportadora" />
+      </field>
+      <field id="razao_social">
+        <phrase id="fldcaption" value="Razão social" />
       </field>
     </table>
   </project>

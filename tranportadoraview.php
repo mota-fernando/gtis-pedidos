@@ -6,6 +6,7 @@ ob_start(); // Turn on output buffering
 <?php include_once ((EW_USE_ADODB) ? "adodb5/adodb.inc.php" : "ewmysql14.php") ?>
 <?php include_once "phpfn14.php" ?>
 <?php include_once "tranportadorainfo.php" ?>
+<?php include_once "empresasgridcls.php" ?>
 <?php include_once "userfn14.php" ?>
 <?php
 
@@ -566,6 +567,9 @@ class ctranportadora_view extends ctranportadora {
 		$this->RowType = EW_ROWTYPE_VIEW;
 		$this->ResetAttrs();
 		$this->RenderRow();
+
+		// Set up detail parameters
+		$this->SetupDetailParms();
 	}
 
 	// Set up other options
@@ -608,6 +612,81 @@ class ctranportadora_view extends ctranportadora {
 		else
 			$item->Body = "<a class=\"ewAction ewDelete\" title=\"" . ew_HtmlTitle($Language->Phrase("ViewPageDeleteLink")) . "\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("ViewPageDeleteLink")) . "\" href=\"" . ew_HtmlEncode($this->DeleteUrl) . "\">" . $Language->Phrase("ViewPageDeleteLink") . "</a>";
 		$item->Visible = ($this->DeleteUrl <> "");
+		$option = &$options["detail"];
+		$DetailTableLink = "";
+		$DetailViewTblVar = "";
+		$DetailCopyTblVar = "";
+		$DetailEditTblVar = "";
+
+		// "detail_empresas"
+		$item = &$option->Add("detail_empresas");
+		$body = $Language->Phrase("ViewPageDetailLink") . $Language->TablePhrase("empresas", "TblCaption");
+		$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("empresaslist.php?" . EW_TABLE_SHOW_MASTER . "=tranportadora&fk_id_transportadora=" . urlencode(strval($this->id_transportadora->CurrentValue)) . "") . "\">" . $body . "</a>";
+		$links = "";
+		if ($GLOBALS["empresas_grid"] && $GLOBALS["empresas_grid"]->DetailView) {
+			$links .= "<li><a class=\"ewRowLink ewDetailView\" data-action=\"view\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailViewLink")) . "\" href=\"" . ew_HtmlEncode($this->GetViewUrl(EW_TABLE_SHOW_DETAIL . "=empresas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailViewLink")) . "</a></li>";
+			if ($DetailViewTblVar <> "") $DetailViewTblVar .= ",";
+			$DetailViewTblVar .= "empresas";
+		}
+		if ($GLOBALS["empresas_grid"] && $GLOBALS["empresas_grid"]->DetailEdit) {
+			$links .= "<li><a class=\"ewRowLink ewDetailEdit\" data-action=\"edit\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailEditLink")) . "\" href=\"" . ew_HtmlEncode($this->GetEditUrl(EW_TABLE_SHOW_DETAIL . "=empresas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailEditLink")) . "</a></li>";
+			if ($DetailEditTblVar <> "") $DetailEditTblVar .= ",";
+			$DetailEditTblVar .= "empresas";
+		}
+		if ($GLOBALS["empresas_grid"] && $GLOBALS["empresas_grid"]->DetailAdd) {
+			$links .= "<li><a class=\"ewRowLink ewDetailCopy\" data-action=\"add\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailCopyLink")) . "\" href=\"" . ew_HtmlEncode($this->GetCopyUrl(EW_TABLE_SHOW_DETAIL . "=empresas")) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailCopyLink")) . "</a></li>";
+			if ($DetailCopyTblVar <> "") $DetailCopyTblVar .= ",";
+			$DetailCopyTblVar .= "empresas";
+		}
+		if ($links <> "") {
+			$body .= "<button class=\"dropdown-toggle btn btn-default btn-sm ewDetail\" data-toggle=\"dropdown\"><b class=\"caret\"></b></button>";
+			$body .= "<ul class=\"dropdown-menu\">". $links . "</ul>";
+		}
+		$body = "<div class=\"btn-group\">" . $body . "</div>";
+		$item->Body = $body;
+		$item->Visible = TRUE;
+		if ($item->Visible) {
+			if ($DetailTableLink <> "") $DetailTableLink .= ",";
+			$DetailTableLink .= "empresas";
+		}
+		if ($this->ShowMultipleDetails) $item->Visible = FALSE;
+
+		// Multiple details
+		if ($this->ShowMultipleDetails) {
+			$body = $Language->Phrase("MultipleMasterDetails");
+			$body = "<div class=\"btn-group\">";
+			$links = "";
+			if ($DetailViewTblVar <> "") {
+				$links .= "<li><a class=\"ewRowLink ewDetailView\" data-action=\"view\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailViewLink")) . "\" href=\"" . ew_HtmlEncode($this->GetViewUrl(EW_TABLE_SHOW_DETAIL . "=" . $DetailViewTblVar)) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailViewLink")) . "</a></li>";
+			}
+			if ($DetailEditTblVar <> "") {
+				$links .= "<li><a class=\"ewRowLink ewDetailEdit\" data-action=\"edit\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailEditLink")) . "\" href=\"" . ew_HtmlEncode($this->GetEditUrl(EW_TABLE_SHOW_DETAIL . "=" . $DetailEditTblVar)) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailEditLink")) . "</a></li>";
+			}
+			if ($DetailCopyTblVar <> "") {
+				$links .= "<li><a class=\"ewRowLink ewDetailCopy\" data-action=\"add\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailCopyLink")) . "\" href=\"" . ew_HtmlEncode($this->GetCopyUrl(EW_TABLE_SHOW_DETAIL . "=" . $DetailCopyTblVar)) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailCopyLink")) . "</a></li>";
+			}
+			if ($links <> "") {
+				$body .= "<button class=\"dropdown-toggle btn btn-default btn-sm ewMasterDetail\" title=\"" . ew_HtmlTitle($Language->Phrase("MultipleMasterDetails")) . "\" data-toggle=\"dropdown\">" . $Language->Phrase("MultipleMasterDetails") . "<b class=\"caret\"></b></button>";
+				$body .= "<ul class=\"dropdown-menu ewMenu\">". $links . "</ul>";
+			}
+			$body .= "</div>";
+
+			// Multiple details
+			$oListOpt = &$option->Add("details");
+			$oListOpt->Body = $body;
+		}
+
+		// Set up detail default
+		$option = &$options["detail"];
+		$options["detail"]->DropDownButtonPhrase = $Language->Phrase("ButtonDetails");
+		$option->UseImageAndText = TRUE;
+		$ar = explode(",", $DetailTableLink);
+		$cnt = count($ar);
+		$option->UseDropDownButton = ($cnt > 1);
+		$option->UseButtonGroup = TRUE;
+		$item = &$option->Add($option->GroupOptionName);
+		$item->Body = "";
+		$item->Visible = FALSE;
 
 		// Set up action default
 		$option = &$options["action"];
@@ -907,6 +986,27 @@ class ctranportadora_view extends ctranportadora {
 		$this->Page_DataRendering($sHeader);
 		$Doc->Text .= $sHeader;
 		$this->ExportDocument($Doc, $rs, $this->StartRec, $this->StopRec, "view");
+
+		// Export detail records (empresas)
+		if (EW_EXPORT_DETAIL_RECORDS && in_array("empresas", explode(",", $this->getCurrentDetailTable()))) {
+			global $empresas;
+			if (!isset($empresas)) $empresas = new cempresas;
+			$rsdetail = $empresas->LoadRs($empresas->GetDetailFilter()); // Load detail records
+			if ($rsdetail && !$rsdetail->EOF) {
+				$ExportStyle = $Doc->Style;
+				$Doc->SetStyle("h"); // Change to horizontal
+				if ($this->Export <> "csv" || EW_EXPORT_DETAIL_RECORDS_FOR_CSV) {
+					$Doc->ExportEmptyRow();
+					$detailcnt = $rsdetail->RecordCount();
+					$oldtbl = $Doc->Table;
+					$Doc->Table = $empresas;
+					$empresas->ExportDocument($Doc, $rsdetail, 1, $detailcnt);
+					$Doc->Table = $oldtbl;
+				}
+				$Doc->SetStyle($ExportStyle); // Restore
+				$rsdetail->Close();
+			}
+		}
 		$sFooter = $this->PageFooter;
 		$this->Page_DataRendered($sFooter);
 		$Doc->Text .= $sFooter;
@@ -930,6 +1030,35 @@ class ctranportadora_view extends ctranportadora {
 
 		// Output data
 		$Doc->Export();
+	}
+
+	// Set up detail parms based on QueryString
+	function SetupDetailParms() {
+
+		// Get the keys for master table
+		if (isset($_GET[EW_TABLE_SHOW_DETAIL])) {
+			$sDetailTblVar = $_GET[EW_TABLE_SHOW_DETAIL];
+			$this->setCurrentDetailTable($sDetailTblVar);
+		} else {
+			$sDetailTblVar = $this->getCurrentDetailTable();
+		}
+		if ($sDetailTblVar <> "") {
+			$DetailTblVar = explode(",", $sDetailTblVar);
+			if (in_array("empresas", $DetailTblVar)) {
+				if (!isset($GLOBALS["empresas_grid"]))
+					$GLOBALS["empresas_grid"] = new cempresas_grid;
+				if ($GLOBALS["empresas_grid"]->DetailView) {
+					$GLOBALS["empresas_grid"]->CurrentMode = "view";
+
+					// Save current master table to detail table
+					$GLOBALS["empresas_grid"]->setCurrentMasterTable($this->TableVar);
+					$GLOBALS["empresas_grid"]->setStartRecordNumber(1);
+					$GLOBALS["empresas_grid"]->id_perfil->FldIsDetailKey = TRUE;
+					$GLOBALS["empresas_grid"]->id_perfil->CurrentValue = $this->id_transportadora->CurrentValue;
+					$GLOBALS["empresas_grid"]->id_perfil->setSessionValue($GLOBALS["empresas_grid"]->id_perfil->CurrentValue);
+				}
+			}
+		}
 	}
 
 	// Set up Breadcrumb
@@ -1217,6 +1346,14 @@ $tranportadora_view->ShowMessage();
 <?php } ?>
 <div class="clearfix"></div>
 <?php } ?>
+<?php } ?>
+<?php
+	if (in_array("empresas", explode(",", $tranportadora->getCurrentDetailTable())) && $empresas->DetailView) {
+?>
+<?php if ($tranportadora->getCurrentDetailTable() <> "") { ?>
+<h4 class="ewDetailCaption"><?php echo $Language->TablePhrase("empresas", "TblCaption") ?></h4>
+<?php } ?>
+<?php include_once "empresasgrid.php" ?>
 <?php } ?>
 </form>
 <?php if ($tranportadora->Export == "") { ?>

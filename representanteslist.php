@@ -6,6 +6,7 @@ ob_start(); // Turn on output buffering
 <?php include_once ((EW_USE_ADODB) ? "adodb5/adodb.inc.php" : "ewmysql14.php") ?>
 <?php include_once "phpfn14.php" ?>
 <?php include_once "representantesinfo.php" ?>
+<?php include_once "pessoa_fisicagridcls.php" ?>
 <?php include_once "userfn14.php" ?>
 <?php
 
@@ -302,7 +303,7 @@ class crepresentantes_list extends crepresentantes {
 		$this->ExportXmlUrl = $this->PageUrl() . "export=xml";
 		$this->ExportCsvUrl = $this->PageUrl() . "export=csv";
 		$this->ExportPdfUrl = $this->PageUrl() . "export=pdf";
-		$this->AddUrl = "representantesadd.php";
+		$this->AddUrl = "representantesadd.php?" . EW_TABLE_SHOW_DETAIL . "=";
 		$this->InlineAddUrl = $this->PageUrl() . "a=add";
 		$this->GridAddUrl = $this->PageUrl() . "a=gridadd";
 		$this->GridEditUrl = $this->PageUrl() . "a=gridedit";
@@ -433,6 +434,22 @@ class crepresentantes_list extends crepresentantes {
 
 		// Process auto fill
 		if (@$_POST["ajax"] == "autofill") {
+
+			// Get the keys for master table
+			$sDetailTblVar = $this->getCurrentDetailTable();
+			if ($sDetailTblVar <> "") {
+				$DetailTblVar = explode(",", $sDetailTblVar);
+				if (in_array("pessoa_fisica", $DetailTblVar)) {
+
+					// Process auto fill for detail table 'pessoa_fisica'
+					if (preg_match('/^fpessoa_fisica(grid|add|addopt|edit|update|search)$/', @$_POST["form"])) {
+						if (!isset($GLOBALS["pessoa_fisica_grid"])) $GLOBALS["pessoa_fisica_grid"] = new cpessoa_fisica_grid;
+						$GLOBALS["pessoa_fisica_grid"]->Page_Init();
+						$this->Page_Terminate();
+						exit();
+					}
+				}
+			}
 			$results = $this->GetAutoFill(@$_POST["name"], @$_POST["q"]);
 			if ($results) {
 
@@ -771,6 +788,28 @@ class crepresentantes_list extends crepresentantes {
 		$item->Visible = TRUE;
 		$item->OnLeft = TRUE;
 
+		// "detail_pessoa_fisica"
+		$item = &$this->ListOptions->Add("detail_pessoa_fisica");
+		$item->CssClass = "text-nowrap";
+		$item->Visible = TRUE && !$this->ShowMultipleDetails;
+		$item->OnLeft = TRUE;
+		$item->ShowInButtonGroup = FALSE;
+		if (!isset($GLOBALS["pessoa_fisica_grid"])) $GLOBALS["pessoa_fisica_grid"] = new cpessoa_fisica_grid;
+
+		// Multiple details
+		if ($this->ShowMultipleDetails) {
+			$item = &$this->ListOptions->Add("details");
+			$item->CssClass = "text-nowrap";
+			$item->Visible = $this->ShowMultipleDetails;
+			$item->OnLeft = TRUE;
+			$item->ShowInButtonGroup = FALSE;
+		}
+
+		// Set up detail pages
+		$pages = new cSubPages();
+		$pages->Add("pessoa_fisica");
+		$this->DetailPages = $pages;
+
 		// List actions
 		$item = &$this->ListOptions->Add("listactions");
 		$item->CssClass = "text-nowrap";
@@ -867,6 +906,68 @@ class crepresentantes_list extends crepresentantes {
 				$oListOpt->Visible = TRUE;
 			}
 		}
+		$DetailViewTblVar = "";
+		$DetailCopyTblVar = "";
+		$DetailEditTblVar = "";
+
+		// "detail_pessoa_fisica"
+		$oListOpt = &$this->ListOptions->Items["detail_pessoa_fisica"];
+		if (TRUE) {
+			$body = $Language->Phrase("DetailLink") . $Language->TablePhrase("pessoa_fisica", "TblCaption");
+			$body = "<a class=\"btn btn-default btn-sm ewRowLink ewDetail\" data-action=\"list\" href=\"" . ew_HtmlEncode("pessoa_fisicalist.php?" . EW_TABLE_SHOW_MASTER . "=representantes&fk_id_representantes=" . urlencode(strval($this->id_representantes->CurrentValue)) . "") . "\">" . $body . "</a>";
+			$links = "";
+			if ($GLOBALS["pessoa_fisica_grid"]->DetailView) {
+				$caption = $Language->Phrase("MasterDetailViewLink");
+				$url = $this->GetViewUrl(EW_TABLE_SHOW_DETAIL . "=pessoa_fisica");
+				$links .= "<li><a class=\"ewRowLink ewDetailView\" data-action=\"view\" data-caption=\"" . ew_HtmlTitle($caption) . "\" href=\"" . ew_HtmlEncode($url) . "\">" . ew_HtmlImageAndText($caption) . "</a></li>";
+				if ($DetailViewTblVar <> "") $DetailViewTblVar .= ",";
+				$DetailViewTblVar .= "pessoa_fisica";
+			}
+			if ($GLOBALS["pessoa_fisica_grid"]->DetailEdit) {
+				$caption = $Language->Phrase("MasterDetailEditLink");
+				$url = $this->GetEditUrl(EW_TABLE_SHOW_DETAIL . "=pessoa_fisica");
+				$links .= "<li><a class=\"ewRowLink ewDetailEdit\" data-action=\"edit\" data-caption=\"" . ew_HtmlTitle($caption) . "\" href=\"" . ew_HtmlEncode($url) . "\">" . ew_HtmlImageAndText($caption) . "</a></li>";
+				if ($DetailEditTblVar <> "") $DetailEditTblVar .= ",";
+				$DetailEditTblVar .= "pessoa_fisica";
+			}
+			if ($GLOBALS["pessoa_fisica_grid"]->DetailAdd) {
+				$caption = $Language->Phrase("MasterDetailCopyLink");
+				$url = $this->GetCopyUrl(EW_TABLE_SHOW_DETAIL . "=pessoa_fisica");
+				$links .= "<li><a class=\"ewRowLink ewDetailCopy\" data-action=\"add\" data-caption=\"" . ew_HtmlTitle($caption) . "\" href=\"" . ew_HtmlEncode($url) . "\">" . ew_HtmlImageAndText($caption) . "</a></li>";
+				if ($DetailCopyTblVar <> "") $DetailCopyTblVar .= ",";
+				$DetailCopyTblVar .= "pessoa_fisica";
+			}
+			if ($links <> "") {
+				$body .= "<button class=\"dropdown-toggle btn btn-default btn-sm ewDetail\" data-toggle=\"dropdown\"><b class=\"caret\"></b></button>";
+				$body .= "<ul class=\"dropdown-menu\">". $links . "</ul>";
+			}
+			$body = "<div class=\"btn-group\">" . $body . "</div>";
+			$oListOpt->Body = $body;
+			if ($this->ShowMultipleDetails) $oListOpt->Visible = FALSE;
+		}
+		if ($this->ShowMultipleDetails) {
+			$body = $Language->Phrase("MultipleMasterDetails");
+			$body = "<div class=\"btn-group\">";
+			$links = "";
+			if ($DetailViewTblVar <> "") {
+				$links .= "<li><a class=\"ewRowLink ewDetailView\" data-action=\"view\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailViewLink")) . "\" href=\"" . ew_HtmlEncode($this->GetViewUrl(EW_TABLE_SHOW_DETAIL . "=" . $DetailViewTblVar)) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailViewLink")) . "</a></li>";
+			}
+			if ($DetailEditTblVar <> "") {
+				$links .= "<li><a class=\"ewRowLink ewDetailEdit\" data-action=\"edit\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailEditLink")) . "\" href=\"" . ew_HtmlEncode($this->GetEditUrl(EW_TABLE_SHOW_DETAIL . "=" . $DetailEditTblVar)) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailEditLink")) . "</a></li>";
+			}
+			if ($DetailCopyTblVar <> "") {
+				$links .= "<li><a class=\"ewRowLink ewDetailCopy\" data-action=\"add\" data-caption=\"" . ew_HtmlTitle($Language->Phrase("MasterDetailCopyLink")) . "\" href=\"" . ew_HtmlEncode($this->GetCopyUrl(EW_TABLE_SHOW_DETAIL . "=" . $DetailCopyTblVar)) . "\">" . ew_HtmlImageAndText($Language->Phrase("MasterDetailCopyLink")) . "</a></li>";
+			}
+			if ($links <> "") {
+				$body .= "<button class=\"dropdown-toggle btn btn-default btn-sm ewMasterDetail\" title=\"" . ew_HtmlTitle($Language->Phrase("MultipleMasterDetails")) . "\" data-toggle=\"dropdown\">" . $Language->Phrase("MultipleMasterDetails") . "<b class=\"caret\"></b></button>";
+				$body .= "<ul class=\"dropdown-menu ewMenu\">". $links . "</ul>";
+			}
+			$body .= "</div>";
+
+			// Multiple details
+			$oListOpt = &$this->ListOptions->Items["details"];
+			$oListOpt->Body = $body;
+		}
 
 		// "checkbox"
 		$oListOpt = &$this->ListOptions->Items["checkbox"];
@@ -888,6 +989,34 @@ class crepresentantes_list extends crepresentantes {
 		$addcaption = ew_HtmlTitle($Language->Phrase("AddLink"));
 		$item->Body = "<a class=\"ewAddEdit ewAdd\" title=\"" . $addcaption . "\" data-caption=\"" . $addcaption . "\" href=\"" . ew_HtmlEncode($this->AddUrl) . "\">" . $Language->Phrase("AddLink") . "</a>";
 		$item->Visible = ($this->AddUrl <> "");
+		$option = $options["detail"];
+		$DetailTableLink = "";
+		$item = &$option->Add("detailadd_pessoa_fisica");
+		$url = $this->GetAddUrl(EW_TABLE_SHOW_DETAIL . "=pessoa_fisica");
+		$caption = $Language->Phrase("Add") . "&nbsp;" . $this->TableCaption() . "/" . $GLOBALS["pessoa_fisica"]->TableCaption();
+		$item->Body = "<a class=\"ewDetailAddGroup ewDetailAdd\" title=\"" . ew_HtmlTitle($caption) . "\" data-caption=\"" . ew_HtmlTitle($caption) . "\" href=\"" . ew_HtmlEncode($url) . "\">" . $caption . "</a>";
+		$item->Visible = ($GLOBALS["pessoa_fisica"]->DetailAdd);
+		if ($item->Visible) {
+			if ($DetailTableLink <> "") $DetailTableLink .= ",";
+			$DetailTableLink .= "pessoa_fisica";
+		}
+
+		// Add multiple details
+		if ($this->ShowMultipleDetails) {
+			$item = &$option->Add("detailsadd");
+			$url = $this->GetAddUrl(EW_TABLE_SHOW_DETAIL . "=" . $DetailTableLink);
+			$caption = $Language->Phrase("AddMasterDetailLink");
+			$item->Body = "<a class=\"ewDetailAddGroup ewDetailAdd\" title=\"" . ew_HtmlTitle($caption) . "\" data-caption=\"" . ew_HtmlTitle($caption) . "\" href=\"" . ew_HtmlEncode($url) . "\">" . $caption . "</a>";
+			$item->Visible = ($DetailTableLink <> "");
+
+			// Hide single master/detail items
+			$ar = explode(",", $DetailTableLink);
+			$cnt = count($ar);
+			for ($i = 0; $i < $cnt; $i++) {
+				if ($item = &$option->GetItem("detailadd_" . $ar[$i]))
+					$item->Visible = FALSE;
+			}
+		}
 		$option = $options["action"];
 
 		// Add multi delete
@@ -1064,6 +1193,74 @@ class crepresentantes_list extends crepresentantes {
 
 	function RenderListOptionsExt() {
 		global $Security, $Language;
+		$links = "";
+		$btngrps = "";
+		$sSqlWrk = "`id_pessoa`=" . ew_AdjustSql($this->id_representantes->CurrentValue, $this->DBID) . "";
+
+		// Column "detail_pessoa_fisica"
+		if ($this->DetailPages->Items["pessoa_fisica"]->Visible) {
+			$link = "";
+			$option = &$this->ListOptions->Items["detail_pessoa_fisica"];
+			$url = "pessoa_fisicapreview.php?t=representantes&f=" . ew_Encrypt($sSqlWrk);
+			$btngrp = "<div data-table=\"pessoa_fisica\" data-url=\"" . $url . "\">";
+			if (TRUE) {
+				$label = $Language->TablePhrase("pessoa_fisica", "TblCaption");
+				$link = "<li class=\"nav-item\"><a class=\"nav-link\" href=\"#\" data-toggle=\"tab\" data-table=\"pessoa_fisica\" data-url=\"" . $url . "\">" . $label . "</a></li>";
+				$links .= $link;
+				$detaillnk = ew_JsEncode3("pessoa_fisicalist.php?" . EW_TABLE_SHOW_MASTER . "=representantes&fk_id_representantes=" . urlencode(strval($this->id_representantes->CurrentValue)) . "");
+				$btngrp .= "<a href=\"javascript:void(0);\" class=\"ewLinkSeparator\" title=\"" . $Language->TablePhrase("pessoa_fisica", "TblCaption") . "\" onclick=\"window.location='" . $detaillnk . "'\">" . $Language->Phrase("MasterDetailListLink") . "</a>";
+			}
+			if ($GLOBALS["pessoa_fisica_grid"]->DetailView) {
+				$caption = $Language->Phrase("MasterDetailViewLink");
+				$url = $this->GetViewUrl(EW_TABLE_SHOW_DETAIL . "=pessoa_fisica");
+				$btngrp .= "<a href=\"javascript:void(0);\" class=\"ewLinkSeparator\" title=\"" . ew_HtmlTitle($caption) . "\" onclick=\"window.location='" . ew_HtmlEncode($url) . "'\">" . $caption . "</a>";
+			}
+			if ($GLOBALS["pessoa_fisica_grid"]->DetailEdit) {
+				$caption = $Language->Phrase("MasterDetailEditLink");
+				$url = $this->GetEditUrl(EW_TABLE_SHOW_DETAIL . "=pessoa_fisica");
+				$btngrp .= "<a href=\"javascript:void(0);\" class=\"ewLinkSeparator\" title=\"" . ew_HtmlTitle($caption) . "\" onclick=\"window.location='" . ew_HtmlEncode($url) . "'\">" . $caption . "</a>";
+			}
+			if ($GLOBALS["pessoa_fisica_grid"]->DetailAdd) {
+				$caption = $Language->Phrase("MasterDetailCopyLink");
+				$url = $this->GetCopyUrl(EW_TABLE_SHOW_DETAIL . "=pessoa_fisica");
+				$btngrp .= "<a href=\"javascript:void(0);\" class=\"ewLinkSeparator\" title=\"" . ew_HtmlTitle($caption) . "\" onclick=\"window.location='" . ew_HtmlEncode($url) . "'\">" . $caption . "</a>";
+			}
+			$btngrp .= "</div>";
+			if ($link <> "") {
+				$btngrps .= $btngrp;
+				$option->Body .= "<div class=\"d-none ewPreview\">" . $link . $btngrp . "</div>";
+			}
+		}
+
+		// Hide detail items if necessary
+		$this->ListOptions->HideDetailItemsForDropDown();
+
+		// Column "preview"
+		$option = &$this->ListOptions->GetItem("preview");
+		if (!$option) { // Add preview column
+			$option = &$this->ListOptions->Add("preview");
+			$option->OnLeft = TRUE;
+			if ($option->OnLeft) {
+				$option->MoveTo($this->ListOptions->ItemPos("checkbox") + 1);
+			} else {
+				$option->MoveTo($this->ListOptions->ItemPos("checkbox"));
+			}
+			$option->Visible = !($this->Export <> "" || $this->CurrentAction == "gridadd" || $this->CurrentAction == "gridedit");
+			$option->ShowInDropDown = FALSE;
+			$option->ShowInButtonGroup = FALSE;
+		}
+		if ($option) {
+			$option->Body = "<span class=\"ewPreviewRowBtn ewPointer ewIcon fa fa-expand text-success\"></span>";
+			$option->Body .= "<div class=\"d-none ewPreview\">" . $links . $btngrps . "</div>";
+			if ($option->Visible) $option->Visible = $links <> "";
+		}
+
+		// Column "details" (Multiple details)
+		$option = &$this->ListOptions->GetItem("details");
+		if ($option) {
+			$option->Body .= "<div class=\"d-none ewPreview\">" . $links . $btngrps . "</div>";
+			if ($option->Visible) $option->Visible = $links <> "";
+		}
 	}
 
 	// Set up starting record parameters

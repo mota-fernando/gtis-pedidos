@@ -6,6 +6,7 @@ ob_start(); // Turn on output buffering
 <?php include_once ((EW_USE_ADODB) ? "adodb5/adodb.inc.php" : "ewmysql14.php") ?>
 <?php include_once "phpfn14.php" ?>
 <?php include_once "pessoa_fisicainfo.php" ?>
+<?php include_once "representantesinfo.php" ?>
 <?php include_once "userfn14.php" ?>
 <?php
 
@@ -254,6 +255,9 @@ class cpessoa_fisica_add extends cpessoa_fisica {
 			$GLOBALS["Table"] = &$GLOBALS["pessoa_fisica"];
 		}
 
+		// Table object (representantes)
+		if (!isset($GLOBALS['representantes'])) $GLOBALS['representantes'] = new crepresentantes();
+
 		// Page ID
 		if (!defined("EW_PAGE_ID"))
 			define("EW_PAGE_ID", 'add', TRUE);
@@ -411,6 +415,9 @@ class cpessoa_fisica_add extends cpessoa_fisica {
 			$gbSkipHeaderFooter = TRUE;
 		$this->IsMobileOrModal = ew_IsMobile() || $this->IsModal;
 		$this->FormClassName = "ewForm ewAddForm form-horizontal";
+
+		// Set up master/detail parameters
+		$this->SetupMasterParms();
 
 		// Set up current action
 		if (@$_POST["a_add"] <> "") {
@@ -1061,6 +1068,26 @@ class cpessoa_fisica_add extends cpessoa_fisica {
 	// Add record
 	function AddRow($rsold = NULL) {
 		global $Language, $Security;
+
+		// Check referential integrity for master table 'representantes'
+		$bValidMasterRecord = TRUE;
+		$sMasterFilter = $this->SqlMasterFilter_representantes();
+		if ($this->id_pessoa->getSessionValue() <> "") {
+			$sMasterFilter = str_replace("@id_representantes@", ew_AdjustSql($this->id_pessoa->getSessionValue(), "DB"), $sMasterFilter);
+		} else {
+			$bValidMasterRecord = FALSE;
+		}
+		if ($bValidMasterRecord) {
+			if (!isset($GLOBALS["representantes"])) $GLOBALS["representantes"] = new crepresentantes();
+			$rsmaster = $GLOBALS["representantes"]->LoadRs($sMasterFilter);
+			$bValidMasterRecord = ($rsmaster && !$rsmaster->EOF);
+			$rsmaster->Close();
+		}
+		if (!$bValidMasterRecord) {
+			$sRelatedRecordMsg = str_replace("%t", "representantes", $Language->Phrase("RelatedRecordRequired"));
+			$this->setFailureMessage($sRelatedRecordMsg);
+			return FALSE;
+		}
 		$conn = &$this->Connection();
 
 		// Load db values from rsold
@@ -1102,6 +1129,11 @@ class cpessoa_fisica_add extends cpessoa_fisica {
 		// id_empresa
 		$this->id_empresa->SetDbValueDef($rsnew, $this->id_empresa->CurrentValue, 0, FALSE);
 
+		// id_pessoa
+		if ($this->id_pessoa->getSessionValue() <> "") {
+			$rsnew['id_pessoa'] = $this->id_pessoa->getSessionValue();
+		}
+
 		// Call Row Inserting event
 		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
 		$bInsertRow = $this->Row_Inserting($rs, $rsnew);
@@ -1130,6 +1162,68 @@ class cpessoa_fisica_add extends cpessoa_fisica {
 			$this->Row_Inserted($rs, $rsnew);
 		}
 		return $AddRow;
+	}
+
+	// Set up master/detail based on QueryString
+	function SetupMasterParms() {
+		$bValidMaster = FALSE;
+
+		// Get the keys for master table
+		if (isset($_GET[EW_TABLE_SHOW_MASTER])) {
+			$sMasterTblVar = $_GET[EW_TABLE_SHOW_MASTER];
+			if ($sMasterTblVar == "") {
+				$bValidMaster = TRUE;
+				$this->DbMasterFilter = "";
+				$this->DbDetailFilter = "";
+			}
+			if ($sMasterTblVar == "representantes") {
+				$bValidMaster = TRUE;
+				if (@$_GET["fk_id_representantes"] <> "") {
+					$GLOBALS["representantes"]->id_representantes->setQueryStringValue($_GET["fk_id_representantes"]);
+					$this->id_pessoa->setQueryStringValue($GLOBALS["representantes"]->id_representantes->QueryStringValue);
+					$this->id_pessoa->setSessionValue($this->id_pessoa->QueryStringValue);
+					if (!is_numeric($GLOBALS["representantes"]->id_representantes->QueryStringValue)) $bValidMaster = FALSE;
+				} else {
+					$bValidMaster = FALSE;
+				}
+			}
+		} elseif (isset($_POST[EW_TABLE_SHOW_MASTER])) {
+			$sMasterTblVar = $_POST[EW_TABLE_SHOW_MASTER];
+			if ($sMasterTblVar == "") {
+				$bValidMaster = TRUE;
+				$this->DbMasterFilter = "";
+				$this->DbDetailFilter = "";
+			}
+			if ($sMasterTblVar == "representantes") {
+				$bValidMaster = TRUE;
+				if (@$_POST["fk_id_representantes"] <> "") {
+					$GLOBALS["representantes"]->id_representantes->setFormValue($_POST["fk_id_representantes"]);
+					$this->id_pessoa->setFormValue($GLOBALS["representantes"]->id_representantes->FormValue);
+					$this->id_pessoa->setSessionValue($this->id_pessoa->FormValue);
+					if (!is_numeric($GLOBALS["representantes"]->id_representantes->FormValue)) $bValidMaster = FALSE;
+				} else {
+					$bValidMaster = FALSE;
+				}
+			}
+		}
+		if ($bValidMaster) {
+
+			// Save current master table
+			$this->setCurrentMasterTable($sMasterTblVar);
+
+			// Reset start record counter (new master key)
+			if (!$this->IsAddOrEdit()) {
+				$this->StartRec = 1;
+				$this->setStartRecordNumber($this->StartRec);
+			}
+
+			// Clear previous master key from Session
+			if ($sMasterTblVar <> "representantes") {
+				if ($this->id_pessoa->CurrentValue == "") $this->id_pessoa->setSessionValue("");
+			}
+		}
+		$this->DbMasterFilter = $this->GetMasterFilter(); // Get master filter
+		$this->DbDetailFilter = $this->GetDetailFilter(); // Get detail filter
 	}
 
 	// Set up Breadcrumb
@@ -1375,6 +1469,10 @@ $pessoa_fisica_add->ShowMessage();
 <input type="hidden" name="t" value="pessoa_fisica">
 <input type="hidden" name="a_add" id="a_add" value="A">
 <input type="hidden" name="modal" value="<?php echo intval($pessoa_fisica_add->IsModal) ?>">
+<?php if ($pessoa_fisica->getCurrentMasterTable() == "representantes") { ?>
+<input type="hidden" name="<?php echo EW_TABLE_SHOW_MASTER ?>" value="representantes">
+<input type="hidden" name="fk_id_representantes" value="<?php echo $pessoa_fisica->id_pessoa->getSessionValue() ?>">
+<?php } ?>
 <div class="ewAddDiv"><!-- page* -->
 <?php if ($pessoa_fisica->nome_pessoa->Visible) { // nome_pessoa ?>
 	<div id="r_nome_pessoa" class="form-group">
@@ -1507,6 +1605,9 @@ fpessoa_fisicaadd.CreateAutoSuggest({"id":"x_id_empresa","forceSelect":false});
 	</div>
 <?php } ?>
 </div><!-- /page* -->
+<?php if (strval($pessoa_fisica->id_pessoa->getSessionValue()) <> "") { ?>
+<input type="hidden" name="x_id_pessoa" id="x_id_pessoa" value="<?php echo ew_HtmlEncode(strval($pessoa_fisica->id_pessoa->getSessionValue())) ?>">
+<?php } ?>
 <?php if (!$pessoa_fisica_add->IsModal) { ?>
 <div class="form-group"><!-- buttons .form-group -->
 	<div class="<?php echo $pessoa_fisica_add->OffsetColumnClass ?>"><!-- buttons offset -->

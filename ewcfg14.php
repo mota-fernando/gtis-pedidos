@@ -15,8 +15,8 @@ if (EW_DEBUG_ENABLED) {
 
 // General
 define("EW_IS_WINDOWS", (strtolower(substr(PHP_OS, 0, 3)) === 'win'), TRUE); // Is Windows OS
-define("EW_IS_PHP5", version_compare(PHP_VERSION, "5.4.0") >= 0, TRUE); // Is PHP 5.4 or later
-if (!EW_IS_PHP5) die("This script requires PHP 5.4 or later. You are running " . phpversion() . ".");
+define("EW_IS_PHP5", version_compare(PHP_VERSION, "5.5.0") >= 0, TRUE); // Is PHP 5.5 or later
+if (!EW_IS_PHP5) die("This script requires PHP 5.5 or later. You are running " . phpversion() . ".");
 define("EW_PATH_DELIMITER", ((EW_IS_WINDOWS) ? "\\" : "/"), TRUE); // Physical path delimiter
 $EW_ROOT_RELATIVE_PATH = "."; // Relative path of app root
 define("EW_UNFORMAT_YEAR", 50, TRUE); // Unformat year
@@ -25,7 +25,7 @@ define("EW_CONFIG_FILE_FOLDER", EW_PROJECT_NAME, TRUE); // Config file name
 define("EW_PROJECT_ID", "{A4E38B50-67B8-459F-992C-3B232135A6E3}", TRUE); // Project ID (GUID)
 $EW_RELATED_PROJECT_ID = "";
 $EW_RELATED_LANGUAGE_FOLDER = "";
-define("EW_RANDOM_KEY", 'lkviQeuZDfKvTvc4', TRUE); // Random key for encryption
+define("EW_RANDOM_KEY", 'sQDduRshHJ1jWshb', TRUE); // Random key for encryption
 define("EW_PROJECT_STYLESHEET_FILENAME", "phpcss/pedidos.css", TRUE); // Project stylesheet file name
 define("EW_CHARSET", "utf-8", TRUE); // Project charset
 define("EW_EMAIL_CHARSET", EW_CHARSET, TRUE); // Email charset
@@ -317,7 +317,7 @@ define("EW_EMAIL_FORGOTPWD_TEMPLATE", "forgotpwd.html", TRUE);
 define("EW_EMAIL_NOTIFY_TEMPLATE", "notify.html", TRUE);
 define("EW_EMAIL_REGISTER_TEMPLATE", "register.html", TRUE);
 define("EW_EMAIL_RESETPWD_TEMPLATE", "resetpwd.html", TRUE);
-define("EW_EMAIL_TEMPLATE_PATH", "phphtml", TRUE); // Template path
+$EW_EMAIL_TEMPLATE_PATH = "phphtml"; // Template path
 
 // Remote file
 $EW_REMOTE_FILE_PATTERN = '/^((https?\:)?|ftps?\:|s3:)\/\//i';
@@ -364,7 +364,7 @@ define("EW_EXPORT_ALL", TRUE, TRUE); // Export all records
 define("EW_EXPORT_ALL_TIME_LIMIT", 120, TRUE); // Export all records time limit
 define("EW_XML_ENCODING", "utf-8", TRUE); // Encoding for Export to XML
 define("EW_EXPORT_ORIGINAL_VALUE", FALSE, TRUE);
-define("EW_EXPORT_FIELD_CAPTION", FALSE, TRUE); // TRUE to export field caption
+define("EW_EXPORT_FIELD_CAPTION", TRUE, TRUE); // TRUE to export field caption
 define("EW_EXPORT_CSS_STYLES", TRUE, TRUE); // TRUE to export CSS styles
 define("EW_EXPORT_MASTER_RECORD", TRUE, TRUE); // TRUE to export master record
 define("EW_EXPORT_MASTER_RECORD_FOR_CSV", FALSE, TRUE); // TRUE to export master record for CSV

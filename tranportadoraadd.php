@@ -6,6 +6,7 @@ ob_start(); // Turn on output buffering
 <?php include_once ((EW_USE_ADODB) ? "adodb5/adodb.inc.php" : "ewmysql14.php") ?>
 <?php include_once "phpfn14.php" ?>
 <?php include_once "tranportadorainfo.php" ?>
+<?php include_once "empresasgridcls.php" ?>
 <?php include_once "userfn14.php" ?>
 <?php
 
@@ -303,6 +304,22 @@ class ctranportadora_add extends ctranportadora {
 
 		// Process auto fill
 		if (@$_POST["ajax"] == "autofill") {
+
+			// Get the keys for master table
+			$sDetailTblVar = $this->getCurrentDetailTable();
+			if ($sDetailTblVar <> "") {
+				$DetailTblVar = explode(",", $sDetailTblVar);
+				if (in_array("empresas", $DetailTblVar)) {
+
+					// Process auto fill for detail table 'empresas'
+					if (preg_match('/^fempresas(grid|add|addopt|edit|update|search)$/', @$_POST["form"])) {
+						if (!isset($GLOBALS["empresas_grid"])) $GLOBALS["empresas_grid"] = new cempresas_grid;
+						$GLOBALS["empresas_grid"]->Page_Init();
+						$this->Page_Terminate();
+						exit();
+					}
+				}
+			}
 			$results = $this->GetAutoFill(@$_POST["name"], @$_POST["q"]);
 			if ($results) {
 
@@ -431,6 +448,9 @@ class ctranportadora_add extends ctranportadora {
 			$this->LoadFormValues(); // Load form values
 		}
 
+		// Set up detail parameters
+		$this->SetupDetailParms();
+
 		// Validate form if post back
 		if (@$_POST["a_add"] <> "") {
 			if (!$this->ValidateForm()) {
@@ -450,13 +470,19 @@ class ctranportadora_add extends ctranportadora {
 					if ($this->getFailureMessage() == "") $this->setFailureMessage($Language->Phrase("NoRecord")); // No record found
 					$this->Page_Terminate("tranportadoralist.php"); // No matching record, return to list
 				}
+
+				// Set up detail parameters
+				$this->SetupDetailParms();
 				break;
 			case "A": // Add new record
 				$this->SendEmail = TRUE; // Send email on add success
 				if ($this->AddRow($this->OldRecordset)) { // Add successful
 					if ($this->getSuccessMessage() == "")
 						$this->setSuccessMessage($Language->Phrase("AddSuccess")); // Set up success message
-					$sReturnUrl = $this->getReturnUrl();
+					if ($this->getCurrentDetailTable() <> "") // Master/detail add
+						$sReturnUrl = $this->GetDetailUrl();
+					else
+						$sReturnUrl = $this->getReturnUrl();
 					if (ew_GetPageName($sReturnUrl) == "tranportadoralist.php")
 						$sReturnUrl = $this->AddMasterUrl($sReturnUrl); // List page, return to List page with correct master key if necessary
 					elseif (ew_GetPageName($sReturnUrl) == "tranportadoraview.php")
@@ -465,6 +491,9 @@ class ctranportadora_add extends ctranportadora {
 				} else {
 					$this->EventCancelled = TRUE; // Event cancelled
 					$this->RestoreFormValues(); // Add failed, restore form values
+
+					// Set up detail parameters
+					$this->SetupDetailParms();
 				}
 		}
 
@@ -681,6 +710,13 @@ class ctranportadora_add extends ctranportadora {
 		if (!EW_SERVER_VALIDATE)
 			return ($gsFormError == "");
 
+		// Validate detail grid
+		$DetailTblVar = explode(",", $this->getCurrentDetailTable());
+		if (in_array("empresas", $DetailTblVar) && $GLOBALS["empresas"]->DetailAdd) {
+			if (!isset($GLOBALS["empresas_grid"])) $GLOBALS["empresas_grid"] = new cempresas_grid(); // get detail page object
+			$GLOBALS["empresas_grid"]->ValidateGridForm();
+		}
+
 		// Return validate result
 		$ValidateForm = ($gsFormError == "");
 
@@ -697,6 +733,10 @@ class ctranportadora_add extends ctranportadora {
 	function AddRow($rsold = NULL) {
 		global $Language, $Security;
 		$conn = &$this->Connection();
+
+		// Begin transaction
+		if ($this->getCurrentDetailTable() <> "")
+			$conn->BeginTrans();
 
 		// Load db values from rsold
 		$this->LoadDbValues($rsold);
@@ -728,6 +768,27 @@ class ctranportadora_add extends ctranportadora {
 			}
 			$AddRow = FALSE;
 		}
+
+		// Add detail records
+		if ($AddRow) {
+			$DetailTblVar = explode(",", $this->getCurrentDetailTable());
+			if (in_array("empresas", $DetailTblVar) && $GLOBALS["empresas"]->DetailAdd) {
+				$GLOBALS["empresas"]->id_perfil->setSessionValue($this->id_transportadora->CurrentValue); // Set master key
+				if (!isset($GLOBALS["empresas_grid"])) $GLOBALS["empresas_grid"] = new cempresas_grid(); // Get detail page object
+				$AddRow = $GLOBALS["empresas_grid"]->GridInsert();
+				if (!$AddRow)
+					$GLOBALS["empresas"]->id_perfil->setSessionValue(""); // Clear master key if insert failed
+			}
+		}
+
+		// Commit/Rollback transaction
+		if ($this->getCurrentDetailTable() <> "") {
+			if ($AddRow) {
+				$conn->CommitTrans(); // Commit transaction
+			} else {
+				$conn->RollbackTrans(); // Rollback transaction
+			}
+		}
 		if ($AddRow) {
 
 			// Call Row Inserted event
@@ -735,6 +796,39 @@ class ctranportadora_add extends ctranportadora {
 			$this->Row_Inserted($rs, $rsnew);
 		}
 		return $AddRow;
+	}
+
+	// Set up detail parms based on QueryString
+	function SetupDetailParms() {
+
+		// Get the keys for master table
+		if (isset($_GET[EW_TABLE_SHOW_DETAIL])) {
+			$sDetailTblVar = $_GET[EW_TABLE_SHOW_DETAIL];
+			$this->setCurrentDetailTable($sDetailTblVar);
+		} else {
+			$sDetailTblVar = $this->getCurrentDetailTable();
+		}
+		if ($sDetailTblVar <> "") {
+			$DetailTblVar = explode(",", $sDetailTblVar);
+			if (in_array("empresas", $DetailTblVar)) {
+				if (!isset($GLOBALS["empresas_grid"]))
+					$GLOBALS["empresas_grid"] = new cempresas_grid;
+				if ($GLOBALS["empresas_grid"]->DetailAdd) {
+					if ($this->CopyRecord)
+						$GLOBALS["empresas_grid"]->CurrentMode = "copy";
+					else
+						$GLOBALS["empresas_grid"]->CurrentMode = "add";
+					$GLOBALS["empresas_grid"]->CurrentAction = "gridadd";
+
+					// Save current master table to detail table
+					$GLOBALS["empresas_grid"]->setCurrentMasterTable($this->TableVar);
+					$GLOBALS["empresas_grid"]->setStartRecordNumber(1);
+					$GLOBALS["empresas_grid"]->id_perfil->FldIsDetailKey = TRUE;
+					$GLOBALS["empresas_grid"]->id_perfil->CurrentValue = $this->id_transportadora->CurrentValue;
+					$GLOBALS["empresas_grid"]->id_perfil->setSessionValue($GLOBALS["empresas_grid"]->id_perfil->CurrentValue);
+				}
+			}
+		}
 	}
 
 	// Set up Breadcrumb
@@ -947,6 +1041,14 @@ $tranportadora_add->ShowMessage();
 	</div>
 <?php } ?>
 </div><!-- /page* -->
+<?php
+	if (in_array("empresas", explode(",", $tranportadora->getCurrentDetailTable())) && $empresas->DetailAdd) {
+?>
+<?php if ($tranportadora->getCurrentDetailTable() <> "") { ?>
+<h4 class="ewDetailCaption"><?php echo $Language->TablePhrase("empresas", "TblCaption") ?></h4>
+<?php } ?>
+<?php include_once "empresasgrid.php" ?>
+<?php } ?>
 <?php if (!$tranportadora_add->IsModal) { ?>
 <div class="form-group"><!-- buttons .form-group -->
 	<div class="<?php echo $tranportadora_add->OffsetColumnClass ?>"><!-- buttons offset -->

@@ -752,7 +752,7 @@ $detalhe_pedido_grid->ListOptions->Render("body", "left", $detalhe_pedido_grid->
 <?php
 
 // Render list options (body, right)
-$detalhe_pedido_grid->ListOptions->Render("body", "right", $detalhe_pedido_grid->RowCnt);
+$detalhe_pedido_grid->ListOptions->Render("body", "right", $detalhe_pedido_grid->RowIndex);
 ?>
 <script type="text/javascript">
 fdetalhe_pedidogrid.UpdateOpts(<?php echo $detalhe_pedido_grid->RowIndex ?>);

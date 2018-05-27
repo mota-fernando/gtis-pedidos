@@ -575,6 +575,17 @@ class crepresentantes_delete extends crepresentantes {
 			return FALSE;
 		}
 		$rows = ($rs) ? $rs->GetRows() : array();
+
+		// Check if records exist for detail table 'pessoa_fisica'
+		if (!isset($GLOBALS["pessoa_fisica"])) $GLOBALS["pessoa_fisica"] = new cpessoa_fisica();
+		foreach ($rows as $row) {
+			$rsdetail = $GLOBALS["pessoa_fisica"]->LoadRs("`id_pessoa` = " . ew_QuotedValue($row['id_representantes'], EW_DATATYPE_NUMBER, 'DB'));
+			if ($rsdetail && !$rsdetail->EOF) {
+				$sRelatedRecordMsg = str_replace("%t", "pessoa_fisica", $Language->Phrase("RelatedRecordExists"));
+				$this->setFailureMessage($sRelatedRecordMsg);
+				return FALSE;
+			}
+		}
 		$conn->BeginTrans();
 
 		// Clone old rows

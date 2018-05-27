@@ -553,6 +553,17 @@ class ctranportadora_delete extends ctranportadora {
 			return FALSE;
 		}
 		$rows = ($rs) ? $rs->GetRows() : array();
+
+		// Check if records exist for detail table 'empresas'
+		if (!isset($GLOBALS["empresas"])) $GLOBALS["empresas"] = new cempresas();
+		foreach ($rows as $row) {
+			$rsdetail = $GLOBALS["empresas"]->LoadRs("`id_perfil` = " . ew_QuotedValue($row['id_transportadora'], EW_DATATYPE_NUMBER, 'DB'));
+			if ($rsdetail && !$rsdetail->EOF) {
+				$sRelatedRecordMsg = str_replace("%t", "empresas", $Language->Phrase("RelatedRecordExists"));
+				$this->setFailureMessage($sRelatedRecordMsg);
+				return FALSE;
+			}
+		}
 		$conn->BeginTrans();
 
 		// Clone old rows

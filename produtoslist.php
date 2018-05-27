@@ -752,10 +752,6 @@ class cprodutos_list extends cprodutos {
 		// Initialize
 		$sFilterList = "";
 		$sSavedFilterList = "";
-
-		// Load server side filters
-		if (EW_SEARCH_FILTER_OPTION == "Server" && isset($UserProfile))
-			$sSavedFilterList = $UserProfile->GetSearchFilters(CurrentUserName(), "fprodutoslistsrch");
 		$sFilterList = ew_Concat($sFilterList, $this->id_produto->AdvancedSearch->ToJson(), ","); // Field id_produto
 		$sFilterList = ew_Concat($sFilterList, $this->codigo_produto->AdvancedSearch->ToJson(), ","); // Field codigo_produto
 		$sFilterList = ew_Concat($sFilterList, $this->nome_produto->AdvancedSearch->ToJson(), ","); // Field nome_produto

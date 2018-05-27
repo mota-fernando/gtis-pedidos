@@ -182,6 +182,53 @@ class cempresas extends cTable {
 		$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_ORDER_BY_LIST] = $v;
 	}
 
+	// Current master table name
+	function getCurrentMasterTable() {
+		return @$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_MASTER_TABLE];
+	}
+
+	function setCurrentMasterTable($v) {
+		$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_MASTER_TABLE] = $v;
+	}
+
+	// Session master WHERE clause
+	function GetMasterFilter() {
+
+		// Master filter
+		$sMasterFilter = "";
+		if ($this->getCurrentMasterTable() == "tranportadora") {
+			if ($this->id_perfil->getSessionValue() <> "")
+				$sMasterFilter .= "`id_transportadora`=" . ew_QuotedValue($this->id_perfil->getSessionValue(), EW_DATATYPE_NUMBER, "DB");
+			else
+				return "";
+		}
+		return $sMasterFilter;
+	}
+
+	// Session detail WHERE clause
+	function GetDetailFilter() {
+
+		// Detail filter
+		$sDetailFilter = "";
+		if ($this->getCurrentMasterTable() == "tranportadora") {
+			if ($this->id_perfil->getSessionValue() <> "")
+				$sDetailFilter .= "`id_perfil`=" . ew_QuotedValue($this->id_perfil->getSessionValue(), EW_DATATYPE_NUMBER, "DB");
+			else
+				return "";
+		}
+		return $sDetailFilter;
+	}
+
+	// Master filter
+	function SqlMasterFilter_tranportadora() {
+		return "`id_transportadora`=@id_transportadora@";
+	}
+
+	// Detail filter
+	function SqlDetailFilter_tranportadora() {
+		return "`id_perfil`=@id_perfil@";
+	}
+
 	// Table level SQL
 	var $_SqlFrom = "";
 
@@ -214,7 +261,7 @@ class cempresas extends cTable {
 	function getSqlSelectList() { // Select for List page
 		$select = "";
 		$select = "SELECT * FROM (" .
-			"SELECT *, (SELECT `nome_pessoa` FROM `pessoa_fisica` `EW_TMP_LOOKUPTABLE` WHERE `EW_TMP_LOOKUPTABLE`.`nome_pessoa` = `empresas`.`direcao` LIMIT 1) AS `EV__direcao`, (SELECT CONCAT(`endereco`,'" . ew_ValueSeparator(1, $this->id_endereco) . "',`bairro`,'" . ew_ValueSeparator(2, $this->id_endereco) . "',`estado`,'" . ew_ValueSeparator(3, $this->id_endereco) . "',`cidade`) FROM `endereco` `EW_TMP_LOOKUPTABLE` WHERE `EW_TMP_LOOKUPTABLE`.`id_endereco` = `empresas`.`id_endereco` LIMIT 1) AS `EV__id_endereco` FROM `empresas`" .
+			"SELECT *, (SELECT `nome_pessoa` FROM `pessoa_fisica` `EW_TMP_LOOKUPTABLE` WHERE `EW_TMP_LOOKUPTABLE`.`nome_pessoa` = `empresas`.`direcao` LIMIT 1) AS `EV__direcao`, (SELECT CONCAT(COALESCE(`endereco`, ''),'" . ew_ValueSeparator(1, $this->id_endereco) . "',COALESCE(`bairro`,''),'" . ew_ValueSeparator(2, $this->id_endereco) . "',COALESCE(`estado`,''),'" . ew_ValueSeparator(3, $this->id_endereco) . "',COALESCE(`cidade`,'')) FROM `endereco` `EW_TMP_LOOKUPTABLE` WHERE `EW_TMP_LOOKUPTABLE`.`id_endereco` = `empresas`.`id_endereco` LIMIT 1) AS `EV__id_endereco` FROM `empresas`" .
 			") `EW_TMP_TABLE`";
 		return ($this->_SqlSelectList <> "") ? $this->_SqlSelectList : $select;
 	}
@@ -624,6 +671,10 @@ class cempresas extends cTable {
 
 	// Add master url
 	function AddMasterUrl($url) {
+		if ($this->getCurrentMasterTable() == "tranportadora" && strpos($url, EW_TABLE_SHOW_MASTER . "=") === FALSE) {
+			$url .= (strpos($url, "?") !== FALSE ? "&" : "?") . EW_TABLE_SHOW_MASTER . "=" . $this->getCurrentMasterTable();
+			$url .= "&fk_id_transportadora=" . urlencode($this->id_perfil->CurrentValue);
+		}
 		return $url;
 	}
 

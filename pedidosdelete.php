@@ -592,8 +592,8 @@ class cpedidos_delete extends cpedidos {
 
 		// id_transportadora
 		if (strval($this->id_transportadora->CurrentValue) <> "") {
-			$sFilterWrk = "`id_transportadora`" . ew_SearchString("=", $this->id_transportadora->CurrentValue, EW_DATATYPE_NUMBER, "");
-		$sSqlWrk = "SELECT `id_transportadora`, `transportadora` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `tranportadora`";
+			$sFilterWrk = "`id_empresa_transportadora`" . ew_SearchString("=", $this->id_transportadora->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_empresa_transportadora`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `transportadoras`";
 		$sWhereWrk = "";
 		$this->id_transportadora->LookupFilters = array();
 		ew_AddFilter($sWhereWrk, $sFilterWrk);
@@ -634,6 +634,7 @@ class cpedidos_delete extends cpedidos {
 		} else {
 			$this->id_prazos->ViewValue = NULL;
 		}
+		$this->id_prazos->ViewValue = ew_FormatNumber($this->id_prazos->ViewValue, 0, -2, -2, -2);
 		$this->id_prazos->ViewCustomAttributes = "";
 
 		// comentarios
@@ -642,8 +643,8 @@ class cpedidos_delete extends cpedidos {
 
 		// id_representante
 		if (strval($this->id_representante->CurrentValue) <> "") {
-			$sFilterWrk = "`id_representantes`" . ew_SearchString("=", $this->id_representante->CurrentValue, EW_DATATYPE_NUMBER, "");
-		$sSqlWrk = "SELECT `id_representantes`, `id_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `representantes`";
+			$sFilterWrk = "`id_pessoa`" . ew_SearchString("=", $this->id_representante->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_pessoa`, `nome_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `view1`";
 		$sWhereWrk = "";
 		$this->id_representante->LookupFilters = array();
 		ew_AddFilter($sWhereWrk, $sFilterWrk);

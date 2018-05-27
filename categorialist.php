@@ -748,10 +748,6 @@ class ccategoria_list extends ccategoria {
 		// Initialize
 		$sFilterList = "";
 		$sSavedFilterList = "";
-
-		// Load server side filters
-		if (EW_SEARCH_FILTER_OPTION == "Server" && isset($UserProfile))
-			$sSavedFilterList = $UserProfile->GetSearchFilters(CurrentUserName(), "fcategorialistsrch");
 		$sFilterList = ew_Concat($sFilterList, $this->id_categoria->AdvancedSearch->ToJson(), ","); // Field id_categoria
 		$sFilterList = ew_Concat($sFilterList, $this->id_pai->AdvancedSearch->ToJson(), ","); // Field id_pai
 		$sFilterList = ew_Concat($sFilterList, $this->categoria->AdvancedSearch->ToJson(), ","); // Field categoria

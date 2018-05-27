@@ -748,10 +748,6 @@ class cprazos_list extends cprazos {
 		// Initialize
 		$sFilterList = "";
 		$sSavedFilterList = "";
-
-		// Load server side filters
-		if (EW_SEARCH_FILTER_OPTION == "Server" && isset($UserProfile))
-			$sSavedFilterList = $UserProfile->GetSearchFilters(CurrentUserName(), "fprazoslistsrch");
 		$sFilterList = ew_Concat($sFilterList, $this->id_prazos->AdvancedSearch->ToJson(), ","); // Field id_prazos
 		$sFilterList = ew_Concat($sFilterList, $this->prazo_em_dias->AdvancedSearch->ToJson(), ","); // Field prazo_em_dias
 		$sFilterList = ew_Concat($sFilterList, $this->parcelas->AdvancedSearch->ToJson(), ","); // Field parcelas

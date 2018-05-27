@@ -160,6 +160,53 @@ class cpessoa_fisica extends cTable {
 		}
 	}
 
+	// Current master table name
+	function getCurrentMasterTable() {
+		return @$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_MASTER_TABLE];
+	}
+
+	function setCurrentMasterTable($v) {
+		$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_MASTER_TABLE] = $v;
+	}
+
+	// Session master WHERE clause
+	function GetMasterFilter() {
+
+		// Master filter
+		$sMasterFilter = "";
+		if ($this->getCurrentMasterTable() == "representantes") {
+			if ($this->id_pessoa->getSessionValue() <> "")
+				$sMasterFilter .= "`id_representantes`=" . ew_QuotedValue($this->id_pessoa->getSessionValue(), EW_DATATYPE_NUMBER, "DB");
+			else
+				return "";
+		}
+		return $sMasterFilter;
+	}
+
+	// Session detail WHERE clause
+	function GetDetailFilter() {
+
+		// Detail filter
+		$sDetailFilter = "";
+		if ($this->getCurrentMasterTable() == "representantes") {
+			if ($this->id_pessoa->getSessionValue() <> "")
+				$sDetailFilter .= "`id_pessoa`=" . ew_QuotedValue($this->id_pessoa->getSessionValue(), EW_DATATYPE_NUMBER, "DB");
+			else
+				return "";
+		}
+		return $sDetailFilter;
+	}
+
+	// Master filter
+	function SqlMasterFilter_representantes() {
+		return "`id_representantes`=@id_representantes@";
+	}
+
+	// Detail filter
+	function SqlDetailFilter_representantes() {
+		return "`id_pessoa`=@id_pessoa@";
+	}
+
 	// Table level SQL
 	var $_SqlFrom = "";
 
@@ -552,6 +599,10 @@ class cpessoa_fisica extends cTable {
 
 	// Add master url
 	function AddMasterUrl($url) {
+		if ($this->getCurrentMasterTable() == "representantes" && strpos($url, EW_TABLE_SHOW_MASTER . "=") === FALSE) {
+			$url .= (strpos($url, "?") !== FALSE ? "&" : "?") . EW_TABLE_SHOW_MASTER . "=" . $this->getCurrentMasterTable();
+			$url .= "&fk_id_representantes=" . urlencode($this->id_pessoa->CurrentValue);
+		}
 		return $url;
 	}
 

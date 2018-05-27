@@ -6,6 +6,7 @@ ob_start(); // Turn on output buffering
 <?php include_once ((EW_USE_ADODB) ? "adodb5/adodb.inc.php" : "ewmysql14.php") ?>
 <?php include_once "phpfn14.php" ?>
 <?php include_once "empresasinfo.php" ?>
+<?php include_once "tranportadorainfo.php" ?>
 <?php include_once "userfn14.php" ?>
 <?php
 
@@ -309,6 +310,9 @@ class cempresas_list extends cempresas {
 		$this->MultiDeleteUrl = "empresasdelete.php";
 		$this->MultiUpdateUrl = "empresasupdate.php";
 
+		// Table object (tranportadora)
+		if (!isset($GLOBALS['tranportadora'])) $GLOBALS['tranportadora'] = new ctranportadora();
+
 		// Page ID
 		if (!defined("EW_PAGE_ID"))
 			define("EW_PAGE_ID", 'list', TRUE);
@@ -454,6 +458,9 @@ class cempresas_list extends cempresas {
 
 		// Create Token
 		$this->CreateToken();
+
+		// Set up master detail parameters
+		$this->SetupMasterParms();
 
 		// Setup other options
 		$this->SetupOtherOptions();
@@ -671,8 +678,28 @@ class cempresas_list extends cempresas {
 
 		// Build filter
 		$sFilter = "";
+
+		// Restore master/detail filter
+		$this->DbMasterFilter = $this->GetMasterFilter(); // Restore master filter
+		$this->DbDetailFilter = $this->GetDetailFilter(); // Restore detail filter
 		ew_AddFilter($sFilter, $this->DbDetailFilter);
 		ew_AddFilter($sFilter, $this->SearchWhere);
+
+		// Load master record
+		if ($this->CurrentMode <> "add" && $this->GetMasterFilter() <> "" && $this->getCurrentMasterTable() == "tranportadora") {
+			global $tranportadora;
+			$rsmaster = $tranportadora->LoadRs($this->DbMasterFilter);
+			$this->MasterRecordExists = ($rsmaster && !$rsmaster->EOF);
+			if (!$this->MasterRecordExists) {
+				$this->setFailureMessage($Language->Phrase("NoRecord")); // Set no record found
+				$this->Page_Terminate("tranportadoralist.php"); // Return to master page
+			} else {
+				$tranportadora->LoadListRowValues($rsmaster);
+				$tranportadora->RowType = EW_ROWTYPE_MASTER; // Master row
+				$tranportadora->RenderListRow();
+				$rsmaster->Close();
+			}
+		}
 
 		// Set up filter
 		if ($this->Command == "json") {
@@ -754,10 +781,6 @@ class cempresas_list extends cempresas {
 		// Initialize
 		$sFilterList = "";
 		$sSavedFilterList = "";
-
-		// Load server side filters
-		if (EW_SEARCH_FILTER_OPTION == "Server" && isset($UserProfile))
-			$sSavedFilterList = $UserProfile->GetSearchFilters(CurrentUserName(), "fempresaslistsrch");
 		$sFilterList = ew_Concat($sFilterList, $this->id_perfil->AdvancedSearch->ToJson(), ","); // Field id_perfil
 		$sFilterList = ew_Concat($sFilterList, $this->razao_social->AdvancedSearch->ToJson(), ","); // Field razao_social
 		$sFilterList = ew_Concat($sFilterList, $this->proprietario->AdvancedSearch->ToJson(), ","); // Field proprietario
@@ -1122,6 +1145,14 @@ class cempresas_list extends cempresas {
 			// Reset search criteria
 			if ($this->Command == "reset" || $this->Command == "resetall")
 				$this->ResetSearchParms();
+
+			// Reset master/detail keys
+			if ($this->Command == "resetall") {
+				$this->setCurrentMasterTable(""); // Clear master table
+				$this->DbMasterFilter = "";
+				$this->DbDetailFilter = "";
+				$this->id_perfil->setSessionValue("");
+			}
 
 			// Reset sorting order
 			if ($this->Command == "resetsort") {
@@ -1980,6 +2011,25 @@ class cempresas_list extends cempresas {
 		// Call Page Exporting server event
 		$this->ExportDoc->ExportCustom = !$this->Page_Exporting();
 		$ParentTable = "";
+
+		// Export master record
+		if (EW_EXPORT_MASTER_RECORD && $this->GetMasterFilter() <> "" && $this->getCurrentMasterTable() == "tranportadora") {
+			global $tranportadora;
+			if (!isset($tranportadora)) $tranportadora = new ctranportadora;
+			$rsmaster = $tranportadora->LoadRs($this->DbMasterFilter); // Load master record
+			if ($rsmaster && !$rsmaster->EOF) {
+				$ExportStyle = $Doc->Style;
+				$Doc->SetStyle("v"); // Change to vertical
+				if ($this->Export <> "csv" || EW_EXPORT_MASTER_RECORD_FOR_CSV) {
+					$Doc->Table = &$tranportadora;
+					$tranportadora->ExportDocument($Doc, $rsmaster, 1, 1);
+					$Doc->ExportEmptyRow();
+					$Doc->Table = &$this;
+				}
+				$Doc->SetStyle($ExportStyle); // Restore
+				$rsmaster->Close();
+			}
+		}
 		$sHeader = $this->PageHeader;
 		$this->Page_DataRendering($sHeader);
 		$Doc->Text .= $sHeader;
@@ -2007,6 +2057,74 @@ class cempresas_list extends cempresas {
 
 		// Output data
 		$Doc->Export();
+	}
+
+	// Set up master/detail based on QueryString
+	function SetupMasterParms() {
+		$bValidMaster = FALSE;
+
+		// Get the keys for master table
+		if (isset($_GET[EW_TABLE_SHOW_MASTER])) {
+			$sMasterTblVar = $_GET[EW_TABLE_SHOW_MASTER];
+			if ($sMasterTblVar == "") {
+				$bValidMaster = TRUE;
+				$this->DbMasterFilter = "";
+				$this->DbDetailFilter = "";
+			}
+			if ($sMasterTblVar == "tranportadora") {
+				$bValidMaster = TRUE;
+				if (@$_GET["fk_id_transportadora"] <> "") {
+					$GLOBALS["tranportadora"]->id_transportadora->setQueryStringValue($_GET["fk_id_transportadora"]);
+					$this->id_perfil->setQueryStringValue($GLOBALS["tranportadora"]->id_transportadora->QueryStringValue);
+					$this->id_perfil->setSessionValue($this->id_perfil->QueryStringValue);
+					if (!is_numeric($GLOBALS["tranportadora"]->id_transportadora->QueryStringValue)) $bValidMaster = FALSE;
+				} else {
+					$bValidMaster = FALSE;
+				}
+			}
+		} elseif (isset($_POST[EW_TABLE_SHOW_MASTER])) {
+			$sMasterTblVar = $_POST[EW_TABLE_SHOW_MASTER];
+			if ($sMasterTblVar == "") {
+				$bValidMaster = TRUE;
+				$this->DbMasterFilter = "";
+				$this->DbDetailFilter = "";
+			}
+			if ($sMasterTblVar == "tranportadora") {
+				$bValidMaster = TRUE;
+				if (@$_POST["fk_id_transportadora"] <> "") {
+					$GLOBALS["tranportadora"]->id_transportadora->setFormValue($_POST["fk_id_transportadora"]);
+					$this->id_perfil->setFormValue($GLOBALS["tranportadora"]->id_transportadora->FormValue);
+					$this->id_perfil->setSessionValue($this->id_perfil->FormValue);
+					if (!is_numeric($GLOBALS["tranportadora"]->id_transportadora->FormValue)) $bValidMaster = FALSE;
+				} else {
+					$bValidMaster = FALSE;
+				}
+			}
+		}
+		if ($bValidMaster) {
+
+			// Update URL
+			$this->AddUrl = $this->AddMasterUrl($this->AddUrl);
+			$this->InlineAddUrl = $this->AddMasterUrl($this->InlineAddUrl);
+			$this->GridAddUrl = $this->AddMasterUrl($this->GridAddUrl);
+			$this->GridEditUrl = $this->AddMasterUrl($this->GridEditUrl);
+
+			// Save current master table
+			$this->setCurrentMasterTable($sMasterTblVar);
+
+			// Reset start record counter (new master key)
+			if (!$this->IsAddOrEdit()) {
+				$this->StartRec = 1;
+				$this->setStartRecordNumber($this->StartRec);
+			}
+
+			// Clear previous master key from Session
+			if ($sMasterTblVar <> "tranportadora") {
+				if ($this->id_perfil->CurrentValue == "") $this->id_perfil->setSessionValue("");
+			}
+		}
+		$this->DbMasterFilter = $this->GetMasterFilter(); // Get master filter
+		$this->DbDetailFilter = $this->GetDetailFilter(); // Get detail filter
 	}
 
 	// Set up Breadcrumb
@@ -2252,6 +2370,17 @@ var EW_PREVIEW_OVERLAY = false;
 <div class="clearfix"></div>
 </div>
 <?php } ?>
+<?php if (($empresas->Export == "") || (EW_EXPORT_MASTER_RECORD && $empresas->Export == "print")) { ?>
+<?php
+if ($empresas_list->DbMasterFilter <> "" && $empresas->getCurrentMasterTable() == "tranportadora") {
+	if ($empresas_list->MasterRecordExists) {
+?>
+<?php include_once "tranportadoramaster.php" ?>
+<?php
+	}
+}
+?>
+<?php } ?>
 <?php
 	$bSelectLimit = $empresas_list->UseSelectLimit;
 	if ($bSelectLimit) {
@@ -2377,6 +2506,10 @@ $empresas_list->ShowMessage();
 <?php } ?>
 <input type="hidden" name="t" value="empresas">
 <input type="hidden" name="exporttype" id="exporttype" value="">
+<?php if ($empresas->getCurrentMasterTable() == "tranportadora" && $empresas->CurrentAction <> "") { ?>
+<input type="hidden" name="<?php echo EW_TABLE_SHOW_MASTER ?>" value="tranportadora">
+<input type="hidden" name="fk_id_transportadora" value="<?php echo $empresas->id_perfil->getSessionValue() ?>">
+<?php } ?>
 <div id="gmp_empresas" class="<?php if (ew_IsResponsiveLayout()) { ?>table-responsive <?php } ?>ewGridMiddlePanel">
 <?php if ($empresas_list->TotalRecs > 0 || $empresas->CurrentAction == "gridedit") { ?>
 <table id="tbl_empresaslist" class="table ewTable">

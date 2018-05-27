@@ -6,6 +6,7 @@ ob_start(); // Turn on output buffering
 <?php include_once ((EW_USE_ADODB) ? "adodb5/adodb.inc.php" : "ewmysql14.php") ?>
 <?php include_once "phpfn14.php" ?>
 <?php include_once "pessoa_fisicainfo.php" ?>
+<?php include_once "representantesinfo.php" ?>
 <?php include_once "userfn14.php" ?>
 <?php
 
@@ -298,6 +299,9 @@ class cpessoa_fisica_view extends cpessoa_fisica {
 		$this->ExportCsvUrl = $this->PageUrl() . "export=csv" . $KeyUrl;
 		$this->ExportPdfUrl = $this->PageUrl() . "export=pdf" . $KeyUrl;
 
+		// Table object (representantes)
+		if (!isset($GLOBALS['representantes'])) $GLOBALS['representantes'] = new crepresentantes();
+
 		// Page ID
 		if (!defined("EW_PAGE_ID"))
 			define("EW_PAGE_ID", 'view', TRUE);
@@ -505,6 +509,9 @@ class cpessoa_fisica_view extends cpessoa_fisica {
 		$bLoadCurrentRecord = FALSE;
 		$sReturnUrl = "";
 		$bMatchRecord = FALSE;
+
+		// Set up master/detail parameters
+		$this->SetupMasterParms();
 		if ($this->IsPageRequest()) { // Validate request
 			if (@$_GET["id_pessoa"] <> "") {
 				$this->id_pessoa->setQueryStringValue($_GET["id_pessoa"]);
@@ -1094,6 +1101,69 @@ class cpessoa_fisica_view extends cpessoa_fisica {
 
 		// Output data
 		$Doc->Export();
+	}
+
+	// Set up master/detail based on QueryString
+	function SetupMasterParms() {
+		$bValidMaster = FALSE;
+
+		// Get the keys for master table
+		if (isset($_GET[EW_TABLE_SHOW_MASTER])) {
+			$sMasterTblVar = $_GET[EW_TABLE_SHOW_MASTER];
+			if ($sMasterTblVar == "") {
+				$bValidMaster = TRUE;
+				$this->DbMasterFilter = "";
+				$this->DbDetailFilter = "";
+			}
+			if ($sMasterTblVar == "representantes") {
+				$bValidMaster = TRUE;
+				if (@$_GET["fk_id_representantes"] <> "") {
+					$GLOBALS["representantes"]->id_representantes->setQueryStringValue($_GET["fk_id_representantes"]);
+					$this->id_pessoa->setQueryStringValue($GLOBALS["representantes"]->id_representantes->QueryStringValue);
+					$this->id_pessoa->setSessionValue($this->id_pessoa->QueryStringValue);
+					if (!is_numeric($GLOBALS["representantes"]->id_representantes->QueryStringValue)) $bValidMaster = FALSE;
+				} else {
+					$bValidMaster = FALSE;
+				}
+			}
+		} elseif (isset($_POST[EW_TABLE_SHOW_MASTER])) {
+			$sMasterTblVar = $_POST[EW_TABLE_SHOW_MASTER];
+			if ($sMasterTblVar == "") {
+				$bValidMaster = TRUE;
+				$this->DbMasterFilter = "";
+				$this->DbDetailFilter = "";
+			}
+			if ($sMasterTblVar == "representantes") {
+				$bValidMaster = TRUE;
+				if (@$_POST["fk_id_representantes"] <> "") {
+					$GLOBALS["representantes"]->id_representantes->setFormValue($_POST["fk_id_representantes"]);
+					$this->id_pessoa->setFormValue($GLOBALS["representantes"]->id_representantes->FormValue);
+					$this->id_pessoa->setSessionValue($this->id_pessoa->FormValue);
+					if (!is_numeric($GLOBALS["representantes"]->id_representantes->FormValue)) $bValidMaster = FALSE;
+				} else {
+					$bValidMaster = FALSE;
+				}
+			}
+		}
+		if ($bValidMaster) {
+
+			// Save current master table
+			$this->setCurrentMasterTable($sMasterTblVar);
+			$this->setSessionWhere($this->GetDetailFilter());
+
+			// Reset start record counter (new master key)
+			if (!$this->IsAddOrEdit()) {
+				$this->StartRec = 1;
+				$this->setStartRecordNumber($this->StartRec);
+			}
+
+			// Clear previous master key from Session
+			if ($sMasterTblVar <> "representantes") {
+				if ($this->id_pessoa->CurrentValue == "") $this->id_pessoa->setSessionValue("");
+			}
+		}
+		$this->DbMasterFilter = $this->GetMasterFilter(); // Get master filter
+		$this->DbDetailFilter = $this->GetDetailFilter(); // Get detail filter
 	}
 
 	// Set up Breadcrumb

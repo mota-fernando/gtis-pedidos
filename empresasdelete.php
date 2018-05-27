@@ -6,6 +6,7 @@ ob_start(); // Turn on output buffering
 <?php include_once ((EW_USE_ADODB) ? "adodb5/adodb.inc.php" : "ewmysql14.php") ?>
 <?php include_once "phpfn14.php" ?>
 <?php include_once "empresasinfo.php" ?>
+<?php include_once "tranportadorainfo.php" ?>
 <?php include_once "userfn14.php" ?>
 <?php
 
@@ -254,6 +255,9 @@ class cempresas_delete extends cempresas {
 			$GLOBALS["Table"] = &$GLOBALS["empresas"];
 		}
 
+		// Table object (tranportadora)
+		if (!isset($GLOBALS['tranportadora'])) $GLOBALS['tranportadora'] = new ctranportadora();
+
 		// Page ID
 		if (!defined("EW_PAGE_ID"))
 			define("EW_PAGE_ID", 'delete', TRUE);
@@ -367,6 +371,9 @@ class cempresas_delete extends cempresas {
 	//
 	function Page_Main() {
 		global $Language;
+
+		// Set up master/detail parameters
+		$this->SetupMasterParms();
 
 		// Set up Breadcrumb
 		$this->SetupBreadcrumb();
@@ -791,6 +798,68 @@ class cempresas_delete extends cempresas {
 			}
 		}
 		return $DeleteRows;
+	}
+
+	// Set up master/detail based on QueryString
+	function SetupMasterParms() {
+		$bValidMaster = FALSE;
+
+		// Get the keys for master table
+		if (isset($_GET[EW_TABLE_SHOW_MASTER])) {
+			$sMasterTblVar = $_GET[EW_TABLE_SHOW_MASTER];
+			if ($sMasterTblVar == "") {
+				$bValidMaster = TRUE;
+				$this->DbMasterFilter = "";
+				$this->DbDetailFilter = "";
+			}
+			if ($sMasterTblVar == "tranportadora") {
+				$bValidMaster = TRUE;
+				if (@$_GET["fk_id_transportadora"] <> "") {
+					$GLOBALS["tranportadora"]->id_transportadora->setQueryStringValue($_GET["fk_id_transportadora"]);
+					$this->id_perfil->setQueryStringValue($GLOBALS["tranportadora"]->id_transportadora->QueryStringValue);
+					$this->id_perfil->setSessionValue($this->id_perfil->QueryStringValue);
+					if (!is_numeric($GLOBALS["tranportadora"]->id_transportadora->QueryStringValue)) $bValidMaster = FALSE;
+				} else {
+					$bValidMaster = FALSE;
+				}
+			}
+		} elseif (isset($_POST[EW_TABLE_SHOW_MASTER])) {
+			$sMasterTblVar = $_POST[EW_TABLE_SHOW_MASTER];
+			if ($sMasterTblVar == "") {
+				$bValidMaster = TRUE;
+				$this->DbMasterFilter = "";
+				$this->DbDetailFilter = "";
+			}
+			if ($sMasterTblVar == "tranportadora") {
+				$bValidMaster = TRUE;
+				if (@$_POST["fk_id_transportadora"] <> "") {
+					$GLOBALS["tranportadora"]->id_transportadora->setFormValue($_POST["fk_id_transportadora"]);
+					$this->id_perfil->setFormValue($GLOBALS["tranportadora"]->id_transportadora->FormValue);
+					$this->id_perfil->setSessionValue($this->id_perfil->FormValue);
+					if (!is_numeric($GLOBALS["tranportadora"]->id_transportadora->FormValue)) $bValidMaster = FALSE;
+				} else {
+					$bValidMaster = FALSE;
+				}
+			}
+		}
+		if ($bValidMaster) {
+
+			// Save current master table
+			$this->setCurrentMasterTable($sMasterTblVar);
+
+			// Reset start record counter (new master key)
+			if (!$this->IsAddOrEdit()) {
+				$this->StartRec = 1;
+				$this->setStartRecordNumber($this->StartRec);
+			}
+
+			// Clear previous master key from Session
+			if ($sMasterTblVar <> "tranportadora") {
+				if ($this->id_perfil->CurrentValue == "") $this->id_perfil->setSessionValue("");
+			}
+		}
+		$this->DbMasterFilter = $this->GetMasterFilter(); // Get master filter
+		$this->DbDetailFilter = $this->GetDetailFilter(); // Get detail filter
 	}
 
 	// Set up Breadcrumb

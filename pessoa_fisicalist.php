@@ -6,6 +6,7 @@ ob_start(); // Turn on output buffering
 <?php include_once ((EW_USE_ADODB) ? "adodb5/adodb.inc.php" : "ewmysql14.php") ?>
 <?php include_once "phpfn14.php" ?>
 <?php include_once "pessoa_fisicainfo.php" ?>
+<?php include_once "representantesinfo.php" ?>
 <?php include_once "userfn14.php" ?>
 <?php
 
@@ -309,6 +310,9 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 		$this->MultiDeleteUrl = "pessoa_fisicadelete.php";
 		$this->MultiUpdateUrl = "pessoa_fisicaupdate.php";
 
+		// Table object (representantes)
+		if (!isset($GLOBALS['representantes'])) $GLOBALS['representantes'] = new crepresentantes();
+
 		// Page ID
 		if (!defined("EW_PAGE_ID"))
 			define("EW_PAGE_ID", 'list', TRUE);
@@ -451,6 +455,9 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 
 		// Create Token
 		$this->CreateToken();
+
+		// Set up master detail parameters
+		$this->SetupMasterParms();
 
 		// Setup other options
 		$this->SetupOtherOptions();
@@ -668,8 +675,28 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 
 		// Build filter
 		$sFilter = "";
+
+		// Restore master/detail filter
+		$this->DbMasterFilter = $this->GetMasterFilter(); // Restore master filter
+		$this->DbDetailFilter = $this->GetDetailFilter(); // Restore detail filter
 		ew_AddFilter($sFilter, $this->DbDetailFilter);
 		ew_AddFilter($sFilter, $this->SearchWhere);
+
+		// Load master record
+		if ($this->CurrentMode <> "add" && $this->GetMasterFilter() <> "" && $this->getCurrentMasterTable() == "representantes") {
+			global $representantes;
+			$rsmaster = $representantes->LoadRs($this->DbMasterFilter);
+			$this->MasterRecordExists = ($rsmaster && !$rsmaster->EOF);
+			if (!$this->MasterRecordExists) {
+				$this->setFailureMessage($Language->Phrase("NoRecord")); // Set no record found
+				$this->Page_Terminate("representanteslist.php"); // Return to master page
+			} else {
+				$representantes->LoadListRowValues($rsmaster);
+				$representantes->RowType = EW_ROWTYPE_MASTER; // Master row
+				$representantes->RenderListRow();
+				$rsmaster->Close();
+			}
+		}
 
 		// Set up filter
 		if ($this->Command == "json") {
@@ -751,10 +778,6 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 		// Initialize
 		$sFilterList = "";
 		$sSavedFilterList = "";
-
-		// Load server side filters
-		if (EW_SEARCH_FILTER_OPTION == "Server" && isset($UserProfile))
-			$sSavedFilterList = $UserProfile->GetSearchFilters(CurrentUserName(), "fpessoa_fisicalistsrch");
 		$sFilterList = ew_Concat($sFilterList, $this->id_pessoa->AdvancedSearch->ToJson(), ","); // Field id_pessoa
 		$sFilterList = ew_Concat($sFilterList, $this->nome_pessoa->AdvancedSearch->ToJson(), ","); // Field nome_pessoa
 		$sFilterList = ew_Concat($sFilterList, $this->sobrenome_pessoa->AdvancedSearch->ToJson(), ","); // Field sobrenome_pessoa
@@ -1095,6 +1118,14 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 			// Reset search criteria
 			if ($this->Command == "reset" || $this->Command == "resetall")
 				$this->ResetSearchParms();
+
+			// Reset master/detail keys
+			if ($this->Command == "resetall") {
+				$this->setCurrentMasterTable(""); // Clear master table
+				$this->DbMasterFilter = "";
+				$this->DbDetailFilter = "";
+				$this->id_pessoa->setSessionValue("");
+			}
 
 			// Reset sorting order
 			if ($this->Command == "resetsort") {
@@ -1905,6 +1936,25 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 		// Call Page Exporting server event
 		$this->ExportDoc->ExportCustom = !$this->Page_Exporting();
 		$ParentTable = "";
+
+		// Export master record
+		if (EW_EXPORT_MASTER_RECORD && $this->GetMasterFilter() <> "" && $this->getCurrentMasterTable() == "representantes") {
+			global $representantes;
+			if (!isset($representantes)) $representantes = new crepresentantes;
+			$rsmaster = $representantes->LoadRs($this->DbMasterFilter); // Load master record
+			if ($rsmaster && !$rsmaster->EOF) {
+				$ExportStyle = $Doc->Style;
+				$Doc->SetStyle("v"); // Change to vertical
+				if ($this->Export <> "csv" || EW_EXPORT_MASTER_RECORD_FOR_CSV) {
+					$Doc->Table = &$representantes;
+					$representantes->ExportDocument($Doc, $rsmaster, 1, 1);
+					$Doc->ExportEmptyRow();
+					$Doc->Table = &$this;
+				}
+				$Doc->SetStyle($ExportStyle); // Restore
+				$rsmaster->Close();
+			}
+		}
 		$sHeader = $this->PageHeader;
 		$this->Page_DataRendering($sHeader);
 		$Doc->Text .= $sHeader;
@@ -1932,6 +1982,74 @@ class cpessoa_fisica_list extends cpessoa_fisica {
 
 		// Output data
 		$Doc->Export();
+	}
+
+	// Set up master/detail based on QueryString
+	function SetupMasterParms() {
+		$bValidMaster = FALSE;
+
+		// Get the keys for master table
+		if (isset($_GET[EW_TABLE_SHOW_MASTER])) {
+			$sMasterTblVar = $_GET[EW_TABLE_SHOW_MASTER];
+			if ($sMasterTblVar == "") {
+				$bValidMaster = TRUE;
+				$this->DbMasterFilter = "";
+				$this->DbDetailFilter = "";
+			}
+			if ($sMasterTblVar == "representantes") {
+				$bValidMaster = TRUE;
+				if (@$_GET["fk_id_representantes"] <> "") {
+					$GLOBALS["representantes"]->id_representantes->setQueryStringValue($_GET["fk_id_representantes"]);
+					$this->id_pessoa->setQueryStringValue($GLOBALS["representantes"]->id_representantes->QueryStringValue);
+					$this->id_pessoa->setSessionValue($this->id_pessoa->QueryStringValue);
+					if (!is_numeric($GLOBALS["representantes"]->id_representantes->QueryStringValue)) $bValidMaster = FALSE;
+				} else {
+					$bValidMaster = FALSE;
+				}
+			}
+		} elseif (isset($_POST[EW_TABLE_SHOW_MASTER])) {
+			$sMasterTblVar = $_POST[EW_TABLE_SHOW_MASTER];
+			if ($sMasterTblVar == "") {
+				$bValidMaster = TRUE;
+				$this->DbMasterFilter = "";
+				$this->DbDetailFilter = "";
+			}
+			if ($sMasterTblVar == "representantes") {
+				$bValidMaster = TRUE;
+				if (@$_POST["fk_id_representantes"] <> "") {
+					$GLOBALS["representantes"]->id_representantes->setFormValue($_POST["fk_id_representantes"]);
+					$this->id_pessoa->setFormValue($GLOBALS["representantes"]->id_representantes->FormValue);
+					$this->id_pessoa->setSessionValue($this->id_pessoa->FormValue);
+					if (!is_numeric($GLOBALS["representantes"]->id_representantes->FormValue)) $bValidMaster = FALSE;
+				} else {
+					$bValidMaster = FALSE;
+				}
+			}
+		}
+		if ($bValidMaster) {
+
+			// Update URL
+			$this->AddUrl = $this->AddMasterUrl($this->AddUrl);
+			$this->InlineAddUrl = $this->AddMasterUrl($this->InlineAddUrl);
+			$this->GridAddUrl = $this->AddMasterUrl($this->GridAddUrl);
+			$this->GridEditUrl = $this->AddMasterUrl($this->GridEditUrl);
+
+			// Save current master table
+			$this->setCurrentMasterTable($sMasterTblVar);
+
+			// Reset start record counter (new master key)
+			if (!$this->IsAddOrEdit()) {
+				$this->StartRec = 1;
+				$this->setStartRecordNumber($this->StartRec);
+			}
+
+			// Clear previous master key from Session
+			if ($sMasterTblVar <> "representantes") {
+				if ($this->id_pessoa->CurrentValue == "") $this->id_pessoa->setSessionValue("");
+			}
+		}
+		$this->DbMasterFilter = $this->GetMasterFilter(); // Get master filter
+		$this->DbDetailFilter = $this->GetDetailFilter(); // Get detail filter
 	}
 
 	// Set up Breadcrumb
@@ -2172,6 +2290,17 @@ var EW_PREVIEW_OVERLAY = false;
 <div class="clearfix"></div>
 </div>
 <?php } ?>
+<?php if (($pessoa_fisica->Export == "") || (EW_EXPORT_MASTER_RECORD && $pessoa_fisica->Export == "print")) { ?>
+<?php
+if ($pessoa_fisica_list->DbMasterFilter <> "" && $pessoa_fisica->getCurrentMasterTable() == "representantes") {
+	if ($pessoa_fisica_list->MasterRecordExists) {
+?>
+<?php include_once "representantesmaster.php" ?>
+<?php
+	}
+}
+?>
+<?php } ?>
 <?php
 	$bSelectLimit = $pessoa_fisica_list->UseSelectLimit;
 	if ($bSelectLimit) {
@@ -2297,6 +2426,10 @@ $pessoa_fisica_list->ShowMessage();
 <?php } ?>
 <input type="hidden" name="t" value="pessoa_fisica">
 <input type="hidden" name="exporttype" id="exporttype" value="">
+<?php if ($pessoa_fisica->getCurrentMasterTable() == "representantes" && $pessoa_fisica->CurrentAction <> "") { ?>
+<input type="hidden" name="<?php echo EW_TABLE_SHOW_MASTER ?>" value="representantes">
+<input type="hidden" name="fk_id_representantes" value="<?php echo $pessoa_fisica->id_pessoa->getSessionValue() ?>">
+<?php } ?>
 <div id="gmp_pessoa_fisica" class="<?php if (ew_IsResponsiveLayout()) { ?>table-responsive <?php } ?>ewGridMiddlePanel">
 <?php if ($pessoa_fisica_list->TotalRecs > 0 || $pessoa_fisica->CurrentAction == "gridedit") { ?>
 <table id="tbl_pessoa_fisicalist" class="table ewTable">

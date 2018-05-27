@@ -6,6 +6,7 @@ ob_start(); // Turn on output buffering
 <?php include_once ((EW_USE_ADODB) ? "adodb5/adodb.inc.php" : "ewmysql14.php") ?>
 <?php include_once "phpfn14.php" ?>
 <?php include_once "pessoa_fisicainfo.php" ?>
+<?php include_once "representantesinfo.php" ?>
 <?php include_once "userfn14.php" ?>
 <?php
 
@@ -253,6 +254,9 @@ class cpessoa_fisica_addopt extends cpessoa_fisica {
 			$GLOBALS["pessoa_fisica"] = &$this;
 			$GLOBALS["Table"] = &$GLOBALS["pessoa_fisica"];
 		}
+
+		// Table object (representantes)
+		if (!isset($GLOBALS['representantes'])) $GLOBALS['representantes'] = new crepresentantes();
 
 		// Page ID
 		if (!defined("EW_PAGE_ID"))
@@ -983,6 +987,26 @@ class cpessoa_fisica_addopt extends cpessoa_fisica {
 	// Add record
 	function AddRow($rsold = NULL) {
 		global $Language, $Security;
+
+		// Check referential integrity for master table 'representantes'
+		$bValidMasterRecord = TRUE;
+		$sMasterFilter = $this->SqlMasterFilter_representantes();
+		if ($this->id_pessoa->getSessionValue() <> "") {
+			$sMasterFilter = str_replace("@id_representantes@", ew_AdjustSql($this->id_pessoa->getSessionValue(), "DB"), $sMasterFilter);
+		} else {
+			$bValidMasterRecord = FALSE;
+		}
+		if ($bValidMasterRecord) {
+			if (!isset($GLOBALS["representantes"])) $GLOBALS["representantes"] = new crepresentantes();
+			$rsmaster = $GLOBALS["representantes"]->LoadRs($sMasterFilter);
+			$bValidMasterRecord = ($rsmaster && !$rsmaster->EOF);
+			$rsmaster->Close();
+		}
+		if (!$bValidMasterRecord) {
+			$sRelatedRecordMsg = str_replace("%t", "representantes", $Language->Phrase("RelatedRecordRequired"));
+			$this->setFailureMessage($sRelatedRecordMsg);
+			return FALSE;
+		}
 		$conn = &$this->Connection();
 
 		// Load db values from rsold
@@ -1024,7 +1048,9 @@ class cpessoa_fisica_addopt extends cpessoa_fisica {
 		// id_empresa
 		$this->id_empresa->SetDbValueDef($rsnew, $this->id_empresa->CurrentValue, 0, FALSE);
 
+		// id_pessoa
 		// Call Row Inserting event
+
 		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
 		$bInsertRow = $this->Row_Inserting($rs, $rsnew);
 		if ($bInsertRow) {

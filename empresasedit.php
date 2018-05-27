@@ -6,6 +6,7 @@ ob_start(); // Turn on output buffering
 <?php include_once ((EW_USE_ADODB) ? "adodb5/adodb.inc.php" : "ewmysql14.php") ?>
 <?php include_once "phpfn14.php" ?>
 <?php include_once "empresasinfo.php" ?>
+<?php include_once "tranportadorainfo.php" ?>
 <?php include_once "userfn14.php" ?>
 <?php
 
@@ -254,6 +255,9 @@ class cempresas_edit extends cempresas {
 			$GLOBALS["Table"] = &$GLOBALS["empresas"];
 		}
 
+		// Table object (tranportadora)
+		if (!isset($GLOBALS['tranportadora'])) $GLOBALS['tranportadora'] = new ctranportadora();
+
 		// Page ID
 		if (!defined("EW_PAGE_ID"))
 			define("EW_PAGE_ID", 'edit', TRUE);
@@ -436,6 +440,9 @@ class cempresas_edit extends cempresas {
 				$this->id_perfil->CurrentValue = NULL;
 			}
 		}
+
+		// Set up master detail parameters
+		$this->SetupMasterParms();
 
 		// Load current record
 		$loaded = $this->LoadRow();
@@ -1159,6 +1166,28 @@ class cempresas_edit extends cempresas {
 			// whatsapp
 			$this->whatsapp->SetDbValueDef($rsnew, $this->whatsapp->CurrentValue, NULL, $this->whatsapp->ReadOnly);
 
+			// Check referential integrity for master table 'tranportadora'
+			$bValidMasterRecord = TRUE;
+			$sMasterFilter = $this->SqlMasterFilter_tranportadora();
+			$KeyValue = isset($rsnew['id_perfil']) ? $rsnew['id_perfil'] : $rsold['id_perfil'];
+			if (strval($KeyValue) <> "") {
+				$sMasterFilter = str_replace("@id_transportadora@", ew_AdjustSql($KeyValue), $sMasterFilter);
+			} else {
+				$bValidMasterRecord = FALSE;
+			}
+			if ($bValidMasterRecord) {
+				if (!isset($GLOBALS["tranportadora"])) $GLOBALS["tranportadora"] = new ctranportadora();
+				$rsmaster = $GLOBALS["tranportadora"]->LoadRs($sMasterFilter);
+				$bValidMasterRecord = ($rsmaster && !$rsmaster->EOF);
+				$rsmaster->Close();
+			}
+			if (!$bValidMasterRecord) {
+				$sRelatedRecordMsg = str_replace("%t", "tranportadora", $Language->Phrase("RelatedRecordRequired"));
+				$this->setFailureMessage($sRelatedRecordMsg);
+				$rs->Close();
+				return FALSE;
+			}
+
 			// Call Row Updating event
 			$bUpdateRow = $this->Row_Updating($rsold, $rsnew);
 			if ($bUpdateRow) {
@@ -1189,6 +1218,69 @@ class cempresas_edit extends cempresas {
 			$this->Row_Updated($rsold, $rsnew);
 		$rs->Close();
 		return $EditRow;
+	}
+
+	// Set up master/detail based on QueryString
+	function SetupMasterParms() {
+		$bValidMaster = FALSE;
+
+		// Get the keys for master table
+		if (isset($_GET[EW_TABLE_SHOW_MASTER])) {
+			$sMasterTblVar = $_GET[EW_TABLE_SHOW_MASTER];
+			if ($sMasterTblVar == "") {
+				$bValidMaster = TRUE;
+				$this->DbMasterFilter = "";
+				$this->DbDetailFilter = "";
+			}
+			if ($sMasterTblVar == "tranportadora") {
+				$bValidMaster = TRUE;
+				if (@$_GET["fk_id_transportadora"] <> "") {
+					$GLOBALS["tranportadora"]->id_transportadora->setQueryStringValue($_GET["fk_id_transportadora"]);
+					$this->id_perfil->setQueryStringValue($GLOBALS["tranportadora"]->id_transportadora->QueryStringValue);
+					$this->id_perfil->setSessionValue($this->id_perfil->QueryStringValue);
+					if (!is_numeric($GLOBALS["tranportadora"]->id_transportadora->QueryStringValue)) $bValidMaster = FALSE;
+				} else {
+					$bValidMaster = FALSE;
+				}
+			}
+		} elseif (isset($_POST[EW_TABLE_SHOW_MASTER])) {
+			$sMasterTblVar = $_POST[EW_TABLE_SHOW_MASTER];
+			if ($sMasterTblVar == "") {
+				$bValidMaster = TRUE;
+				$this->DbMasterFilter = "";
+				$this->DbDetailFilter = "";
+			}
+			if ($sMasterTblVar == "tranportadora") {
+				$bValidMaster = TRUE;
+				if (@$_POST["fk_id_transportadora"] <> "") {
+					$GLOBALS["tranportadora"]->id_transportadora->setFormValue($_POST["fk_id_transportadora"]);
+					$this->id_perfil->setFormValue($GLOBALS["tranportadora"]->id_transportadora->FormValue);
+					$this->id_perfil->setSessionValue($this->id_perfil->FormValue);
+					if (!is_numeric($GLOBALS["tranportadora"]->id_transportadora->FormValue)) $bValidMaster = FALSE;
+				} else {
+					$bValidMaster = FALSE;
+				}
+			}
+		}
+		if ($bValidMaster) {
+
+			// Save current master table
+			$this->setCurrentMasterTable($sMasterTblVar);
+			$this->setSessionWhere($this->GetDetailFilter());
+
+			// Reset start record counter (new master key)
+			if (!$this->IsAddOrEdit()) {
+				$this->StartRec = 1;
+				$this->setStartRecordNumber($this->StartRec);
+			}
+
+			// Clear previous master key from Session
+			if ($sMasterTblVar <> "tranportadora") {
+				if ($this->id_perfil->CurrentValue == "") $this->id_perfil->setSessionValue("");
+			}
+		}
+		$this->DbMasterFilter = $this->GetMasterFilter(); // Get master filter
+		$this->DbDetailFilter = $this->GetDetailFilter(); // Get detail filter
 	}
 
 	// Set up Breadcrumb
@@ -1425,6 +1517,10 @@ $empresas_edit->ShowMessage();
 <input type="hidden" name="t" value="empresas">
 <input type="hidden" name="a_edit" id="a_edit" value="U">
 <input type="hidden" name="modal" value="<?php echo intval($empresas_edit->IsModal) ?>">
+<?php if ($empresas->getCurrentMasterTable() == "tranportadora") { ?>
+<input type="hidden" name="<?php echo EW_TABLE_SHOW_MASTER ?>" value="tranportadora">
+<input type="hidden" name="fk_id_transportadora" value="<?php echo $empresas->id_perfil->getSessionValue() ?>">
+<?php } ?>
 <div class="ewEditDiv"><!-- page* -->
 <?php if ($empresas->id_perfil->Visible) { // id_perfil ?>
 	<div id="r_id_perfil" class="form-group">

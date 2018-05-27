@@ -490,7 +490,7 @@ class cpedidos_add extends cpedidos {
 				if ($this->AddRow($this->OldRecordset)) { // Add successful
 					if ($this->getSuccessMessage() == "")
 						$this->setSuccessMessage($Language->Phrase("AddSuccess")); // Set up success message
-					$sReturnUrl = "pedidoslist.php";
+					$sReturnUrl = $this->GetViewUrl();
 					if (ew_GetPageName($sReturnUrl) == "pedidoslist.php")
 						$sReturnUrl = $this->AddMasterUrl($sReturnUrl); // List page, return to List page with correct master key if necessary
 					elseif (ew_GetPageName($sReturnUrl) == "pedidosview.php")
@@ -797,8 +797,8 @@ class cpedidos_add extends cpedidos {
 
 		// id_transportadora
 		if (strval($this->id_transportadora->CurrentValue) <> "") {
-			$sFilterWrk = "`id_transportadora`" . ew_SearchString("=", $this->id_transportadora->CurrentValue, EW_DATATYPE_NUMBER, "");
-		$sSqlWrk = "SELECT `id_transportadora`, `transportadora` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `tranportadora`";
+			$sFilterWrk = "`id_empresa_transportadora`" . ew_SearchString("=", $this->id_transportadora->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_empresa_transportadora`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `transportadoras`";
 		$sWhereWrk = "";
 		$this->id_transportadora->LookupFilters = array();
 		ew_AddFilter($sWhereWrk, $sFilterWrk);
@@ -839,6 +839,7 @@ class cpedidos_add extends cpedidos {
 		} else {
 			$this->id_prazos->ViewValue = NULL;
 		}
+		$this->id_prazos->ViewValue = ew_FormatNumber($this->id_prazos->ViewValue, 0, -2, -2, -2);
 		$this->id_prazos->ViewCustomAttributes = "";
 
 		// comentarios
@@ -847,8 +848,8 @@ class cpedidos_add extends cpedidos {
 
 		// id_representante
 		if (strval($this->id_representante->CurrentValue) <> "") {
-			$sFilterWrk = "`id_representantes`" . ew_SearchString("=", $this->id_representante->CurrentValue, EW_DATATYPE_NUMBER, "");
-		$sSqlWrk = "SELECT `id_representantes`, `id_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `representantes`";
+			$sFilterWrk = "`id_pessoa`" . ew_SearchString("=", $this->id_representante->CurrentValue, EW_DATATYPE_NUMBER, "");
+		$sSqlWrk = "SELECT `id_pessoa`, `nome_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `view1`";
 		$sWhereWrk = "";
 		$this->id_representante->LookupFilters = array();
 		ew_AddFilter($sWhereWrk, $sFilterWrk);
@@ -1007,9 +1008,9 @@ class cpedidos_add extends cpedidos {
 			if (trim(strval($this->id_transportadora->CurrentValue)) == "") {
 				$sFilterWrk = "0=1";
 			} else {
-				$sFilterWrk = "`id_transportadora`" . ew_SearchString("=", $this->id_transportadora->CurrentValue, EW_DATATYPE_NUMBER, "");
+				$sFilterWrk = "`id_empresa_transportadora`" . ew_SearchString("=", $this->id_transportadora->CurrentValue, EW_DATATYPE_NUMBER, "");
 			}
-			$sSqlWrk = "SELECT `id_transportadora`, `transportadora` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `tranportadora`";
+			$sSqlWrk = "SELECT `id_empresa_transportadora`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `transportadoras`";
 			$sWhereWrk = "";
 			$this->id_transportadora->LookupFilters = array();
 			ew_AddFilter($sWhereWrk, $sFilterWrk);
@@ -1051,9 +1052,9 @@ class cpedidos_add extends cpedidos {
 			if (trim(strval($this->id_representante->CurrentValue)) == "") {
 				$sFilterWrk = "0=1";
 			} else {
-				$sFilterWrk = "`id_representantes`" . ew_SearchString("=", $this->id_representante->CurrentValue, EW_DATATYPE_NUMBER, "");
+				$sFilterWrk = "`id_pessoa`" . ew_SearchString("=", $this->id_representante->CurrentValue, EW_DATATYPE_NUMBER, "");
 			}
-			$sSqlWrk = "SELECT `id_representantes`, `id_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `representantes`";
+			$sSqlWrk = "SELECT `id_pessoa`, `nome_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld`, '' AS `SelectFilterFld`, '' AS `SelectFilterFld2`, '' AS `SelectFilterFld3`, '' AS `SelectFilterFld4` FROM `view1`";
 			$sWhereWrk = "";
 			$this->id_representante->LookupFilters = array();
 			ew_AddFilter($sWhereWrk, $sFilterWrk);
@@ -1358,10 +1359,10 @@ class cpedidos_add extends cpedidos {
 			break;
 		case "x_id_transportadora":
 			$sSqlWrk = "";
-			$sSqlWrk = "SELECT `id_transportadora` AS `LinkFld`, `transportadora` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `tranportadora`";
+			$sSqlWrk = "SELECT `id_empresa_transportadora` AS `LinkFld`, `razao_social` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `transportadoras`";
 			$sWhereWrk = "";
 			$fld->LookupFilters = array();
-			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`id_transportadora` IN ({filter_value})', "t0" => "3", "fn0" => "");
+			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`id_empresa_transportadora` IN ({filter_value})', "t0" => "3", "fn0" => "");
 			$sSqlWrk = "";
 			$this->Lookup_Selecting($this->id_transportadora, $sWhereWrk); // Call Lookup Selecting
 			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
@@ -1382,10 +1383,10 @@ class cpedidos_add extends cpedidos {
 			break;
 		case "x_id_representante":
 			$sSqlWrk = "";
-			$sSqlWrk = "SELECT `id_representantes` AS `LinkFld`, `id_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `representantes`";
+			$sSqlWrk = "SELECT `id_pessoa` AS `LinkFld`, `nome_pessoa` AS `DispFld`, '' AS `Disp2Fld`, '' AS `Disp3Fld`, '' AS `Disp4Fld` FROM `view1`";
 			$sWhereWrk = "";
 			$fld->LookupFilters = array();
-			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`id_representantes` IN ({filter_value})', "t0" => "3", "fn0" => "");
+			$fld->LookupFilters += array("s" => $sSqlWrk, "d" => "", "f0" => '`id_pessoa` IN ({filter_value})', "t0" => "3", "fn0" => "");
 			$sSqlWrk = "";
 			$this->Lookup_Selecting($this->id_representante, $sWhereWrk); // Call Lookup Selecting
 			if ($sWhereWrk <> "") $sSqlWrk .= " WHERE " . $sWhereWrk;
@@ -1568,11 +1569,11 @@ fpedidosadd.Lists["x_tipo_pedido"] = {"LinkField":"","Ajax":null,"AutoFill":fals
 fpedidosadd.Lists["x_tipo_pedido"].Options = <?php echo json_encode($pedidos_add->tipo_pedido->Options()) ?>;
 fpedidosadd.Lists["x_id_fornecedor"] = {"LinkField":"x_id_perfil","Ajax":true,"AutoFill":false,"DisplayFields":["x_razao_social","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"empresas"};
 fpedidosadd.Lists["x_id_fornecedor"].Data = "<?php echo $pedidos_add->id_fornecedor->LookupFilterQuery(FALSE, "add") ?>";
-fpedidosadd.Lists["x_id_transportadora"] = {"LinkField":"x_id_transportadora","Ajax":true,"AutoFill":false,"DisplayFields":["x_transportadora","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"tranportadora"};
+fpedidosadd.Lists["x_id_transportadora"] = {"LinkField":"x_id_empresa_transportadora","Ajax":true,"AutoFill":false,"DisplayFields":["x_razao_social","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"transportadoras"};
 fpedidosadd.Lists["x_id_transportadora"].Data = "<?php echo $pedidos_add->id_transportadora->LookupFilterQuery(FALSE, "add") ?>";
 fpedidosadd.Lists["x_id_prazos"] = {"LinkField":"x_id_prazos","Ajax":true,"AutoFill":false,"DisplayFields":["x_prazo_em_dias","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"prazos"};
 fpedidosadd.Lists["x_id_prazos"].Data = "<?php echo $pedidos_add->id_prazos->LookupFilterQuery(FALSE, "add") ?>";
-fpedidosadd.Lists["x_id_representante"] = {"LinkField":"x_id_representantes","Ajax":true,"AutoFill":false,"DisplayFields":["x_id_pessoa","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"representantes"};
+fpedidosadd.Lists["x_id_representante"] = {"LinkField":"x_id_pessoa","Ajax":true,"AutoFill":false,"DisplayFields":["x_nome_pessoa","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":"","LinkTable":"view1"};
 fpedidosadd.Lists["x_id_representante"].Data = "<?php echo $pedidos_add->id_representante->LookupFilterQuery(FALSE, "add") ?>";
 fpedidosadd.Lists["x_comissao_representante"] = {"LinkField":"","Ajax":null,"AutoFill":false,"DisplayFields":["","","",""],"ParentFields":[],"ChildFields":[],"FilterFields":[],"Options":[],"Template":""};
 fpedidosadd.Lists["x_comissao_representante"].Options = <?php echo json_encode($pedidos_add->comissao_representante->Options()) ?>;
@@ -1642,7 +1643,7 @@ $pedidos_add->ShowMessage();
 <select data-table="pedidos" data-field="x_id_transportadora" data-value-separator="<?php echo $pedidos->id_transportadora->DisplayValueSeparatorAttribute() ?>" id="x_id_transportadora" name="x_id_transportadora"<?php echo $pedidos->id_transportadora->EditAttributes() ?>>
 <?php echo $pedidos->id_transportadora->SelectOptionListHtml("x_id_transportadora") ?>
 </select>
-<button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $pedidos->id_transportadora->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_transportadora',url:'tranportadoraaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_transportadora"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $pedidos->id_transportadora->FldCaption() ?></span></button>
+<button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $pedidos->id_transportadora->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_transportadora',url:'transportadorasaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_transportadora"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $pedidos->id_transportadora->FldCaption() ?></span></button>
 </span>
 <?php echo $pedidos->id_transportadora->CustomMsg ?></div></div>
 	</div>
@@ -1678,7 +1679,7 @@ $pedidos_add->ShowMessage();
 <select data-table="pedidos" data-field="x_id_representante" data-value-separator="<?php echo $pedidos->id_representante->DisplayValueSeparatorAttribute() ?>" id="x_id_representante" name="x_id_representante"<?php echo $pedidos->id_representante->EditAttributes() ?>>
 <?php echo $pedidos->id_representante->SelectOptionListHtml("x_id_representante") ?>
 </select>
-<button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $pedidos->id_representante->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_representante',url:'representantesaddopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_representante"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $pedidos->id_representante->FldCaption() ?></span></button>
+<button type="button" title="<?php echo ew_HtmlTitle($Language->Phrase("AddLink")) . "&nbsp;" . $pedidos->id_representante->FldCaption() ?>" onclick="ew_AddOptDialogShow({lnk:this,el:'x_id_representante',url:'view1addopt.php'});" class="ewAddOptBtn btn btn-default btn-sm" id="aol_x_id_representante"><span class="glyphicon glyphicon-plus ewIcon"></span><span class="hide"><?php echo $Language->Phrase("AddLink") ?>&nbsp;<?php echo $pedidos->id_representante->FldCaption() ?></span></button>
 </span>
 <?php echo $pedidos->id_representante->CustomMsg ?></div></div>
 	</div>

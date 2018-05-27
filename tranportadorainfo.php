@@ -100,6 +100,30 @@ class ctranportadora extends cTable {
 		}
 	}
 
+	// Current detail table name
+	function getCurrentDetailTable() {
+		return @$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_DETAIL_TABLE];
+	}
+
+	function setCurrentDetailTable($v) {
+		$_SESSION[EW_PROJECT_NAME . "_" . $this->TableVar . "_" . EW_TABLE_DETAIL_TABLE] = $v;
+	}
+
+	// Get detail url
+	function GetDetailUrl() {
+
+		// Detail url
+		$sDetailUrl = "";
+		if ($this->getCurrentDetailTable() == "empresas") {
+			$sDetailUrl = $GLOBALS["empresas"]->GetListUrl() . "?" . EW_TABLE_SHOW_MASTER . "=" . $this->TableVar;
+			$sDetailUrl .= "&fk_id_transportadora=" . urlencode($this->id_transportadora->CurrentValue);
+		}
+		if ($sDetailUrl == "") {
+			$sDetailUrl = "tranportadoralist.php";
+		}
+		return $sDetailUrl;
+	}
+
 	// Table level SQL
 	var $_SqlFrom = "";
 
@@ -463,7 +487,10 @@ class ctranportadora extends cTable {
 
 	// Edit URL
 	function GetEditUrl($parm = "") {
-		$url = $this->KeyUrl("tranportadoraedit.php", $this->UrlParm($parm));
+		if ($parm <> "")
+			$url = $this->KeyUrl("tranportadoraedit.php", $this->UrlParm($parm));
+		else
+			$url = $this->KeyUrl("tranportadoraedit.php", $this->UrlParm(EW_TABLE_SHOW_DETAIL . "="));
 		return $this->AddMasterUrl($url);
 	}
 
@@ -475,7 +502,10 @@ class ctranportadora extends cTable {
 
 	// Copy URL
 	function GetCopyUrl($parm = "") {
-		$url = $this->KeyUrl("tranportadoraadd.php", $this->UrlParm($parm));
+		if ($parm <> "")
+			$url = $this->KeyUrl("tranportadoraadd.php", $this->UrlParm($parm));
+		else
+			$url = $this->KeyUrl("tranportadoraadd.php", $this->UrlParm(EW_TABLE_SHOW_DETAIL . "="));
 		return $this->AddMasterUrl($url);
 	}
 

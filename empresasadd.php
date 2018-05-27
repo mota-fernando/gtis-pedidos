@@ -6,6 +6,7 @@ ob_start(); // Turn on output buffering
 <?php include_once ((EW_USE_ADODB) ? "adodb5/adodb.inc.php" : "ewmysql14.php") ?>
 <?php include_once "phpfn14.php" ?>
 <?php include_once "empresasinfo.php" ?>
+<?php include_once "tranportadorainfo.php" ?>
 <?php include_once "userfn14.php" ?>
 <?php
 
@@ -254,6 +255,9 @@ class cempresas_add extends cempresas {
 			$GLOBALS["Table"] = &$GLOBALS["empresas"];
 		}
 
+		// Table object (tranportadora)
+		if (!isset($GLOBALS['tranportadora'])) $GLOBALS['tranportadora'] = new ctranportadora();
+
 		// Page ID
 		if (!defined("EW_PAGE_ID"))
 			define("EW_PAGE_ID", 'add', TRUE);
@@ -412,6 +416,9 @@ class cempresas_add extends cempresas {
 			$gbSkipHeaderFooter = TRUE;
 		$this->IsMobileOrModal = ew_IsMobile() || $this->IsModal;
 		$this->FormClassName = "ewForm ewAddForm form-horizontal";
+
+		// Set up master/detail parameters
+		$this->SetupMasterParms();
 
 		// Set up current action
 		if (@$_POST["a_add"] <> "") {
@@ -1082,6 +1089,26 @@ class cempresas_add extends cempresas {
 	// Add record
 	function AddRow($rsold = NULL) {
 		global $Language, $Security;
+
+		// Check referential integrity for master table 'tranportadora'
+		$bValidMasterRecord = TRUE;
+		$sMasterFilter = $this->SqlMasterFilter_tranportadora();
+		if ($this->id_perfil->getSessionValue() <> "") {
+			$sMasterFilter = str_replace("@id_transportadora@", ew_AdjustSql($this->id_perfil->getSessionValue(), "DB"), $sMasterFilter);
+		} else {
+			$bValidMasterRecord = FALSE;
+		}
+		if ($bValidMasterRecord) {
+			if (!isset($GLOBALS["tranportadora"])) $GLOBALS["tranportadora"] = new ctranportadora();
+			$rsmaster = $GLOBALS["tranportadora"]->LoadRs($sMasterFilter);
+			$bValidMasterRecord = ($rsmaster && !$rsmaster->EOF);
+			$rsmaster->Close();
+		}
+		if (!$bValidMasterRecord) {
+			$sRelatedRecordMsg = str_replace("%t", "tranportadora", $Language->Phrase("RelatedRecordRequired"));
+			$this->setFailureMessage($sRelatedRecordMsg);
+			return FALSE;
+		}
 		$conn = &$this->Connection();
 
 		// Load db values from rsold
@@ -1126,6 +1153,11 @@ class cempresas_add extends cempresas {
 		// whatsapp
 		$this->whatsapp->SetDbValueDef($rsnew, $this->whatsapp->CurrentValue, NULL, FALSE);
 
+		// id_perfil
+		if ($this->id_perfil->getSessionValue() <> "") {
+			$rsnew['id_perfil'] = $this->id_perfil->getSessionValue();
+		}
+
 		// Call Row Inserting event
 		$rs = ($rsold == NULL) ? NULL : $rsold->fields;
 		$bInsertRow = $this->Row_Inserting($rs, $rsnew);
@@ -1154,6 +1186,68 @@ class cempresas_add extends cempresas {
 			$this->Row_Inserted($rs, $rsnew);
 		}
 		return $AddRow;
+	}
+
+	// Set up master/detail based on QueryString
+	function SetupMasterParms() {
+		$bValidMaster = FALSE;
+
+		// Get the keys for master table
+		if (isset($_GET[EW_TABLE_SHOW_MASTER])) {
+			$sMasterTblVar = $_GET[EW_TABLE_SHOW_MASTER];
+			if ($sMasterTblVar == "") {
+				$bValidMaster = TRUE;
+				$this->DbMasterFilter = "";
+				$this->DbDetailFilter = "";
+			}
+			if ($sMasterTblVar == "tranportadora") {
+				$bValidMaster = TRUE;
+				if (@$_GET["fk_id_transportadora"] <> "") {
+					$GLOBALS["tranportadora"]->id_transportadora->setQueryStringValue($_GET["fk_id_transportadora"]);
+					$this->id_perfil->setQueryStringValue($GLOBALS["tranportadora"]->id_transportadora->QueryStringValue);
+					$this->id_perfil->setSessionValue($this->id_perfil->QueryStringValue);
+					if (!is_numeric($GLOBALS["tranportadora"]->id_transportadora->QueryStringValue)) $bValidMaster = FALSE;
+				} else {
+					$bValidMaster = FALSE;
+				}
+			}
+		} elseif (isset($_POST[EW_TABLE_SHOW_MASTER])) {
+			$sMasterTblVar = $_POST[EW_TABLE_SHOW_MASTER];
+			if ($sMasterTblVar == "") {
+				$bValidMaster = TRUE;
+				$this->DbMasterFilter = "";
+				$this->DbDetailFilter = "";
+			}
+			if ($sMasterTblVar == "tranportadora") {
+				$bValidMaster = TRUE;
+				if (@$_POST["fk_id_transportadora"] <> "") {
+					$GLOBALS["tranportadora"]->id_transportadora->setFormValue($_POST["fk_id_transportadora"]);
+					$this->id_perfil->setFormValue($GLOBALS["tranportadora"]->id_transportadora->FormValue);
+					$this->id_perfil->setSessionValue($this->id_perfil->FormValue);
+					if (!is_numeric($GLOBALS["tranportadora"]->id_transportadora->FormValue)) $bValidMaster = FALSE;
+				} else {
+					$bValidMaster = FALSE;
+				}
+			}
+		}
+		if ($bValidMaster) {
+
+			// Save current master table
+			$this->setCurrentMasterTable($sMasterTblVar);
+
+			// Reset start record counter (new master key)
+			if (!$this->IsAddOrEdit()) {
+				$this->StartRec = 1;
+				$this->setStartRecordNumber($this->StartRec);
+			}
+
+			// Clear previous master key from Session
+			if ($sMasterTblVar <> "tranportadora") {
+				if ($this->id_perfil->CurrentValue == "") $this->id_perfil->setSessionValue("");
+			}
+		}
+		$this->DbMasterFilter = $this->GetMasterFilter(); // Get master filter
+		$this->DbDetailFilter = $this->GetDetailFilter(); // Get detail filter
 	}
 
 	// Set up Breadcrumb
@@ -1390,6 +1484,10 @@ $empresas_add->ShowMessage();
 <input type="hidden" name="t" value="empresas">
 <input type="hidden" name="a_add" id="a_add" value="A">
 <input type="hidden" name="modal" value="<?php echo intval($empresas_add->IsModal) ?>">
+<?php if ($empresas->getCurrentMasterTable() == "tranportadora") { ?>
+<input type="hidden" name="<?php echo EW_TABLE_SHOW_MASTER ?>" value="tranportadora">
+<input type="hidden" name="fk_id_transportadora" value="<?php echo $empresas->id_perfil->getSessionValue() ?>">
+<?php } ?>
 <div class="ewAddDiv"><!-- page* -->
 <?php if ($empresas->razao_social->Visible) { // razao_social ?>
 	<div id="r_razao_social" class="form-group">
@@ -1527,6 +1625,9 @@ fempresasadd.CreateAutoSuggest({"id":"x_direcao","forceSelect":false});
 	</div>
 <?php } ?>
 </div><!-- /page* -->
+<?php if (strval($empresas->id_perfil->getSessionValue()) <> "") { ?>
+<input type="hidden" name="x_id_perfil" id="x_id_perfil" value="<?php echo ew_HtmlEncode(strval($empresas->id_perfil->getSessionValue())) ?>">
+<?php } ?>
 <?php if (!$empresas_add->IsModal) { ?>
 <div class="form-group"><!-- buttons .form-group -->
 	<div class="<?php echo $empresas_add->OffsetColumnClass ?>"><!-- buttons offset -->
